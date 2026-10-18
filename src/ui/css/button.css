@@ -104,3 +104,131 @@
 .gd-btn--text:hover:not(:disabled) {
   background: var(--gd-primary-soft);
 }
+
+/* ── Loading Button ─────────────────────────────────────────── */
+
+.gd-btn--loading {
+  position: relative;
+  cursor: wait;
+  gap: 8px;
+}
+
+.gd-btn--loading:disabled {
+  opacity: 1;
+  cursor: wait;
+}
+
+.gd-btn--loading.gd-btn--default {
+  background: var(--gd-primary-soft);
+  border-color: transparent;
+  color: var(--gd-primary);
+}
+
+.gd-btn--loading.gd-btn--primary {
+  background: var(--gd-primary-active);
+  filter: saturate(1.05);
+}
+
+.gd-btn--loading.gd-btn--ghost,
+.gd-btn--loading.gd-btn--text {
+  background: var(--gd-primary-soft);
+  border-color: transparent;
+  color: var(--gd-primary);
+}
+
+.gd-btn--loading.gd-btn--danger {
+  background: var(--gd-danger-soft);
+  color: var(--gd-danger);
+}
+
+.gd-btn__label {
+  line-height: 1;
+}
+
+.gd-btn__indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.gd-btn__indicator--dots {
+  gap: 3px;
+  height: 1em;
+}
+
+.gd-btn__indicator--dots i {
+  display: block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.35;
+  animation: gd-btn-dots 900ms var(--gd-ease) infinite;
+}
+
+.gd-btn__indicator--dots i:nth-child(1) {
+  animation-delay: 0ms;
+}
+
+.gd-btn__indicator--dots i:nth-child(2) {
+  animation-delay: 150ms;
+}
+
+.gd-btn__indicator--dots i:nth-child(3) {
+  animation-delay: 300ms;
+}
+
+.gd-btn__indicator--spin {
+  width: 12px;
+  height: 12px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  opacity: 0.85;
+  animation: gd-btn-spin 640ms linear infinite;
+}
+
+.gd-btn--sm .gd-btn__indicator--spin {
+  width: 10px;
+  height: 10px;
+}
+
+.gd-btn--lg .gd-btn__indicator--spin {
+  width: 14px;
+  height: 14px;
+}
+
+.gd-btn--sm .gd-btn__indicator--dots i {
+  width: 3px;
+  height: 3px;
+}
+
+@keyframes gd-btn-dots {
+  0%,
+  80%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0) scale(0.85);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-3px) scale(1.15);
+  }
+}
+
+@keyframes gd-btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.gd-loading-button {
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+.gd-loading-button:has(.gd-btn--block) {
+  display: flex;
+  width: 100%;
+}
