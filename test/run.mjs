@@ -23,7 +23,6 @@ import {
   scopeCssText,
   styleScopeId,
   STYLE_SCOPE_ATTR,
-  applyStyleScope,
   domEventType,
 } from '../src/engine/index.js';
 import { createStore, DEFAULT_DOC } from '../src/product/lib/store.js';

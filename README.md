@@ -193,7 +193,7 @@ div(
 | Tokens / shared | App-level CSS |
 | Component-private | `FooComponent.css` next to `FooComponent.js` |
 
-`mount` injects `static styles` once; unmount does not remove them.
+`mount` injects `static styles` once (auto-scoped to the host via `data-gd-c`; authors still write plain `.toolbar` / `className: 'toolbar'`). Unmount does not remove them.
 
 ---
 
