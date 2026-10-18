@@ -183,167 +183,7 @@ class GalleryPage extends Component {
     this.lightbox = new Lightbox({});
     this.cmd = new CommandPalette({});
     this.notification = new Notification({});
-    this.workflow = new WorkflowDAG({
-      onMount: (wf) => {
-        wf.setGraph({
-          columns: [
-            {
-              key: 'ingest',
-              title: 'Ingest',
-              nodes: [
-                {
-                  key: 'n-source',
-                  title: 'Source sync',
-                  status: 'success',
-                  description: 'Pull events from upstream queue.',
-                },
-                {
-                  key: 'n-validate',
-                  title: 'Validate',
-                  status: 'running',
-                  description: 'Schema + freshness checks.',
-                },
-              ],
-            },
-            {
-              key: 'transform',
-              title: 'Transform',
-              nodes: [
-                {
-                  key: 'n-enrich',
-                  title: 'Enrich',
-                  status: 'pending',
-                  description: 'Join dimensions and tags.',
-                },
-                {
-                  key: 'n-aggregate',
-                  title: 'Aggregate',
-                  status: 'pending',
-                  description: 'Roll up by tenant and day.',
-                },
-              ],
-            },
-            {
-              key: 'deliver',
-              title: 'Deliver',
-              nodes: [
-                {
-                  key: 'n-warehouse',
-                  title: 'Warehouse load',
-                  status: 'pending',
-                  description: 'Write parquet partitions.',
-                },
-                {
-                  key: 'n-notify',
-                  title: 'Notify',
-                  status: 'pending',
-                  description: 'Slack + email on completion.',
-                },
-              ],
-            },
-            {
-              key: 'observe',
-              title: 'Observe',
-              nodes: [
-                {
-                  key: 'n-metrics',
-                  title: 'Metrics',
-                  status: 'pending',
-                  description: 'Emit pipeline SLIs.',
-                },
-              ],
-            },
-          ],
-          edges: [
-            { from: 'n-source', to: 'n-enrich' },
-            { from: 'n-validate', to: 'n-enrich' },
-            { from: 'n-enrich', to: 'n-aggregate' },
-            { from: 'n-aggregate', to: 'n-warehouse' },
-            { from: 'n-warehouse', to: 'n-notify' },
-            { from: 'n-notify', to: 'n-metrics' },
-          ],
-        });
-      },
-    });
-    this.jsonTree = new JsonTree({
-      height: 320,
-      defaultExpand: 2,
-      onPath: (path) => this.toast.show({ message: path, type: 'info' }),
-      onMount: (jt) => {
-        jt.loadData({
-          product: 'gd5',
-          themes: ['orange', 'blue', 'green'],
-          engine: {
-            runtime: 'real-DOM',
-            bundler: false,
-            apis: ['Component', 'bind', 'LogProvider'],
-          },
-          ui: {
-            kits: 80,
-            overlays: ['Modal', 'Drawer', 'Toast'],
-            flags: { virtualJson: true, workflowDag: true },
-          },
-          metrics: {
-            score: 98.5,
-            samples: [1, 2, 3, 5, 8, 13],
-            ok: true,
-            note: null,
-          },
-        });
-      },
-    });
-    this.markdownEditor = new MarkdownEditor({
-      height: 280,
-      mode: 'split',
-      value:
-        '# Markdown editor\n\nWrite **bold**, *italic*, and `code`.\n\n- Toolbar wraps selection\n- Switch 编辑 / 分栏 / 预览\n\n```js\nconst ok = true;\n```\n\n> Preview updates as you type.\n',
-      onChange: () => {},
-    });
-    this.coverFlow = new CoverFlow({
-      height: 300,
-      index: 2,
-      items: [
-        { key: 'knight', title: 'Knight', subtitle: 'Tank · Iron Order', color: 'linear-gradient(145deg,#4a5568,#1a202c)' },
-        { key: 'mage', title: 'Mage', subtitle: 'Caster · Arcane', color: 'linear-gradient(145deg,#6b46c1,#2b1a4e)' },
-        { key: 'ranger', title: 'Ranger', subtitle: 'Scout · Wildwood', color: 'linear-gradient(145deg,#2f8f5b,#143528)' },
-        { key: 'rogue', title: 'Rogue', subtitle: 'Assassin · Night', color: 'linear-gradient(145deg,#c05621,#3b1d0f)' },
-        { key: 'cleric', title: 'Cleric', subtitle: 'Support · Dawn', color: 'linear-gradient(145deg,#2b6cb0,#1a365d)' },
-      ],
-      onChange: (i, item) => this.toast.show({ message: `Selected ${item.title}`, type: 'info' }),
-    });
-    this.todoList = new TodoList({
-      title: 'To-dos',
-      items: [
-        {
-          key: '1',
-          text: 'Add Button loading + LoadingButton with dots/spin',
-          status: 'active',
-        },
-        { key: '2', text: 'CSS, gallery, docs, tests, demo', status: 'pending' },
-        { key: '3', text: 'Commit, push, open PR', status: 'pending' },
-      ],
-      onItemClick: (_item, index) => {
-        const items = this.todoList.getItems().map((t, i) =>
-          i === index ? { ...t, status: nextTodoStatus(t.status) } : t
-        );
-        this.todoList.setItems(items);
-      },
-    });
-    this.loadingBtnDots = new LoadingButton({
-      text: 'Save',
-      loadingText: 'Saving',
-      type: 'default',
-      loadingType: 'primary',
-      indicator: 'dots',
-      onClick: () => new Promise((r) => setTimeout(r, 1600)),
-    });
-    this.loadingBtnSpin = new LoadingButton({
-      text: 'Publish',
-      loadingText: 'Publishing',
-      type: 'primary',
-      indicator: 'spin',
-      onClick: () => new Promise((r) => setTimeout(r, 1600)),
-    });
+    // Tree Components are composed inline in ensureShell (like React JSX) — not pre-new'd on `this`.
   }
 
   async componentDidMount() {
@@ -374,7 +214,7 @@ class GalleryPage extends Component {
     const d = this.state.data;
     this.ensureShell(
       (ids) => ids.galleryRoot,
-      ({ div }) => {
+      ({ div, h }) => {
         div(
           { id: 'galleryRoot', className: 'gallery' },
           Banner({
@@ -480,7 +320,24 @@ class GalleryPage extends Component {
                 type: 'secondary',
                 text: 'LoadingButton — click locks until async finishes (dots / spin).',
               }),
-              Space({}, this.loadingBtnDots, this.loadingBtnSpin)
+              Space(
+                {},
+                h(LoadingButton, {
+                  text: 'Save',
+                  loadingText: 'Saving',
+                  type: 'default',
+                  loadingType: 'primary',
+                  indicator: 'dots',
+                  onClick: () => new Promise((r) => setTimeout(r, 1600)),
+                }),
+                h(LoadingButton, {
+                  text: 'Publish',
+                  loadingText: 'Publishing',
+                  type: 'primary',
+                  indicator: 'spin',
+                  onClick: () => new Promise((r) => setTimeout(r, 1600)),
+                })
+              )
             )
           ),
 
@@ -717,7 +574,25 @@ class GalleryPage extends Component {
                 type: 'secondary',
                 text: 'TodoList — active arrow · pending dashed ring · done check. Click a row to cycle status.',
               }),
-              this.todoList
+              TodoList({
+                title: 'To-dos',
+                items: [
+                  {
+                    key: '1',
+                    text: 'Add Button loading + LoadingButton with dots/spin',
+                    status: 'active',
+                  },
+                  { key: '2', text: 'CSS, gallery, docs, tests, demo', status: 'pending' },
+                  { key: '3', text: 'Commit, push, open PR', status: 'pending' },
+                ],
+                onItemClick(item, index) {
+                  this.setItems(
+                    this.getItems().map((t, i) =>
+                      i === index ? { ...t, status: nextTodoStatus(t.status) } : t
+                    )
+                  );
+                },
+              })
             )
           ),
 
@@ -729,7 +604,18 @@ class GalleryPage extends Component {
                 type: 'secondary',
                 text: 'Cover Flow（封面流）— game character-select style: center card faces forward, neighbors tilt & stack. Drag / arrows / dots.',
               }),
-              this.coverFlow
+              h(CoverFlow, {
+                height: 300,
+                index: 2,
+                items: [
+                  { key: 'knight', title: 'Knight', subtitle: 'Tank · Iron Order', color: 'linear-gradient(145deg,#4a5568,#1a202c)' },
+                  { key: 'mage', title: 'Mage', subtitle: 'Caster · Arcane', color: 'linear-gradient(145deg,#6b46c1,#2b1a4e)' },
+                  { key: 'ranger', title: 'Ranger', subtitle: 'Scout · Wildwood', color: 'linear-gradient(145deg,#2f8f5b,#143528)' },
+                  { key: 'rogue', title: 'Rogue', subtitle: 'Assassin · Night', color: 'linear-gradient(145deg,#c05621,#3b1d0f)' },
+                  { key: 'cleric', title: 'Cleric', subtitle: 'Support · Dawn', color: 'linear-gradient(145deg,#2b6cb0,#1a365d)' },
+                ],
+                onChange: (i, item) => this.toast.show({ message: `Selected ${item.title}`, type: 'info' }),
+              })
             )
           ),
 
@@ -741,7 +627,13 @@ class GalleryPage extends Component {
                 type: 'secondary',
                 text: 'Default Markdown editing with a basic top toolbar and live preview (编辑 / 分栏 / 预览).',
               }),
-              this.markdownEditor
+              h(MarkdownEditor, {
+                height: 280,
+                mode: 'split',
+                value:
+                  '# Markdown editor\n\nWrite **bold**, *italic*, and `code`.\n\n- Toolbar wraps selection\n- Switch 编辑 / 分栏 / 预览\n\n```js\nconst ok = true;\n```\n\n> Preview updates as you type.\n',
+                onChange: () => {},
+              })
             )
           ),
 
@@ -785,7 +677,33 @@ class GalleryPage extends Component {
                 type: 'secondary',
                 text: 'Virtualized JSON viewer (jsonTreeViewer-style). Expand / mark / JSONPath; theme-aware type colors.',
               }),
-              this.jsonTree
+              h(JsonTree, {
+                height: 320,
+                defaultExpand: 2,
+                onPath: (path) => this.toast.show({ message: path, type: 'info' }),
+                onMount: (jt) => {
+                  jt.loadData({
+                    product: 'gd5',
+                    themes: ['orange', 'blue', 'green'],
+                    engine: {
+                      runtime: 'real-DOM',
+                      bundler: false,
+                      apis: ['Component', 'bind', 'LogProvider'],
+                    },
+                    ui: {
+                      kits: 80,
+                      overlays: ['Modal', 'Drawer', 'Toast'],
+                      flags: { virtualJson: true, workflowDag: true },
+                    },
+                    metrics: {
+                      score: 98.5,
+                      samples: [1, 2, 3, 5, 8, 13],
+                      ok: true,
+                      note: null,
+                    },
+                  });
+                },
+              })
             )
           ),
 
@@ -797,7 +715,88 @@ class GalleryPage extends Component {
                 type: 'secondary',
                 text: 'Multi-column DAG: scroll, drag blank area to pan, click a node for the right drawer.',
               }),
-              this.workflow
+              h(WorkflowDAG, {
+                onMount: (wf) => {
+                  wf.setGraph({
+                    columns: [
+                      {
+                        key: 'ingest',
+                        title: 'Ingest',
+                        nodes: [
+                          {
+                            key: 'n-source',
+                            title: 'Source sync',
+                            status: 'success',
+                            description: 'Pull events from upstream queue.',
+                          },
+                          {
+                            key: 'n-validate',
+                            title: 'Validate',
+                            status: 'running',
+                            description: 'Schema + freshness checks.',
+                          },
+                        ],
+                      },
+                      {
+                        key: 'transform',
+                        title: 'Transform',
+                        nodes: [
+                          {
+                            key: 'n-enrich',
+                            title: 'Enrich',
+                            status: 'pending',
+                            description: 'Join dimensions and tags.',
+                          },
+                          {
+                            key: 'n-aggregate',
+                            title: 'Aggregate',
+                            status: 'pending',
+                            description: 'Roll up by tenant and day.',
+                          },
+                        ],
+                      },
+                      {
+                        key: 'deliver',
+                        title: 'Deliver',
+                        nodes: [
+                          {
+                            key: 'n-warehouse',
+                            title: 'Warehouse load',
+                            status: 'pending',
+                            description: 'Write parquet partitions.',
+                          },
+                          {
+                            key: 'n-notify',
+                            title: 'Notify',
+                            status: 'pending',
+                            description: 'Slack + email on completion.',
+                          },
+                        ],
+                      },
+                      {
+                        key: 'observe',
+                        title: 'Observe',
+                        nodes: [
+                          {
+                            key: 'n-metrics',
+                            title: 'Metrics',
+                            status: 'pending',
+                            description: 'Emit pipeline SLIs.',
+                          },
+                        ],
+                      },
+                    ],
+                    edges: [
+                      { from: 'n-source', to: 'n-enrich' },
+                      { from: 'n-validate', to: 'n-enrich' },
+                      { from: 'n-enrich', to: 'n-aggregate' },
+                      { from: 'n-aggregate', to: 'n-warehouse' },
+                      { from: 'n-warehouse', to: 'n-notify' },
+                      { from: 'n-notify', to: 'n-metrics' },
+                    ],
+                  });
+                },
+              })
             )
           ),
 

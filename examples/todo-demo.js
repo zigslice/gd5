@@ -5,29 +5,12 @@ import { startDemoApp } from './demoApp.js';
 class TodoDemoPage extends Component {
   static styles = [new URL('./demo-shell.css', import.meta.url)];
 
-  constructor(deps) {
-    super(deps);
-    this.todoList = new TodoList({
-      title: 'To-dos',
-      items: [
-        { key: '1', text: 'Add Button loading + LoadingButton with dots/spin', status: 'active' },
-        { key: '2', text: 'CSS, gallery, docs, tests, demo', status: 'pending' },
-        { key: '3', text: 'Commit, push, open PR', status: 'pending' },
-      ],
-      onItemClick: (_item, index) => {
-        const items = this.todoList.getItems().map((t, i) =>
-          i === index ? { ...t, status: nextTodoStatus(t.status) } : t
-        );
-        this.todoList.setItems(items);
-      },
-    });
-  }
-
   async componentDidMount() {
     await loadUi();
   }
 
   render() {
+    // 就地组合 — 像 React render 里写 <TodoList />，不必先挂到 this 再 new
     this.ensureShell(
       (ids) => ids.root,
       ({ div, h1, p }) => {
@@ -35,7 +18,28 @@ class TodoDemoPage extends Component {
           { id: 'root', className: 'gd-demo' },
           h1({ className: 'gd-demo__title', text: 'TodoList' }),
           p({ className: 'gd-demo__hint', text: '点击条目可循环：pending → active → done' }),
-          div({ className: 'gd-demo__body' }, this.todoList)
+          div(
+            { className: 'gd-demo__body' },
+            TodoList({
+              title: 'To-dos',
+              items: [
+                {
+                  key: '1',
+                  text: 'Add Button loading + LoadingButton with dots/spin',
+                  status: 'active',
+                },
+                { key: '2', text: 'CSS, gallery, docs, tests, demo', status: 'pending' },
+                { key: '3', text: 'Commit, push, open PR', status: 'pending' },
+              ],
+              onItemClick(item, index) {
+                this.setItems(
+                  this.getItems().map((t, i) =>
+                    i === index ? { ...t, status: nextTodoStatus(t.status) } : t
+                  )
+                );
+              },
+            })
+          )
         );
       }
     );

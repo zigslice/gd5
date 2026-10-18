@@ -36,13 +36,18 @@ goBack / parent.unmount()
   → 引擎卸 on() 监听、清宿主、重置 ref
 ```
 
-子组件和 `div` 一样写进树（Component 有 `.dom()`，与 Element 同形）：
+子组件和 `div` / `Button({})` 一样写进树（就地组合，不必先 `this.x = new …`）：
 
 ```js
-div({ id: 'root' }, h1({ text: 'Hi' }), this.todoList);
+div(
+  { id: 'root' },
+  h1({ text: 'Hi' }),
+  TodoList({ items }),           // factory → Component（有 .dom()）
+  h(CoverFlow, { items }),       // Component class ≈ React createElement
+);
 ```
 
-引擎插入 `display: contents` 宿主再 `mount`，布局由子组件自己的根节点承担。
+`ensureShell` 只建一次，就地 `TodoList({…})` 也只创建一次。引擎插入 `display: contents` 宿主再 `mount`。
 
 ## 写组件时怎么少踩坑
 
@@ -127,7 +132,6 @@ export class Panel extends Component {
   constructor(deps) {
     super(deps); // 已带 navigator / logger
     this.store = deps.store;
-    this.todos = new TodoList({ items: deps.items });
   }
 
   componentDidAttachEvents() {
@@ -147,8 +151,8 @@ export class Panel extends Component {
             text: '保存',
             onClick: () => this.save(),
           }),
-          // 像 React：<div><TodoList /></div>
-          this.todos
+          // 像 React：<div><TodoList items={…} /></div>
+          TodoList({ items: this.store.getTodos() })
         );
       }
     );

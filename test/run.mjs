@@ -1021,17 +1021,19 @@ section('ui kit');
     assert(ui.countTodoProgress(items).done === 1 && ui.countTodoProgress(items).total === 3, 'countTodoProgress');
     assert(ui.nextTodoStatus('pending') === 'active', 'nextTodoStatus pending→active');
     assert(ui.nextTodoStatus('active') === 'done', 'nextTodoStatus active→done');
-    const todos = new ui.TodoList({
+    const todos = ui.TodoList({
       items: [
         { key: '1', text: 'Ship LoadingButton', status: 'active' },
         { key: '2', text: 'Write docs', status: 'pending' },
         { key: '3', text: 'Open PR', status: 'done' },
       ],
     });
+    assert(typeof todos.mount === 'function' && typeof todos.dom === 'function', 'TodoList() returns Component');
     assert(todos.getItems().length === 3, 'TodoList.getItems');
     assert(todos.getProgress().done === 1 && todos.getProgress().total === 3, 'TodoList.getProgress');
     todos.setItems([{ text: 'Only', status: 'pending' }]);
     assert(todos.getItems().length === 1 && todos.getProgress().done === 0, 'TodoList.setItems');
+    assert(typeof ui.TodoListView === 'function', 'TodoListView class exported');
   }
   {
     const items = ui.normalizeCoverFlowItems(['A', { key: 'b', title: 'Bee', subtitle: 'x' }]);
@@ -1184,7 +1186,7 @@ section('ui kit');
   assert(docs.includes('MarkdownEditor') && docs.includes('renderMarkdown'), 'docs cover MarkdownEditor');
   assert(docs.includes('CoverFlow') && docs.includes('封面流'), 'docs cover CoverFlow');
   assert(docs.includes('TodoList') && docs.includes('To-dos'), 'docs cover TodoList');
-  assert(docs.includes('setItems') && docs.includes('this.todos'), 'docs show TodoList tree composition');
+  assert(docs.includes('setItems') && docs.includes('TodoList({'), 'docs show inline TodoList({…}) composition');
   assert(docs.includes('LoadingButton') && docs.includes('Loading Button'), 'docs cover LoadingButton');
   assert(docs.includes('demoApp.js'), 'docs mention demoApp bootstrap');
 
@@ -1207,19 +1209,16 @@ section('ui kit');
     assert(boot.includes('ComponentRender') && boot.includes('LogProvider'), 'demoApp.js is standard gd5 boot');
     assert(!existsSync(join(root, 'examples/loading-button-showcase.html')), 'ad-hoc showcase removed');
     const todoDemo = readFileSync(join(root, 'examples/todo-demo.js'), 'utf8');
-    assert(todoDemo.includes('new TodoList'), 'todo-demo constructs TodoList Component');
-    assert(todoDemo.includes('this.todoList'), 'todo-demo composes TodoList as tree child');
+    assert(todoDemo.includes('TodoList({'), 'todo-demo composes TodoList({…}) inline');
+    assert(!todoDemo.includes('this.todoList'), 'todo-demo does not pre-new on this');
     assert(!todoDemo.includes('replaceChildren'), 'todo-demo does not use replaceChildren');
     assert(!todoDemo.includes('_mountedTodo'), 'todo-demo has no mount flag');
-    assert(!todoDemo.includes('slot('), 'todo-demo does not need slot() wrapper');
     const gallerySrc = readFileSync(join(root, 'examples/ui-gallery.js'), 'utf8');
-    assert(gallerySrc.includes('new TodoList'), 'gallery constructs TodoList Component');
-    assert(gallerySrc.includes('this.todoList'), 'gallery composes TodoList as tree child');
+    assert(gallerySrc.includes('TodoList({'), 'gallery composes TodoList({…}) inline');
+    assert(!gallerySrc.includes('this.todoList'), 'gallery does not pre-new TodoList on this');
     assert(!gallerySrc.includes('replaceChildren'), 'gallery does not use replaceChildren');
-    assert(!gallerySrc.includes('_todoListMounted'), 'gallery has no TodoList mount flag');
-    assert(!gallerySrc.includes('this.slot('), 'gallery does not use slot() wrapper');
     const engineApi = readFileSync(join(root, 'docs/api.md'), 'utf8');
-    assert(engineApi.includes('dom()') && engineApi.includes('hyperscript child'), 'docs/api covers Component.dom composition');
+    assert(engineApi.includes('createElement') || engineApi.includes('h(Type'), 'docs/api covers h(Type) composition');
   }
 
   const listeners = [];
@@ -1374,7 +1373,7 @@ section('ui kit');
     // TodoList is a Component — mount into a host (composition via child.mount)
     {
       const host = makeUiNode('div');
-      const todos = new ui.TodoList({
+      const todos = ui.TodoList({
         title: 'To-dos',
         items: [
           { key: '1', text: 'Ship LoadingButton', status: 'active' },

@@ -365,14 +365,41 @@ export class D {
 }
 
 /**
+ * Component class?: has mount + render on prototype (avoids importing Component here).
+ * @param {unknown} type
+ */
+function isComponentClass(type) {
+  return (
+    typeof type === 'function' &&
+    type.prototype != null &&
+    type.prototype.constructor === type &&
+    typeof type.prototype.mount === 'function' &&
+    typeof type.prototype.render === 'function'
+  );
+}
+
+/**
  * 绑定到同一个 D 实例，便于解构短名。
  * @param {D} [d]
  */
 export function bind(d = new D()) {
   const api = {
     d,
-    h(tag, props, ...children) {
-      return d.el(tag, props, ...children);
+    /**
+     * Hyperscript: DOM tag, UI primitive, or Component class / factory.
+     * `h(TodoList, { items })` / `h(CoverFlow, { items })` — React createElement 同形。
+     * @param {string|Function} type
+     * @param {object} [props]
+     * @param {...any} children
+     */
+    h(type, props, ...children) {
+      if (isComponentClass(type)) {
+        return new type(props || {});
+      }
+      if (typeof type === 'function') {
+        return type(props || {}, ...children);
+      }
+      return d.el(type, props, ...children);
     },
     map(list, render, keyOf) {
       return d.map(list, render, keyOf);

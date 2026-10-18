@@ -7,25 +7,6 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 class LoadingButtonDemoPage extends Component {
   static styles = [new URL('./demo-shell.css', import.meta.url)];
 
-  constructor(deps) {
-    super(deps);
-    this.dotsBtn = new LoadingButton({
-      text: 'Save',
-      loadingText: 'Saving',
-      type: 'default',
-      loadingType: 'primary',
-      indicator: 'dots',
-      onClick: () => wait(1800),
-    });
-    this.spinBtn = new LoadingButton({
-      text: 'Publish',
-      loadingText: 'Publishing',
-      type: 'primary',
-      indicator: 'spin',
-      onClick: () => wait(1800),
-    });
-  }
-
   async componentDidMount() {
     await loadUi();
   }
@@ -33,7 +14,7 @@ class LoadingButtonDemoPage extends Component {
   render() {
     this.ensureShell(
       (ids) => ids.root,
-      ({ div, h1, p }) => {
+      ({ div, h1, p, h }) => {
         div(
           { id: 'root', className: 'gd-demo' },
           h1({ className: 'gd-demo__title', text: 'Loading Button' }),
@@ -63,7 +44,24 @@ class LoadingButtonDemoPage extends Component {
               text: 'Interactive — click locks until async finishes:',
               style: { marginTop: '20px', marginBottom: '10px' },
             }),
-            div({ className: 'gd-demo__row' }, this.dotsBtn, this.spinBtn)
+            div(
+              { className: 'gd-demo__row' },
+              h(LoadingButton, {
+                text: 'Save',
+                loadingText: 'Saving',
+                type: 'default',
+                loadingType: 'primary',
+                indicator: 'dots',
+                onClick: () => wait(1800),
+              }),
+              h(LoadingButton, {
+                text: 'Publish',
+                loadingText: 'Publishing',
+                type: 'primary',
+                indicator: 'spin',
+                onClick: () => wait(1800),
+              })
+            )
           )
         );
       }

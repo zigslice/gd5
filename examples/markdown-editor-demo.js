@@ -5,33 +5,6 @@ import { startDemoApp } from './demoApp.js';
 class MarkdownEditorDemoPage extends Component {
   static styles = [new URL('./demo-shell.css', import.meta.url)];
 
-  constructor(deps) {
-    super(deps);
-    this.editor = new MarkdownEditor({
-      height: 360,
-      mode: 'split',
-      value: [
-        '# gd5 Markdown',
-        '',
-        '默认以 **Markdown** 编辑，顶部工具栏可快速插入格式。',
-        '',
-        '## 功能',
-        '',
-        '- 粗体 / 斜体 / 标题',
-        '- 引用、列表、链接、行内代码',
-        '- 分栏实时预览',
-        '',
-        '```js',
-        'ed.setMode("preview");',
-        '```',
-        '',
-        '> 切换右上角「编辑 / 分栏 / 预览」。',
-        '',
-        'Visit [gd5](https://github.com/zigslice/gd5).',
-      ].join('\n'),
-    });
-  }
-
   async componentDidMount() {
     await loadUi();
   }
@@ -39,7 +12,7 @@ class MarkdownEditorDemoPage extends Component {
   render() {
     this.ensureShell(
       (ids) => ids.root,
-      ({ div, h1, p }) => {
+      ({ div, h1, p, h }) => {
         div(
           { id: 'root', className: 'gd-demo' },
           h1({ className: 'gd-demo__title', text: 'MarkdownEditor' }),
@@ -47,7 +20,32 @@ class MarkdownEditorDemoPage extends Component {
             className: 'gd-demo__hint',
             text: '默认 Markdown 编辑 · 顶部工具栏 · 编辑 / 分栏 / 预览',
           }),
-          div({ className: 'gd-demo__body' }, this.editor)
+          div(
+            { className: 'gd-demo__body' },
+            h(MarkdownEditor, {
+              height: 360,
+              mode: 'split',
+              value: [
+                '# gd5 Markdown',
+                '',
+                '默认以 **Markdown** 编辑，顶部工具栏可快速插入格式。',
+                '',
+                '## 功能',
+                '',
+                '- 粗体 / 斜体 / 标题',
+                '- 引用、列表、链接、行内代码',
+                '- 分栏实时预览',
+                '',
+                '```js',
+                'ed.setMode("preview");',
+                '```',
+                '',
+                '> 切换右上角「编辑 / 分栏 / 预览」。',
+                '',
+                'Visit [gd5](https://github.com/zigslice/gd5).',
+              ].join('\n'),
+            })
+          )
         );
       }
     );

@@ -218,32 +218,36 @@ Button({ type: 'primary', text: 'Wait', loading: true, indicator: 'spin' })
 
 Cursor-style checklist card (Component): header title + `done/total`, active item with filled arrow disc, pending with dashed ring, done with check.
 
-Compose like React — construct once, write the instance into the tree as a child (same as `div`), update via `setItems`.
+Compose like React / like `Button({})` — call in the tree, no pre-`new` on `this`.
 
 ```js
 import { TodoList, nextTodoStatus } from './src/ui/index.js';
 
-// constructor — keep the instance (like a ref)
-this.todos = new TodoList({
-  title: 'To-dos',
-  items: [
-    { key: '1', text: 'Ship LoadingButton', status: 'active' },
-    { key: '2', text: 'Write docs', status: 'pending' },
-    { key: '3', text: 'Open PR', status: 'pending' },
-  ],
-  onItemClick: (_item, i) => {
-    const items = this.todos.getItems().map((t, idx) =>
-      idx === i ? { ...t, status: nextTodoStatus(t.status) } : t
-    );
-    this.todos.setItems(items);
-  },
-});
-
-// render — <div><TodoList /></div>
+// render — <div><TodoList items={…} /></div>
 this.ensureShell((ids) => ids.root, ({ div }) => {
-  div({ id: 'root' }, this.todos);
+  div(
+    { id: 'root' },
+    TodoList({
+      title: 'To-dos',
+      items: [
+        { key: '1', text: 'Ship LoadingButton', status: 'active' },
+        { key: '2', text: 'Write docs', status: 'pending' },
+        { key: '3', text: 'Open PR', status: 'pending' },
+      ],
+      onItemClick(item, i) {
+        // `this` is the TodoList instance
+        this.setItems(
+          this.getItems().map((t, idx) =>
+            idx === i ? { ...t, status: nextTodoStatus(t.status) } : t
+          )
+        );
+      },
+    })
+  );
 });
 ```
+
+Component classes use `h(CoverFlow, { items })` the same way (`h` ≈ React `createElement`).
 
 Statuses: `pending` · `active` (`in_progress`) · `done` (`completed`).
 

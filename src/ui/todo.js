@@ -99,31 +99,18 @@ function statusIcon(status) {
 }
 
 /**
- * TodoList — Cursor-style to-dos card (mountable Component).
- *
- * Compose: `new TodoList({ items })` → parent ensureShell host → `todo.mount(host)`.
- * Update: `setItems` / `setData` (do not rebuild via replaceChildren).
- *
- * Statuses:
- * - `pending`  dashed circle, muted text
- * - `active`   filled circle + arrow (current)
- * - `done`     filled check (counts toward n/total)
- *
- * @param {object} [deps]
- * @param {string} [deps.title]
- * @param {TodoItemInput[]|string[]} [deps.items]
- * @param {boolean} [deps.showProgress]
- * @param {(item:object, index:number)=>void} [deps.onItemClick]
- * @param {string} [deps.className]
+ * TodoList view — mountable Component (prefer calling `TodoList(props)` in trees).
  */
-export class TodoList extends Component {
+export class TodoListView extends Component {
   constructor(deps = {}) {
     super(deps);
     this.state.data.title = deps.title ?? 'To-dos';
     this.state.data.items = normalizeTodoItems(deps.items);
     this.state.data.showProgress = deps.showProgress !== false;
     this.state.data.className = deps.className || '';
-    this._onItemClick = deps.onItemClick || null;
+    // Bind so inline handlers can use this.setItems / this.getItems
+    this._onItemClick =
+      typeof deps.onItemClick === 'function' ? deps.onItemClick.bind(this) : null;
   }
 
   async mount(host, params = {}) {
@@ -243,11 +230,35 @@ export class TodoList extends Component {
 }
 
 /**
+ * TodoList — Cursor-style to-dos (like Button: call in the tree, no pre-`new` on `this`).
+ *
+ * ```js
+ * div(
+ *   { id: 'root' },
+ *   TodoList({
+ *     items: [...],
+ *     onItemClick(item, index) {
+ *       this.setItems(this.getItems().map(...)); // `this` is the list
+ *     },
+ *   })
+ * )
+ * ```
+ *
+ * Statuses: `pending` · `active` · `done`
+ *
+ * @param {object} [props]
+ * @returns {TodoListView}
+ */
+export function TodoList(props = {}) {
+  return new TodoListView(props);
+}
+
+/**
  * @param {object} [options]
  * @param {HTMLElement|string} [host]
  */
 export function createTodoList(options = {}, host) {
-  const list = new TodoList(options);
+  const list = TodoList(options);
   const elHost =
     typeof host === 'string'
       ? typeof document !== 'undefined'
