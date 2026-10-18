@@ -113,6 +113,7 @@ section('layout: product vs engine');
     'docs/images/theme-orange.png',
     'docs/images/theme-blue.png',
     'docs/images/theme-green.png',
+    'docs/images/coding-agent-demo.gif',
     'examples/demoApp.js',
     'examples/demo-shell.css',
     'examples/ui-gallery.html',

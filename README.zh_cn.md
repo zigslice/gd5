@@ -219,6 +219,8 @@ docs/           api.md · ui.md · engine.md · architecture.md
 
 ProtoLive（`src/product/`）在可视化编辑器里演示组合用法。**Coding Agent**（`agent.html` → `src/product/agent/`）是更完整的产品 demo：IDE 壳 + UI 组件嵌入 + store 驱动的 Agent 回合。嵌入引擎时可忽略。
 
+![Coding Agent 产品演示](docs/images/coding-agent-demo.gif)
+
 `examples/` 下的 UI 演示都是**标准 gd5 应用**：HTML 页槽 + `ComponentRender` / `LogProvider`（见 `examples/demoApp.js`），结构与 `src/product/main.js` 一致。
 
 ```bash
