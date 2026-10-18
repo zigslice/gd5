@@ -219,6 +219,8 @@ docs/           api.md · ui.md · engine.md · architecture.md
 
 ProtoLive (`src/product/`) shows composition in a visual editor. **Coding Agent** (`agent.html` → `src/product/agent/`) is the fuller product demo: IDE chrome + UI kit embeds + store-driven agent turns. Safe to ignore when embedding the engine.
 
+![Coding Agent product demo](docs/images/coding-agent-demo.gif)
+
 UI kit demos under `examples/` are **standard gd5 apps**: HTML page slots + `ComponentRender` / `LogProvider` (via `examples/demoApp.js`), same shape as `src/product/main.js`.
 
 ```bash
