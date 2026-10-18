@@ -120,6 +120,7 @@ import {
   CodeBlock,
   DiffBlock,
   MarkdownEditor,
+  CoverFlow,
   themes,
   setTheme,
   getTheme,
@@ -193,6 +194,19 @@ class GalleryPage extends Component {
       onChange: () => {},
     });
     this._markdownMounted = false;
+    this.coverFlow = new CoverFlow({
+      height: 300,
+      index: 2,
+      items: [
+        { key: 'knight', title: 'Knight', subtitle: 'Tank · Iron Order', color: 'linear-gradient(145deg,#4a5568,#1a202c)' },
+        { key: 'mage', title: 'Mage', subtitle: 'Caster · Arcane', color: 'linear-gradient(145deg,#6b46c1,#2b1a4e)' },
+        { key: 'ranger', title: 'Ranger', subtitle: 'Scout · Wildwood', color: 'linear-gradient(145deg,#2f8f5b,#143528)' },
+        { key: 'rogue', title: 'Rogue', subtitle: 'Assassin · Night', color: 'linear-gradient(145deg,#c05621,#3b1d0f)' },
+        { key: 'cleric', title: 'Cleric', subtitle: 'Support · Dawn', color: 'linear-gradient(145deg,#2b6cb0,#1a365d)' },
+      ],
+      onChange: (i, item) => this.toast.show({ message: `Selected ${item.title}`, type: 'info' }),
+    });
+    this._coverFlowMounted = false;
   }
 
   async componentDidMount() {
@@ -545,6 +559,22 @@ class GalleryPage extends Component {
                   { key: 'search', label: 'Search', icon: '⌕' },
                   { key: 'me', label: 'Me', icon: '☺' },
                 ],
+              })
+            )
+          ),
+
+          this.section(
+            'Cover Flow',
+            Space(
+              { direction: 'vertical', size: 'sm' },
+              Text({
+                type: 'secondary',
+                text: 'Cover Flow（封面流）— game character-select style: center card faces forward, neighbors tilt & stack. Drag / arrows / dots.',
+              }),
+              el('div', {
+                id: 'coverFlowHost',
+                className: 'component-host',
+                style: { minHeight: '360px' },
               })
             )
           ),
@@ -1076,6 +1106,16 @@ class GalleryPage extends Component {
         );
       }
     );
+
+    const cfHost =
+      this.ids().coverFlowHost ||
+      (typeof document !== 'undefined'
+        ? document.getElementById('coverFlowHost')
+        : null);
+    if (cfHost && !this._coverFlowMounted) {
+      this._coverFlowMounted = true;
+      void this.coverFlow.mount(cfHost);
+    }
 
     const mdHost =
       this.ids().markdownEditorHost ||
