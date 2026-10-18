@@ -46,11 +46,12 @@ div(
   EChart({ option }),            // 同上：ECharts 嵌入
   ThreeView({ onInit }),         // 同上：three.js 3D
   SparkView({ url }),            // 同上：Spark.js Gaussian Splatting
+  PeleView({ source }),          // 同上：Pele Mermaid→SVG
   h(CoverFlow, { items }),       // Component class ≈ React createElement
 );
 ```
 
-`ensureShell` 只建一次，就地 `TodoList({…})` / `EChart` / `ThreeView` / `SparkView` 也只创建一次。引擎插入 `display: contents` 宿主再 `mount`。
+`ensureShell` 只建一次，就地 `TodoList({…})` / `EChart` / `ThreeView` / `SparkView` / `PeleView` 也只创建一次。引擎插入 `display: contents` 宿主再 `mount`。
 
 ## 写组件时怎么少踩坑
 

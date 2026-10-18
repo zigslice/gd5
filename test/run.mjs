@@ -125,6 +125,8 @@ section('layout: product vs engine');
     'examples/embed-demo.js',
     'examples/spark-demo.html',
     'examples/spark-demo.js',
+    'examples/pele-demo.html',
+    'examples/pele-demo.js',
     'examples/code-block-demo.html',
     'examples/code-block-demo.js',
     'examples/markdown-editor-demo.html',
@@ -136,6 +138,7 @@ section('layout: product vs engine');
     'src/ui/EChart.js',
     'src/ui/ThreeView.js',
     'src/ui/SparkView.js',
+    'src/ui/PeleView.js',
     'src/ui/css/embed.css',
     'src/engine/styles.js',
     'src/product/css/tokens.css',
@@ -1097,6 +1100,10 @@ section('ui kit');
   assert(typeof ui.createSparkView === 'function', 'createSparkView exported');
   assert(typeof ui.loadSpark === 'function', 'loadSpark exported');
   assert(typeof ui.ensureSparkImportMap === 'function', 'ensureSparkImportMap exported');
+  assert(typeof ui.PeleView === 'function', 'PeleView exported');
+  assert(ui.MermaidView === ui.PeleView, 'MermaidView aliases PeleView');
+  assert(typeof ui.createPeleView === 'function', 'createPeleView exported');
+  assert(typeof ui.loadPele === 'function', 'loadPele exported');
   {
     const items = ui.normalizeTodoItems([
       { text: 'A', status: 'in_progress' },
@@ -1129,6 +1136,9 @@ section('ui kit');
     const spark = ui.SparkView({ height: 200, autoSplat: false });
     assert(typeof spark.mount === 'function' && typeof spark.dom === 'function', 'SparkView() returns Component');
     assert(typeof spark.getContext === 'function' && typeof spark.getSpark === 'function', 'SparkView API');
+    const pele = ui.PeleView({ height: 200, source: 'flowchart LR\n  A-->B' });
+    assert(typeof pele.mount === 'function' && typeof pele.dom === 'function', 'PeleView() returns Component');
+    assert(typeof pele.setSource === 'function' && typeof pele.getMounted === 'function', 'PeleView API');
   }
   {
     const items = ui.normalizeCoverFlowItems(['A', { key: 'b', title: 'Bee', subtitle: 'x' }]);
@@ -1262,7 +1272,7 @@ section('ui kit');
     'BottomNav', 'Sidebar', 'Toolbar', 'Tooltip', 'Popover', 'DropdownMenu', 'HoverCard',
     'Combobox', 'TagInput', 'MultiSelect', 'Transfer', 'Slider', 'ColorWell', 'DatePicker',
     'Timeline', 'ChatBubble', 'Carousel', 'CoverFlow', 'BentoGrid', 'Marquee', 'Fab', 'Lightbox',
-    'EChart', 'ThreeView', 'SparkView', 'PieChart', 'DonutChart', 'SearchInput', 'SignInForm', 'Truncate', 'Splitter',
+    'EChart', 'ThreeView', 'SparkView', 'PeleView', 'PieChart', 'DonutChart', 'SearchInput', 'SignInForm', 'Truncate', 'Splitter',
     'InputNumber', 'Rate', 'Cascader', 'Upload', 'Mentions', 'TreeSelect', 'Form', 'FormItem',
     'List', 'Descriptions', 'Statistic', 'Calendar', 'Image', 'Result', 'Popconfirm',
     'Notification', 'Watermark', 'Flex', 'Row', 'Col', 'Layout', 'Menu', 'Affix', 'Anchor',
@@ -1286,6 +1296,8 @@ section('ui kit');
   assert(docs.includes('three.js'), 'docs mention three.js 3D');
   assert(docs.includes('SparkView') && docs.includes('Gaussian Splatting'), 'docs cover SparkView');
   assert(docs.includes('sparkjsdev/spark') || docs.includes('@sparkjsdev/spark'), 'docs cite Spark upstream');
+  assert(docs.includes('PeleView') && docs.includes('Mermaid'), 'docs cover PeleView');
+  assert(docs.includes('obsidianmd/pele') || docs.includes('pele.run'), 'docs cite Pele upstream');
   assert(docs.includes('LoadingButton') && docs.includes('Loading Button'), 'docs cover LoadingButton');
   assert(docs.includes('demoApp.js'), 'docs mention demoApp bootstrap');
 
@@ -1295,6 +1307,7 @@ section('ui kit');
       'examples/todo-demo.html',
       'examples/embed-demo.html',
       'examples/spark-demo.html',
+      'examples/pele-demo.html',
       'examples/code-block-demo.html',
       'examples/markdown-editor-demo.html',
       'examples/coverflow-demo.html',
@@ -1325,10 +1338,15 @@ section('ui kit');
     assert(!sparkDemo.includes('replaceChildren'), 'spark-demo does not use replaceChildren');
     const sparkHtml = readFileSync(join(root, 'examples/spark-demo.html'), 'utf8');
     assert(sparkHtml.includes('type="importmap"') && sparkHtml.includes('@sparkjsdev/spark'), 'spark-demo has Spark importmap');
+    const peleDemo = readFileSync(join(root, 'examples/pele-demo.js'), 'utf8');
+    assert(peleDemo.includes('PeleView({'), 'pele-demo composes PeleView({…}) inline');
+    assert(!peleDemo.includes('this.pele'), 'pele-demo does not pre-new PeleView on this');
+    assert(!peleDemo.includes('replaceChildren'), 'pele-demo does not use replaceChildren');
     const gallerySrc = readFileSync(join(root, 'examples/ui-gallery.js'), 'utf8');
     assert(gallerySrc.includes('TodoList({'), 'gallery composes TodoList({…}) inline');
     assert(gallerySrc.includes('EChart({') && gallerySrc.includes('ThreeView({'), 'gallery composes EChart/ThreeView inline');
     assert(gallerySrc.includes('SparkView({'), 'gallery composes SparkView({…}) inline');
+    assert(gallerySrc.includes('PeleView({'), 'gallery composes PeleView({…}) inline');
     assert(!gallerySrc.includes('this.todoList'), 'gallery does not pre-new TodoList on this');
     assert(!gallerySrc.includes('replaceChildren'), 'gallery does not use replaceChildren');
     const engineApi = readFileSync(join(root, 'docs/api.md'), 'utf8');
@@ -1514,7 +1532,7 @@ section('ui kit');
       );
     }
 
-    // EChart / ThreeView / SparkView — shell + injected libs (no CDN in tests)
+    // EChart / ThreeView / SparkView / PeleView — shell + injected libs (no CDN in tests)
     {
       const prevRaf = globalThis.requestAnimationFrame;
       const prevCaf = globalThis.cancelAnimationFrame;
@@ -1648,6 +1666,52 @@ section('ui kit');
       assert(sparkView.getSplat() === fakeSplat, 'SparkView.getSplat');
       sparkView.unmount();
       assert(fakeSparkRenderer.disposed, 'SparkView disposes SparkRenderer');
+
+      let peleDestroyed = false;
+      let lastPeleSource = '';
+      const fakeMounted = {
+        source: '',
+        result: { svg: '<svg></svg>' },
+        update(src) {
+          this.source = String(src ?? '');
+          lastPeleSource = this.source;
+        },
+        refresh() {},
+        destroy() {
+          peleDestroyed = true;
+        },
+      };
+      const fakePele = {
+        mount(host, source, _opts) {
+          host.appendChild?.(makeUiNode('div'));
+          fakeMounted.source = String(source ?? '');
+          lastPeleSource = fakeMounted.source;
+          return fakeMounted;
+        },
+      };
+      const peleHost = makeUiNode('div');
+      peleHost.clientWidth = 320;
+      peleHost.clientHeight = 200;
+      let peleReady = false;
+      const peleView = ui.PeleView({
+        height: 200,
+        source: 'flowchart LR\n  A-->B',
+        pele: fakePele,
+        onReady() {
+          peleReady = true;
+        },
+      });
+      await peleView.mount(peleHost);
+      await new Promise((r) => setTimeout(r, 0));
+      assert(String(peleView.ids().gdPeleRoot?.className || '').includes('gd-pele'), 'PeleView root class');
+      assert(peleReady, 'PeleView onReady called');
+      assert(peleView.getMounted() === fakeMounted, 'PeleView.getMounted');
+      assert(peleView.getResult()?.svg === '<svg></svg>', 'PeleView.getResult');
+      assert(lastPeleSource.includes('A-->B'), 'PeleView mounts with source');
+      peleView.setSource('sequenceDiagram\n  A->>B: hi');
+      assert(lastPeleSource.includes('sequenceDiagram'), 'PeleView.setSource updates');
+      peleView.unmount();
+      assert(peleDestroyed, 'PeleView destroys mounted diagram');
 
       if (prevRaf) globalThis.requestAnimationFrame = prevRaf;
       else delete globalThis.requestAnimationFrame;

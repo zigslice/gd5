@@ -61,6 +61,7 @@ Primitives return **real-DOM `Element`s**. Overlay widgets are **`Component`s** 
 | ECharts embed | `EChart`, `EChartView`, `createEChart`, `loadEcharts` | **Component** (CDN) |
 | three.js 3D | `ThreeView`, `ThreeScene`, `createThreeView`, `loadThree` | **Component** (CDN) |
 | Spark.js GS | `SparkView`, `SplatView`, `createSparkView`, `loadSpark` | **Component** (CDN) |
+| Pele Mermaid | `PeleView`, `MermaidView`, `createPeleView`, `loadPele` | **Component** (CDN) |
 | Chat Bubble | `ChatBubble` | primitive |
 | Combobox | `Combobox` | primitive |
 | Command Palette | `CommandPalette` | **Component** |
@@ -318,6 +319,33 @@ this.ensureShell((ids) => ids.root, ({ div }) => {
 - `SparkView({ url, onReady, onFrame, autoRotate, spark, three })` — `getContext()` / `getSpark()` / `getSplat()`
 - Upstream: [sparkjsdev/spark](https://github.com/sparkjsdev/spark)
 - Demo: [`examples/spark-demo.html`](../examples/spark-demo.html)
+
+## PeleView
+
+Thin host for **[Pele](https://pele.run/)** ([obsidianmd/pele](https://github.com/obsidianmd/pele)) — Mermaid → themeable SVG. Same nesting as `TodoList`. Not a core dep.
+
+```js
+import { PeleView } from './src/ui/index.js';
+
+this.ensureShell((ids) => ids.root, ({ div }) => {
+  div(
+    { id: 'root' },
+    PeleView({
+      height: 280,
+      source: `flowchart LR
+  A[Ask] --> B[Plan] --> C[Ship]`,
+      onReady({ mounted, result }) {
+        // mounted.update(nextSource)
+      },
+    })
+  );
+});
+```
+
+- `PeleView({ source, onReady, onError, options, pele, zoom })` — `setSource()` / `getMounted()` / `getResult()`
+- CSS maps `--gd-*` → `--pele-*` on `.gd-pele`
+- Upstream: [obsidianmd/pele](https://github.com/obsidianmd/pele)
+- Demo: [`examples/pele-demo.html`](../examples/pele-demo.html)
 
 ## Cover Flow
 
