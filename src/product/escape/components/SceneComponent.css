@@ -152,23 +152,36 @@
 
 .escape-scene__prop--lamp {
   left: 14%;
-  top: 40%;
-  width: 8%;
-  height: 22%;
-  background: #2a241c;
-  clip-path: polygon(30% 0, 70% 0, 100% 100%, 0 100%);
-  opacity: 0.85;
+  top: 42%;
+  width: 9%;
+  height: 20%;
+  background: #4a3a28;
+  clip-path: polygon(28% 8%, 72% 8%, 100% 100%, 0 100%);
+  opacity: 1;
+  box-shadow: 0 0 0 1px rgba(243, 214, 176, 0.2);
+}
+
+.escape-scene__prop--lamp::before {
+  content: '';
+  position: absolute;
+  left: 42%;
+  top: -22%;
+  width: 16%;
+  height: 28%;
+  background: #5a4a38;
+  border-radius: 2px;
 }
 
 .escape-scene__prop--lamp::after {
   content: '';
   position: absolute;
-  left: 20%;
-  right: 20%;
-  top: -18%;
-  height: 28%;
-  background: #3a3428;
-  border-radius: 4px 4px 0 0;
+  left: 12%;
+  right: 12%;
+  top: -8%;
+  height: 22%;
+  background: #6a5a42;
+  border-radius: 3px 3px 0 0;
+  box-shadow: 0 0 8px rgba(255, 180, 80, 0.15);
 }
 
 .escape-scene__prop--lamp.is-on {
