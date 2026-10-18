@@ -108,7 +108,8 @@ Primitives return **real-DOM `Element`s**. Overlay widgets are **`Component`s** 
 | Markdown editor | `MarkdownEditor`, `createMarkdownEditor`, `renderMarkdown` | **Component** |
 | Truncation | `Truncate` | primitive |
 | Typography | `Title`, `Text` | primitive |
-| Button | `Button` | primitive |
+| Button | `Button` (`loading`) | primitive |
+| Loading Button | `LoadingButton`, `AsyncButton`, `createLoadingButton` | **Component** |
 
 ### Ant Design coverage (gap fill)
 
@@ -189,6 +190,28 @@ DiffBlock({
 })
 
 parseDiffLines(diff) // → [{ type, text, oldLine, newLine, marker, raw }, …]
+```
+
+## Loading Button
+
+Async **Loading Button**：点击后进入 busy（换色 + 散点/转圈），期间忽略重复点击；Promise 结束后恢复纯文本。受控也可用 `Button({ loading: true })`。
+
+```js
+import { LoadingButton, Button } from './src/ui/index.js';
+
+const btn = new LoadingButton({
+  text: 'Save',
+  loadingText: 'Saving',
+  type: 'default',
+  loadingType: 'primary',
+  indicator: 'dots', // or 'spin'
+  onClick: async () => {
+    await fetch('/api/save', { method: 'POST' });
+  },
+});
+await btn.mount(host);
+
+Button({ type: 'primary', text: 'Wait', loading: true, indicator: 'spin' })
 ```
 
 ## To-dos
