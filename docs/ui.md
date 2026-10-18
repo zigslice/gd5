@@ -56,6 +56,7 @@ Primitives return **real-DOM `Element`s**. Overlay widgets are **`Component`s** 
 | Breadcrumbs | `Breadcrumbs` | primitive |
 | Card | `Card` | primitive |
 | Carousel / Page Control | `Carousel`, `PageControl` | primitive |
+| Cover Flow (封面流) | `CoverFlow`, `CoverflowCarousel`, `createCoverFlow` | **Component** |
 | Chat Bubble | `ChatBubble` | primitive |
 | Combobox | `Combobox` | primitive |
 | Command Palette | `CommandPalette` | **Component** |
@@ -188,6 +189,27 @@ DiffBlock({
 
 parseDiffLines(diff) // → [{ type, text, oldLine, newLine, marker, raw }, …]
 ```
+
+## Cover Flow
+
+**Cover Flow（封面流）** — the Apple / game character-select pattern: the active card faces forward in the center; neighbors are smaller, perspective-tilted, and stacked. Also called coverflow carousel / 3D card carousel (Swiper: `effect: 'coverflow'`).
+
+```js
+import { CoverFlow } from './src/ui/index.js';
+
+const cf = new CoverFlow({
+  height: 300,
+  items: [
+    { key: 'knight', title: 'Knight', subtitle: 'Tank', color: '#4a5568' },
+    { key: 'mage', title: 'Mage', subtitle: 'Caster', color: '#6b46c1' },
+  ],
+  onChange: (i, item) => console.log(i, item),
+});
+await cf.mount(host);
+cf.next(); // or cf.prev() / cf.setIndex(1)
+```
+
+Drag the stage, use arrows / dots, or click a side card. Keyboard: ← →.
 
 ## Markdown editor
 

@@ -84,6 +84,13 @@ export { Timeline } from './timeline.js';
 export { ChatBubble } from './chat.js';
 export { Carousel } from './carousel.js';
 export {
+  CoverFlow,
+  Coverflow,
+  CoverflowCarousel,
+  createCoverFlow,
+  normalizeCoverFlowItems,
+} from './CoverFlow.js';
+export {
   BentoGrid,
   BentoTile,
   Masonry,

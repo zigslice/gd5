@@ -93,6 +93,8 @@ section('layout: product vs engine');
     'src/ui/css/code-block.css',
     'src/ui/markdown.js',
     'src/ui/css/markdown-editor.css',
+    'src/ui/CoverFlow.js',
+    'src/ui/css/coverflow.css',
     'src/ui/input-number.js',
     'src/ui/rate.js',
     'src/ui/cascader.js',
@@ -887,6 +889,22 @@ section('ui kit');
   assert(typeof ui.MarkdownEditor === 'function', 'MarkdownEditor exported');
   assert(typeof ui.renderMarkdown === 'function', 'renderMarkdown exported');
   assert(typeof ui.createMarkdownEditor === 'function', 'createMarkdownEditor exported');
+  assert(typeof ui.CoverFlow === 'function', 'CoverFlow exported');
+  assert(ui.CoverflowCarousel === ui.CoverFlow, 'CoverflowCarousel aliases CoverFlow');
+  assert(typeof ui.normalizeCoverFlowItems === 'function', 'normalizeCoverFlowItems exported');
+  {
+    const items = ui.normalizeCoverFlowItems(['A', { key: 'b', title: 'Bee', subtitle: 'x' }]);
+    assert(items.length === 2 && items[0].title === 'A' && items[1].key === 'b', 'normalizeCoverFlowItems shapes items');
+    const cf = new ui.CoverFlow({ items: ['one', 'two', 'three'], index: 1 });
+    assert(cf.getIndex() === 1, 'CoverFlow initial index');
+    assert(cf.getActiveItem()?.title === 'two', 'CoverFlow active item');
+    cf.next();
+    assert(cf.getIndex() === 2, 'CoverFlow.next advances');
+    cf.next();
+    assert(cf.getIndex() === 0, 'CoverFlow loops by default');
+    cf.setIndex(1);
+    assert(cf.getIndex() === 1, 'CoverFlow.setIndex');
+  }
   {
     const html = ui.renderMarkdown(
       '# Title\n\nHello **world** and *it*.\n\n- a\n- b\n\n```js\nconst x = 1;\n```\n\n> quote\n\n[link](https://example.com)\n'
@@ -1005,7 +1023,7 @@ section('ui kit');
     'StatusDot', 'Collapse', 'ToggleGroup', 'Steps', 'Pagination', 'Navbar', 'SiteHeader',
     'BottomNav', 'Sidebar', 'Toolbar', 'Tooltip', 'Popover', 'DropdownMenu', 'HoverCard',
     'Combobox', 'TagInput', 'MultiSelect', 'Transfer', 'Slider', 'ColorWell', 'DatePicker',
-    'Timeline', 'ChatBubble', 'Carousel', 'BentoGrid', 'Marquee', 'Fab', 'Lightbox',
+    'Timeline', 'ChatBubble', 'Carousel', 'CoverFlow', 'BentoGrid', 'Marquee', 'Fab', 'Lightbox',
     'PieChart', 'DonutChart', 'SearchInput', 'SignInForm', 'Truncate', 'Splitter',
     'InputNumber', 'Rate', 'Cascader', 'Upload', 'Mentions', 'TreeSelect', 'Form', 'FormItem',
     'List', 'Descriptions', 'Statistic', 'Calendar', 'Image', 'Result', 'Popconfirm',
@@ -1023,6 +1041,7 @@ section('ui kit');
   assert(docs.includes('Ant Design') || docs.includes('ant.design'), 'docs reference Ant Design');
   assert(docs.includes('DiffBlock') && docs.includes('parseDiffLines'), 'docs cover DiffBlock');
   assert(docs.includes('MarkdownEditor') && docs.includes('renderMarkdown'), 'docs cover MarkdownEditor');
+  assert(docs.includes('CoverFlow') && docs.includes('封面流'), 'docs cover CoverFlow');
 
   const listeners = [];
   globalThis.document = {
