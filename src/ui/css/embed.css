@@ -1,10 +1,11 @@
 /**
- * EChart / ThreeView / SparkView — third-party embed hosts.
+ * EChart / ThreeView / SparkView / PeleView — third-party embed hosts.
  */
 
 .gd-echart,
 .gd-three,
-.gd-spark {
+.gd-spark,
+.gd-pele {
   box-sizing: border-box;
   position: relative;
   min-width: 0;
@@ -21,7 +22,8 @@
 
 .gd-echart__host,
 .gd-three__host,
-.gd-spark__host {
+.gd-spark__host,
+.gd-pele__host {
   box-sizing: border-box;
   width: 100%;
   height: 100%;
@@ -34,7 +36,8 @@
   height: 100% !important;
 }
 
-.gd-spark__error {
+.gd-spark__error,
+.gd-pele__error {
   box-sizing: border-box;
   display: flex;
   align-items: center;
@@ -42,7 +45,38 @@
   width: 100%;
   height: 100%;
   padding: 1rem;
-  color: #f5f5f4;
   font: 13px/1.4 system-ui, sans-serif;
   text-align: center;
+}
+
+.gd-spark__error {
+  color: #f5f5f4;
+}
+
+.gd-pele__error {
+  color: var(--gd-text-secondary, #6b7c8d);
+}
+
+/* Map gd5 tokens → Pele CSS variables */
+.gd-pele.pele,
+.gd-pele .pele,
+.gd-pele__host.pele {
+  --pele-bg: var(--gd-bg-elevated, #fff);
+  --pele-fg: var(--gd-text, #1a2330);
+  --pele-muted: var(--gd-text-secondary, #6b7c8d);
+  --pele-line: var(--gd-border-strong, #3d4d60);
+  --pele-surface: var(--gd-bg, #f7f4ef);
+  --pele-surface-alt: var(--gd-bg-muted, #ebe6de);
+  --pele-border: var(--gd-border, #e8e4df);
+  --pele-accent: var(--gd-primary, #e86a17);
+  --pele-font: var(--gd-font, system-ui, sans-serif);
+  --pele-radius: 8px;
+  --pele-error: var(--gd-danger, #c23b22);
+}
+
+.gd-pele__host svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
 }

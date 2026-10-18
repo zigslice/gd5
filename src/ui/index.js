@@ -128,6 +128,15 @@ export {
   DEFAULT_SPARK_THREE_URL,
 } from './SparkView.js';
 export {
+  PeleView,
+  PeleViewView,
+  MermaidView,
+  createPeleView,
+  loadPele,
+  DEFAULT_PELE_URL,
+  DEFAULT_PELE_SOURCE,
+} from './PeleView.js';
+export {
   BentoGrid,
   BentoTile,
   Masonry,

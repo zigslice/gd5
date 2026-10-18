@@ -128,6 +128,7 @@ import {
   EChart,
   ThreeView,
   SparkView,
+  PeleView,
   LoadingButton,
   themes,
   setTheme,
@@ -634,6 +635,22 @@ class GalleryPage extends Component {
                 url: 'https://sparkjs.dev/assets/splats/butterfly.spz',
                 background: 0x0c0c0c,
                 autoRotate: true,
+              })
+            )
+          ),
+
+          this.section(
+            'PeleView',
+            Space(
+              { direction: 'vertical', size: 'sm' },
+              Text({
+                type: 'secondary',
+                text: 'Pele (obsidianmd/pele) — Mermaid→SVG, CDN ESM, CSS vars mapped to gd tokens.',
+              }),
+              PeleView({
+                height: 220,
+                source: `flowchart LR
+  A[Ask] --> B[Plan] --> C[Ship]`,
               })
             )
           ),
