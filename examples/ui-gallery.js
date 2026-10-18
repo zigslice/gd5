@@ -127,6 +127,7 @@ import {
   nextTodoStatus,
   EChart,
   ThreeView,
+  SparkView,
   LoadingButton,
   themes,
   setTheme,
@@ -617,6 +618,23 @@ class GalleryPage extends Component {
                 },
               }),
               ThreeView({ height: 240, background: 0xf7f4ef })
+            )
+          ),
+
+          this.section(
+            'SparkView',
+            Space(
+              { direction: 'vertical', size: 'sm' },
+              Text({
+                type: 'secondary',
+                text: 'Spark.js Gaussian Splatting (@sparkjsdev/spark 2.x) — CDN + importmap; antialias off; loads butterfly.spz.',
+              }),
+              SparkView({
+                height: 280,
+                url: 'https://sparkjs.dev/assets/splats/butterfly.spz',
+                background: 0x0c0c0c,
+                autoRotate: true,
+              })
             )
           ),
 

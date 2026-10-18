@@ -72,7 +72,7 @@ render() {
 ## Skill：产品页要薄，靠 Component 组合
 
 - 页面与页内模块**都是** `extends Component`
-- 子组件就地写进树（不必先 `this.x = new X`）：`TodoList({…})` / `EChart({…})` / `ThreeView({…})` / `h(CoverFlow, {…})`
+- 子组件就地写进树（不必先 `this.x = new X`）：`TodoList({…})` / `EChart({…})` / `ThreeView({…})` / `SparkView({…})` / `h(CoverFlow, {…})`
 - 子组件自行 `setData` / `refresh`；父 `unmount` 会卸组合子组件
 - 一组件一事：Toolbar / Palette / Artboard / Inspector
 - 画布 kind 用 `nodes/*` 注册表，禁止在 Editor 里 `switch (kind)`
