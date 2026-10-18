@@ -103,6 +103,19 @@ export {
   nextTodoStatus,
 } from './todo.js';
 export {
+  EChart,
+  EChartView,
+  createEChart,
+  loadEcharts,
+} from './EChart.js';
+export {
+  ThreeView,
+  ThreeViewView,
+  ThreeScene,
+  createThreeView,
+  loadThree,
+} from './ThreeView.js';
+export {
   BentoGrid,
   BentoTile,
   Masonry,

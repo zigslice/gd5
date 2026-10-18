@@ -43,11 +43,13 @@ div(
   { id: 'root' },
   h1({ text: 'Hi' }),
   TodoList({ items }),           // factory → Component（有 .dom()）
+  EChart({ option }),            // 同上：ECharts 嵌入
+  ThreeView({ onInit }),         // 同上：three.js 3D
   h(CoverFlow, { items }),       // Component class ≈ React createElement
 );
 ```
 
-`ensureShell` 只建一次，就地 `TodoList({…})` 也只创建一次。引擎插入 `display: contents` 宿主再 `mount`。
+`ensureShell` 只建一次，就地 `TodoList({…})` / `EChart` / `ThreeView` 也只创建一次。引擎插入 `display: contents` 宿主再 `mount`。
 
 ## 写组件时怎么少踩坑
 

@@ -58,6 +58,8 @@ Primitives return **real-DOM `Element`s**. Overlay widgets are **`Component`s** 
 | Carousel / Page Control | `Carousel`, `PageControl` | primitive |
 | Cover Flow (封面流) | `CoverFlow`, `CoverflowCarousel`, `createCoverFlow` | **Component** |
 | To-dos | `TodoList`, `Todos`, `createTodoList`, `normalizeTodoItems` | **Component** |
+| ECharts embed | `EChart`, `EChartView`, `createEChart`, `loadEcharts` | **Component** (CDN) |
+| three.js 3D | `ThreeView`, `ThreeScene`, `createThreeView`, `loadThree` | **Component** (CDN) |
 | Chat Bubble | `ChatBubble` | primitive |
 | Combobox | `Combobox` | primitive |
 | Command Palette | `CommandPalette` | **Component** |
@@ -250,6 +252,44 @@ this.ensureShell((ids) => ids.root, ({ div }) => {
 Component classes use `h(CoverFlow, { items })` the same way (`h` ≈ React `createElement`).
 
 Statuses: `pending` · `active` (`in_progress`) · `done` (`completed`).
+
+## EChart / ThreeView
+
+Thin hosts for **ECharts** and **three.js** (3D). Same nesting as `TodoList` — call in the tree; libraries load once from CDN ESM (or inject your own module). Not core deps.
+
+```js
+import { EChart, ThreeView } from './src/ui/index.js';
+
+this.ensureShell((ids) => ids.root, ({ div }) => {
+  div(
+    { id: 'root' },
+    EChart({
+      height: 280,
+      option: {
+        xAxis: { type: 'category', data: ['Mon', 'Tue', 'Wed'] },
+        yAxis: { type: 'value' },
+        series: [{ type: 'bar', data: [12, 18, 9] }],
+      },
+    }),
+    ThreeView({
+      height: 320,
+      onInit({ THREE, scene }) {
+        scene.add(
+          new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshNormalMaterial())
+        );
+      },
+      onFrame(dt, { scene }) {
+        const mesh = scene.children.find((c) => c.isMesh);
+        if (mesh) mesh.rotation.y += dt;
+      },
+    })
+  );
+});
+```
+
+- `EChart({ option, height, onReady, echarts })` — `getChart()` / `setOption()` / `resize()`
+- `ThreeView({ onInit, onFrame, three, background })` — `getContext()`; `onInit` may return a dispose fn
+- Demo: [`examples/embed-demo.html`](../examples/embed-demo.html)
 
 ## Cover Flow
 
