@@ -57,6 +57,7 @@ Primitives return **real-DOM `Element`s**. Overlay widgets are **`Component`s** 
 | Card | `Card` | primitive |
 | Carousel / Page Control | `Carousel`, `PageControl` | primitive |
 | Cover Flow (封面流) | `CoverFlow`, `CoverflowCarousel`, `createCoverFlow` | **Component** |
+| To-dos | `TodoList`, `Todos`, `normalizeTodoItems` | primitive |
 | Chat Bubble | `ChatBubble` | primitive |
 | Combobox | `Combobox` | primitive |
 | Command Palette | `CommandPalette` | **Component** |
@@ -189,6 +190,28 @@ DiffBlock({
 
 parseDiffLines(diff) // → [{ type, text, oldLine, newLine, marker, raw }, …]
 ```
+
+## To-dos
+
+Cursor-style checklist card: header title + `done/total`, active item with filled arrow disc, pending with dashed ring, done with check.
+
+```js
+import { TodoList, nextTodoStatus } from './src/ui/index.js';
+
+TodoList({
+  title: 'To-dos',
+  items: [
+    { key: '1', text: 'Ship LoadingButton', status: 'active' },
+    { key: '2', text: 'Write docs', status: 'pending' },
+    { key: '3', text: 'Open PR', status: 'pending' },
+  ],
+  onItemClick: (item, i) => {
+    items[i].status = nextTodoStatus(item.status);
+  },
+})
+```
+
+Statuses: `pending` · `active` (`in_progress`) · `done` (`completed`).
 
 ## Cover Flow
 

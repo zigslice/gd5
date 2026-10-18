@@ -121,6 +121,8 @@ import {
   DiffBlock,
   MarkdownEditor,
   CoverFlow,
+  TodoList,
+  nextTodoStatus,
   themes,
   setTheme,
   getTheme,
@@ -171,6 +173,15 @@ class GalleryPage extends Component {
       popconfirmOpen: false,
       anchorKey: 'antd',
       theme: 'orange',
+      todos: [
+        {
+          key: '1',
+          text: 'Add Button loading + LoadingButton with dots/spin',
+          status: 'active',
+        },
+        { key: '2', text: 'CSS, gallery, docs, tests, demo', status: 'pending' },
+        { key: '3', text: 'Commit, push, open PR', status: 'pending' },
+      ],
     };
     this.modal = new Modal({});
     this.drawer = new Drawer({});
@@ -559,6 +570,27 @@ class GalleryPage extends Component {
                   { key: 'search', label: 'Search', icon: '⌕' },
                   { key: 'me', label: 'Me', icon: '☺' },
                 ],
+              })
+            )
+          ),
+
+          this.section(
+            'To-dos',
+            Space(
+              { direction: 'vertical', size: 'sm' },
+              Text({
+                type: 'secondary',
+                text: 'TodoList — active arrow · pending dashed ring · done check. Click a row to cycle status.',
+              }),
+              TodoList({
+                title: 'To-dos',
+                items: d.todos,
+                onItemClick: (item, index) => {
+                  const todos = d.todos.map((t, i) =>
+                    i === index ? { ...t, status: nextTodoStatus(t.status) } : t
+                  );
+                  this.setData({ todos });
+                },
               })
             )
           ),
