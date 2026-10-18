@@ -6,7 +6,7 @@
 |----|------|------|
 | **引擎 (Engine)** | `src/engine/` | 迷你实模式 DOM 运行时：`Component` / `ComponentRender` / `D` / `LogProvider` |
 | **组件库 (UI)** | `src/ui/` | 对标 antd 的常用组件（Button / Input / Modal…），默认**橙色主色 + 白色面板** |
-| **产品 (Product)** | `src/product/` | 示例应用 ProtoLive（可用引擎 + UI 库） |
+| **产品 (Product)** | `src/product/` | 示例应用：ProtoLive + Coding Agent（可用引擎 + UI 库） |
 
 ```
 src/engine  ──►  src/ui（组件库）
@@ -24,6 +24,15 @@ skills/blocks ──► product components (extends engine.Component)
           ▼           ▼           ▼
      页面 Component   子 Component.mount(host)
     (ComponentRender)  Toolbar/Palette/Artboard/Inspector
+```
+
+Coding Agent（`src/product/agent/`，入口 `agent.html`）同样结构，但面板换成 IDE：
+
+```
+agent store ──► Workspace / Settings pages
+                   │
+     FileTree · CodePane · AgentChat · AgentSide · Toolbar
+     (+ UI: Tree, CodeBlock, DiffBlock, TodoList, ChatBubble, CommandPalette)
 ```
 
 ## 引擎
@@ -51,11 +60,15 @@ skills/blocks ──► product components (extends engine.Component)
 ```
 src/engine/
 src/product/
-  components/   # FooComponent.js + FooComponent.css 旁挂
+  components/   # ProtoLive: FooComponent.js + FooComponent.css 旁挂
   nodes/        # 画布 kind
   lib/
   css/          # 仅 tokens.css + base.css（全局）
-  main.js
+  main.js       # ProtoLive boot
+  agent/        # Coding Agent product demo
+    main.js
+    components/
+    lib/
 ```
 
 组件私有样式不进 `css/app.css`；共享控件（`.btn` / `.field`）放 `base.css`。
