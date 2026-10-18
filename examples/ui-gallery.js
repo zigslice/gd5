@@ -125,6 +125,8 @@ import {
   CoverFlow,
   TodoList,
   nextTodoStatus,
+  EChart,
+  ThreeView,
   LoadingButton,
   themes,
   setTheme,
@@ -593,6 +595,28 @@ class GalleryPage extends Component {
                   );
                 },
               })
+            )
+          ),
+
+          this.section(
+            'EChart / ThreeView',
+            Space(
+              { direction: 'vertical', size: 'sm' },
+              Text({
+                type: 'secondary',
+                text: 'Third-party embeds — ECharts + three.js 3D, nested like TodoList (CDN ESM, not core deps).',
+              }),
+              EChart({
+                height: 220,
+                option: {
+                  color: ['#e86a17'],
+                  grid: { left: 36, right: 12, top: 16, bottom: 28 },
+                  xAxis: { type: 'category', data: ['A', 'B', 'C', 'D', 'E'] },
+                  yAxis: { type: 'value' },
+                  series: [{ type: 'bar', data: [4, 7, 3, 9, 6], barWidth: '50%' }],
+                },
+              }),
+              ThreeView({ height: 240, background: 0xf7f4ef })
             )
           ),
 

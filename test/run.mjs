@@ -120,6 +120,8 @@ section('layout: product vs engine');
     'examples/ui-gallery.css',
     'examples/todo-demo.html',
     'examples/todo-demo.js',
+    'examples/embed-demo.html',
+    'examples/embed-demo.js',
     'examples/code-block-demo.html',
     'examples/code-block-demo.js',
     'examples/markdown-editor-demo.html',
@@ -128,6 +130,9 @@ section('layout: product vs engine');
     'examples/coverflow-demo.js',
     'examples/loading-button-demo.html',
     'examples/loading-button-demo.js',
+    'src/ui/EChart.js',
+    'src/ui/ThreeView.js',
+    'src/ui/css/embed.css',
     'src/engine/styles.js',
     'src/product/css/tokens.css',
     'src/product/css/base.css',
@@ -1011,6 +1016,14 @@ section('ui kit');
   assert(typeof ui.TodoList === 'function', 'TodoList exported');
   assert(ui.Todos === ui.TodoList, 'Todos aliases TodoList');
   assert(typeof ui.createTodoList === 'function', 'createTodoList exported');
+  assert(typeof ui.EChart === 'function', 'EChart exported');
+  assert(typeof ui.EChartView === 'function', 'EChartView exported');
+  assert(typeof ui.createEChart === 'function', 'createEChart exported');
+  assert(typeof ui.loadEcharts === 'function', 'loadEcharts exported');
+  assert(typeof ui.ThreeView === 'function', 'ThreeView exported');
+  assert(ui.ThreeScene === ui.ThreeView, 'ThreeScene aliases ThreeView');
+  assert(typeof ui.createThreeView === 'function', 'createThreeView exported');
+  assert(typeof ui.loadThree === 'function', 'loadThree exported');
   {
     const items = ui.normalizeTodoItems([
       { text: 'A', status: 'in_progress' },
@@ -1034,6 +1047,12 @@ section('ui kit');
     todos.setItems([{ text: 'Only', status: 'pending' }]);
     assert(todos.getItems().length === 1 && todos.getProgress().done === 0, 'TodoList.setItems');
     assert(typeof ui.TodoListView === 'function', 'TodoListView class exported');
+    const chart = ui.EChart({ option: { series: [] }, height: 200 });
+    assert(typeof chart.mount === 'function' && typeof chart.dom === 'function', 'EChart() returns Component');
+    assert(typeof chart.setOption === 'function' && typeof chart.getChart === 'function', 'EChart API');
+    const three = ui.ThreeView({ height: 200 });
+    assert(typeof three.mount === 'function' && typeof three.dom === 'function', 'ThreeView() returns Component');
+    assert(typeof three.getContext === 'function', 'ThreeView.getContext');
   }
   {
     const items = ui.normalizeCoverFlowItems(['A', { key: 'b', title: 'Bee', subtitle: 'x' }]);
@@ -1167,7 +1186,7 @@ section('ui kit');
     'BottomNav', 'Sidebar', 'Toolbar', 'Tooltip', 'Popover', 'DropdownMenu', 'HoverCard',
     'Combobox', 'TagInput', 'MultiSelect', 'Transfer', 'Slider', 'ColorWell', 'DatePicker',
     'Timeline', 'ChatBubble', 'Carousel', 'CoverFlow', 'BentoGrid', 'Marquee', 'Fab', 'Lightbox',
-    'PieChart', 'DonutChart', 'SearchInput', 'SignInForm', 'Truncate', 'Splitter',
+    'EChart', 'ThreeView', 'PieChart', 'DonutChart', 'SearchInput', 'SignInForm', 'Truncate', 'Splitter',
     'InputNumber', 'Rate', 'Cascader', 'Upload', 'Mentions', 'TreeSelect', 'Form', 'FormItem',
     'List', 'Descriptions', 'Statistic', 'Calendar', 'Image', 'Result', 'Popconfirm',
     'Notification', 'Watermark', 'Flex', 'Row', 'Col', 'Layout', 'Menu', 'Affix', 'Anchor',
@@ -1187,6 +1206,8 @@ section('ui kit');
   assert(docs.includes('CoverFlow') && docs.includes('封面流'), 'docs cover CoverFlow');
   assert(docs.includes('TodoList') && docs.includes('To-dos'), 'docs cover TodoList');
   assert(docs.includes('setItems') && docs.includes('TodoList({'), 'docs show inline TodoList({…}) composition');
+  assert(docs.includes('EChart') && docs.includes('ThreeView'), 'docs cover EChart / ThreeView');
+  assert(docs.includes('three.js'), 'docs mention three.js 3D');
   assert(docs.includes('LoadingButton') && docs.includes('Loading Button'), 'docs cover LoadingButton');
   assert(docs.includes('demoApp.js'), 'docs mention demoApp bootstrap');
 
@@ -1194,6 +1215,7 @@ section('ui kit');
     const demos = [
       'examples/ui-gallery.html',
       'examples/todo-demo.html',
+      'examples/embed-demo.html',
       'examples/code-block-demo.html',
       'examples/markdown-editor-demo.html',
       'examples/coverflow-demo.html',
@@ -1213,8 +1235,14 @@ section('ui kit');
     assert(!todoDemo.includes('this.todoList'), 'todo-demo does not pre-new on this');
     assert(!todoDemo.includes('replaceChildren'), 'todo-demo does not use replaceChildren');
     assert(!todoDemo.includes('_mountedTodo'), 'todo-demo has no mount flag');
+    const embedDemo = readFileSync(join(root, 'examples/embed-demo.js'), 'utf8');
+    assert(embedDemo.includes('EChart({'), 'embed-demo composes EChart({…}) inline');
+    assert(embedDemo.includes('ThreeView({'), 'embed-demo composes ThreeView({…}) inline');
+    assert(!embedDemo.includes('this.echart') && !embedDemo.includes('this.three'), 'embed-demo does not pre-new embeds on this');
+    assert(!embedDemo.includes('replaceChildren'), 'embed-demo does not use replaceChildren');
     const gallerySrc = readFileSync(join(root, 'examples/ui-gallery.js'), 'utf8');
     assert(gallerySrc.includes('TodoList({'), 'gallery composes TodoList({…}) inline');
+    assert(gallerySrc.includes('EChart({') && gallerySrc.includes('ThreeView({'), 'gallery composes EChart/ThreeView inline');
     assert(!gallerySrc.includes('this.todoList'), 'gallery does not pre-new TodoList on this');
     assert(!gallerySrc.includes('replaceChildren'), 'gallery does not use replaceChildren');
     const engineApi = readFileSync(join(root, 'docs/api.md'), 'utf8');
@@ -1398,6 +1426,84 @@ section('ui kit');
         ),
         'TodoList progress shows done/total'
       );
+    }
+
+    // EChart / ThreeView — shell + injected libs (no CDN in tests)
+    {
+      const prevRaf = globalThis.requestAnimationFrame;
+      const prevCaf = globalThis.cancelAnimationFrame;
+      globalThis.requestAnimationFrame = (cb) => setTimeout(() => cb(Date.now()), 0);
+      globalThis.cancelAnimationFrame = (id) => clearTimeout(id);
+
+      const fakeChart = { option: null, disposed: false, setOption(o) { this.option = o; }, resize() {}, dispose() { this.disposed = true; } };
+      const fakeEcharts = { init() { return fakeChart; } };
+      const chartHost = makeUiNode('div');
+      chartHost.clientWidth = 320;
+      chartHost.clientHeight = 200;
+      const chart = ui.EChart({
+        height: 200,
+        option: { series: [{ type: 'bar', data: [1, 2] }] },
+        echarts: fakeEcharts,
+      });
+      await chart.mount(chartHost);
+      await new Promise((r) => setTimeout(r, 0));
+      assert(String(chart.ids().gdEchartRoot?.className || '').includes('gd-echart'), 'EChart root class');
+      assert(chart.getChart() === fakeChart, 'EChart inits with injected echarts');
+      chart.setOption({ series: [{ type: 'line', data: [3] }] });
+      assert(fakeChart.option?.series?.[0]?.type === 'line', 'EChart.setOption forwards');
+
+      const fakeScene = { children: [], add(obj) { this.children.push(obj); } };
+      const fakeTHREE = {
+        Scene: class { constructor() { return fakeScene; } },
+        PerspectiveCamera: class {
+          constructor() { this.position = { set() {} }; this.aspect = 1; }
+          updateProjectionMatrix() {}
+        },
+        WebGLRenderer: class {
+          constructor() {
+            this.domElement = makeUiNode('canvas');
+            this.domElement.remove = () => {};
+          }
+          setPixelRatio() {}
+          setSize() {}
+          setClearColor() {}
+          render() {}
+          dispose() {}
+        },
+        DirectionalLight: class { constructor() { this.position = { set() {} }; } },
+        AmbientLight: class {},
+        BoxGeometry: class {},
+        MeshStandardMaterial: class {},
+        Mesh: class {
+          constructor() {
+            this.isMesh = true;
+            this.rotation = { x: 0, y: 0 };
+            this.geometry = { dispose() {} };
+            this.material = { dispose() {} };
+          }
+        },
+      };
+      const threeHost = makeUiNode('div');
+      threeHost.clientWidth = 320;
+      threeHost.clientHeight = 200;
+      let inited = false;
+      const three = ui.ThreeView({
+        height: 200,
+        three: fakeTHREE,
+        onInit() { inited = true; },
+        onFrame() {},
+      });
+      await three.mount(threeHost);
+      await new Promise((r) => setTimeout(r, 0));
+      assert(String(three.ids().gdThreeRoot?.className || '').includes('gd-three'), 'ThreeView root class');
+      assert(inited, 'ThreeView onInit called');
+      assert(three.getContext().THREE === fakeTHREE, 'ThreeView context exposes THREE');
+      three.unmount();
+
+      if (prevRaf) globalThis.requestAnimationFrame = prevRaf;
+      else delete globalThis.requestAnimationFrame;
+      if (prevCaf) globalThis.cancelAnimationFrame = prevCaf;
+      else delete globalThis.cancelAnimationFrame;
     }
 
     const diff = ui.DiffBlock({
