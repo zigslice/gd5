@@ -57,7 +57,7 @@ Primitives return **real-DOM `Element`s**. Overlay widgets are **`Component`s** 
 | Card | `Card` | primitive |
 | Carousel / Page Control | `Carousel`, `PageControl` | primitive |
 | Cover Flow (封面流) | `CoverFlow`, `CoverflowCarousel`, `createCoverFlow` | **Component** |
-| To-dos | `TodoList`, `Todos`, `normalizeTodoItems` | primitive |
+| To-dos | `TodoList`, `Todos`, `createTodoList`, `normalizeTodoItems` | **Component** |
 | Chat Bubble | `ChatBubble` | primitive |
 | Combobox | `Combobox` | primitive |
 | Command Palette | `CommandPalette` | **Component** |
@@ -144,7 +144,7 @@ Primitives return **real-DOM `Element`s**. Overlay widgets are **`Component`s** 
 
 **Not shipped as components** (CSS motion / vibe, not controls): easing, spring, text scramble, parallax, hover-lift effects, Name That Vibe styles. Use CSS / your app layer.
 
-Live gallery: [`examples/ui-gallery.html`](../examples/ui-gallery.html)
+Live gallery: [`examples/ui-gallery.html`](../examples/ui-gallery.html) (standard gd5 app: `#home` slot + `ComponentRender`). Other demos (`examples/*-demo.html`) use the same bootstrap via [`examples/demoApp.js`](../examples/demoApp.js).
 
 ## Modal / Drawer / Toast
 
@@ -216,23 +216,38 @@ Button({ type: 'primary', text: 'Wait', loading: true, indicator: 'spin' })
 
 ## To-dos
 
-Cursor-style checklist card: header title + `done/total`, active item with filled arrow disc, pending with dashed ring, done with check.
+Cursor-style checklist card (Component): header title + `done/total`, active item with filled arrow disc, pending with dashed ring, done with check.
+
+Compose like React / like `Button({})` — call in the tree, no pre-`new` on `this`.
 
 ```js
 import { TodoList, nextTodoStatus } from './src/ui/index.js';
 
-TodoList({
-  title: 'To-dos',
-  items: [
-    { key: '1', text: 'Ship LoadingButton', status: 'active' },
-    { key: '2', text: 'Write docs', status: 'pending' },
-    { key: '3', text: 'Open PR', status: 'pending' },
-  ],
-  onItemClick: (item, i) => {
-    items[i].status = nextTodoStatus(item.status);
-  },
-})
+// render — <div><TodoList items={…} /></div>
+this.ensureShell((ids) => ids.root, ({ div }) => {
+  div(
+    { id: 'root' },
+    TodoList({
+      title: 'To-dos',
+      items: [
+        { key: '1', text: 'Ship LoadingButton', status: 'active' },
+        { key: '2', text: 'Write docs', status: 'pending' },
+        { key: '3', text: 'Open PR', status: 'pending' },
+      ],
+      onItemClick(item, i) {
+        // `this` is the TodoList instance
+        this.setItems(
+          this.getItems().map((t, idx) =>
+            idx === i ? { ...t, status: nextTodoStatus(t.status) } : t
+          )
+        );
+      },
+    })
+  );
+});
 ```
+
+Component classes use `h(CoverFlow, { items })` the same way (`h` ≈ React `createElement`).
 
 Statuses: `pending` · `active` (`in_progress`) · `done` (`completed`).
 

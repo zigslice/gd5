@@ -1,8 +1,10 @@
 /**
  * Live gallery for gd5 UI kit — NameThatUI-aligned catalog.
+ * Standard gd5 app: page slot `#home` + ComponentRender (see demoApp.js).
  * Open examples/ui-gallery.html via static server.
  */
 import { Component } from '../src/engine/index.js';
+import { startDemoApp } from './demoApp.js';
 import {
   loadUi,
   Button,
@@ -128,11 +130,11 @@ import {
   setTheme,
   getTheme,
 } from '../src/ui/index.js';
-import { el } from '../src/ui/util.js';
-
 class GalleryPage extends Component {
-  constructor() {
-    super({});
+  static styles = [new URL('./ui-gallery.css', import.meta.url)];
+
+  constructor(deps = {}) {
+    super(deps);
     this.state.data = {
       name: '',
       notify: true,
@@ -174,15 +176,6 @@ class GalleryPage extends Component {
       popconfirmOpen: false,
       anchorKey: 'antd',
       theme: 'orange',
-      todos: [
-        {
-          key: '1',
-          text: 'Add Button loading + LoadingButton with dots/spin',
-          status: 'active',
-        },
-        { key: '2', text: 'CSS, gallery, docs, tests, demo', status: 'pending' },
-        { key: '3', text: 'Commit, push, open PR', status: 'pending' },
-      ],
     };
     this.modal = new Modal({});
     this.drawer = new Drawer({});
@@ -190,51 +183,7 @@ class GalleryPage extends Component {
     this.lightbox = new Lightbox({});
     this.cmd = new CommandPalette({});
     this.notification = new Notification({});
-    this.workflow = new WorkflowDAG({});
-    this._workflowMounted = false;
-    this.jsonTree = new JsonTree({
-      height: 320,
-      defaultExpand: 2,
-      onPath: (path) => this.toast.show({ message: path, type: 'info' }),
-    });
-    this._jsonTreeMounted = false;
-    this.markdownEditor = new MarkdownEditor({
-      height: 280,
-      mode: 'split',
-      value:
-        '# Markdown editor\n\nWrite **bold**, *italic*, and `code`.\n\n- Toolbar wraps selection\n- Switch 编辑 / 分栏 / 预览\n\n```js\nconst ok = true;\n```\n\n> Preview updates as you type.\n',
-      onChange: () => {},
-    });
-    this._markdownMounted = false;
-    this.coverFlow = new CoverFlow({
-      height: 300,
-      index: 2,
-      items: [
-        { key: 'knight', title: 'Knight', subtitle: 'Tank · Iron Order', color: 'linear-gradient(145deg,#4a5568,#1a202c)' },
-        { key: 'mage', title: 'Mage', subtitle: 'Caster · Arcane', color: 'linear-gradient(145deg,#6b46c1,#2b1a4e)' },
-        { key: 'ranger', title: 'Ranger', subtitle: 'Scout · Wildwood', color: 'linear-gradient(145deg,#2f8f5b,#143528)' },
-        { key: 'rogue', title: 'Rogue', subtitle: 'Assassin · Night', color: 'linear-gradient(145deg,#c05621,#3b1d0f)' },
-        { key: 'cleric', title: 'Cleric', subtitle: 'Support · Dawn', color: 'linear-gradient(145deg,#2b6cb0,#1a365d)' },
-      ],
-      onChange: (i, item) => this.toast.show({ message: `Selected ${item.title}`, type: 'info' }),
-    });
-    this._coverFlowMounted = false;
-    this.loadingBtnDots = new LoadingButton({
-      text: 'Save',
-      loadingText: 'Saving',
-      type: 'default',
-      loadingType: 'primary',
-      indicator: 'dots',
-      onClick: () => new Promise((r) => setTimeout(r, 1600)),
-    });
-    this.loadingBtnSpin = new LoadingButton({
-      text: 'Publish',
-      loadingText: 'Publishing',
-      type: 'primary',
-      indicator: 'spin',
-      onClick: () => new Promise((r) => setTimeout(r, 1600)),
-    });
-    this._loadingBtnsMounted = false;
+    // Tree Components are composed inline in ensureShell (like React JSX) — not pre-new'd on `this`.
   }
 
   async componentDidMount() {
@@ -265,9 +214,9 @@ class GalleryPage extends Component {
     const d = this.state.data;
     this.ensureShell(
       (ids) => ids.galleryRoot,
-      ({ div }) => {
+      ({ div, h }) => {
         div(
-          { id: 'galleryRoot' },
+          { id: 'galleryRoot', className: 'gallery' },
           Banner({
             type: 'info',
             message: 'gd5 UI — NameThatUI + Ant Design coverage. White panels; accent theme is selectable.',
@@ -373,8 +322,21 @@ class GalleryPage extends Component {
               }),
               Space(
                 {},
-                el('div', { id: 'loadingBtnDotsHost', className: 'component-host' }),
-                el('div', { id: 'loadingBtnSpinHost', className: 'component-host' })
+                h(LoadingButton, {
+                  text: 'Save',
+                  loadingText: 'Saving',
+                  type: 'default',
+                  loadingType: 'primary',
+                  indicator: 'dots',
+                  onClick: () => new Promise((r) => setTimeout(r, 1600)),
+                }),
+                h(LoadingButton, {
+                  text: 'Publish',
+                  loadingText: 'Publishing',
+                  type: 'primary',
+                  indicator: 'spin',
+                  onClick: () => new Promise((r) => setTimeout(r, 1600)),
+                })
               )
             )
           ),
@@ -614,12 +576,21 @@ class GalleryPage extends Component {
               }),
               TodoList({
                 title: 'To-dos',
-                items: d.todos,
-                onItemClick: (item, index) => {
-                  const todos = d.todos.map((t, i) =>
-                    i === index ? { ...t, status: nextTodoStatus(t.status) } : t
+                items: [
+                  {
+                    key: '1',
+                    text: 'Add Button loading + LoadingButton with dots/spin',
+                    status: 'active',
+                  },
+                  { key: '2', text: 'CSS, gallery, docs, tests, demo', status: 'pending' },
+                  { key: '3', text: 'Commit, push, open PR', status: 'pending' },
+                ],
+                onItemClick(item, index) {
+                  this.setItems(
+                    this.getItems().map((t, i) =>
+                      i === index ? { ...t, status: nextTodoStatus(t.status) } : t
+                    )
                   );
-                  this.setData({ todos });
                 },
               })
             )
@@ -633,10 +604,17 @@ class GalleryPage extends Component {
                 type: 'secondary',
                 text: 'Cover Flow（封面流）— game character-select style: center card faces forward, neighbors tilt & stack. Drag / arrows / dots.',
               }),
-              el('div', {
-                id: 'coverFlowHost',
-                className: 'component-host',
-                style: { minHeight: '360px' },
+              h(CoverFlow, {
+                height: 300,
+                index: 2,
+                items: [
+                  { key: 'knight', title: 'Knight', subtitle: 'Tank · Iron Order', color: 'linear-gradient(145deg,#4a5568,#1a202c)' },
+                  { key: 'mage', title: 'Mage', subtitle: 'Caster · Arcane', color: 'linear-gradient(145deg,#6b46c1,#2b1a4e)' },
+                  { key: 'ranger', title: 'Ranger', subtitle: 'Scout · Wildwood', color: 'linear-gradient(145deg,#2f8f5b,#143528)' },
+                  { key: 'rogue', title: 'Rogue', subtitle: 'Assassin · Night', color: 'linear-gradient(145deg,#c05621,#3b1d0f)' },
+                  { key: 'cleric', title: 'Cleric', subtitle: 'Support · Dawn', color: 'linear-gradient(145deg,#2b6cb0,#1a365d)' },
+                ],
+                onChange: (i, item) => this.toast.show({ message: `Selected ${item.title}`, type: 'info' }),
               })
             )
           ),
@@ -649,10 +627,12 @@ class GalleryPage extends Component {
                 type: 'secondary',
                 text: 'Default Markdown editing with a basic top toolbar and live preview (编辑 / 分栏 / 预览).',
               }),
-              el('div', {
-                id: 'markdownEditorHost',
-                className: 'component-host',
-                style: { minHeight: '300px' },
+              h(MarkdownEditor, {
+                height: 280,
+                mode: 'split',
+                value:
+                  '# Markdown editor\n\nWrite **bold**, *italic*, and `code`.\n\n- Toolbar wraps selection\n- Switch 编辑 / 分栏 / 预览\n\n```js\nconst ok = true;\n```\n\n> Preview updates as you type.\n',
+                onChange: () => {},
               })
             )
           ),
@@ -697,11 +677,32 @@ class GalleryPage extends Component {
                 type: 'secondary',
                 text: 'Virtualized JSON viewer (jsonTreeViewer-style). Expand / mark / JSONPath; theme-aware type colors.',
               }),
-              // Use standalone el() — nested bind div() steals D.root inside ensureShell.
-              el('div', {
-                id: 'jsonTreeHost',
-                className: 'component-host',
-                style: { minHeight: '340px' },
+              h(JsonTree, {
+                height: 320,
+                defaultExpand: 2,
+                onPath: (path) => this.toast.show({ message: path, type: 'info' }),
+                onMount: (jt) => {
+                  jt.loadData({
+                    product: 'gd5',
+                    themes: ['orange', 'blue', 'green'],
+                    engine: {
+                      runtime: 'real-DOM',
+                      bundler: false,
+                      apis: ['Component', 'bind', 'LogProvider'],
+                    },
+                    ui: {
+                      kits: 80,
+                      overlays: ['Modal', 'Drawer', 'Toast'],
+                      flags: { virtualJson: true, workflowDag: true },
+                    },
+                    metrics: {
+                      score: 98.5,
+                      samples: [1, 2, 3, 5, 8, 13],
+                      ok: true,
+                      note: null,
+                    },
+                  });
+                },
               })
             )
           ),
@@ -714,10 +715,87 @@ class GalleryPage extends Component {
                 type: 'secondary',
                 text: 'Multi-column DAG: scroll, drag blank area to pan, click a node for the right drawer.',
               }),
-              el('div', {
-                id: 'workflowHost',
-                className: 'component-host',
-                style: { minHeight: '360px' },
+              h(WorkflowDAG, {
+                onMount: (wf) => {
+                  wf.setGraph({
+                    columns: [
+                      {
+                        key: 'ingest',
+                        title: 'Ingest',
+                        nodes: [
+                          {
+                            key: 'n-source',
+                            title: 'Source sync',
+                            status: 'success',
+                            description: 'Pull events from upstream queue.',
+                          },
+                          {
+                            key: 'n-validate',
+                            title: 'Validate',
+                            status: 'running',
+                            description: 'Schema + freshness checks.',
+                          },
+                        ],
+                      },
+                      {
+                        key: 'transform',
+                        title: 'Transform',
+                        nodes: [
+                          {
+                            key: 'n-enrich',
+                            title: 'Enrich',
+                            status: 'pending',
+                            description: 'Join dimensions and tags.',
+                          },
+                          {
+                            key: 'n-aggregate',
+                            title: 'Aggregate',
+                            status: 'pending',
+                            description: 'Roll up by tenant and day.',
+                          },
+                        ],
+                      },
+                      {
+                        key: 'deliver',
+                        title: 'Deliver',
+                        nodes: [
+                          {
+                            key: 'n-warehouse',
+                            title: 'Warehouse load',
+                            status: 'pending',
+                            description: 'Write parquet partitions.',
+                          },
+                          {
+                            key: 'n-notify',
+                            title: 'Notify',
+                            status: 'pending',
+                            description: 'Slack + email on completion.',
+                          },
+                        ],
+                      },
+                      {
+                        key: 'observe',
+                        title: 'Observe',
+                        nodes: [
+                          {
+                            key: 'n-metrics',
+                            title: 'Metrics',
+                            status: 'pending',
+                            description: 'Emit pipeline SLIs.',
+                          },
+                        ],
+                      },
+                    ],
+                    edges: [
+                      { from: 'n-source', to: 'n-enrich' },
+                      { from: 'n-validate', to: 'n-enrich' },
+                      { from: 'n-enrich', to: 'n-aggregate' },
+                      { from: 'n-aggregate', to: 'n-warehouse' },
+                      { from: 'n-warehouse', to: 'n-notify' },
+                      { from: 'n-notify', to: 'n-metrics' },
+                    ],
+                  });
+                },
               })
             )
           ),
@@ -1168,162 +1246,7 @@ class GalleryPage extends Component {
         );
       }
     );
-
-    if (!this._loadingBtnsMounted) {
-      const dotsHost =
-        this.ids().loadingBtnDotsHost ||
-        (typeof document !== 'undefined' ? document.getElementById('loadingBtnDotsHost') : null);
-      const spinHost =
-        this.ids().loadingBtnSpinHost ||
-        (typeof document !== 'undefined' ? document.getElementById('loadingBtnSpinHost') : null);
-      if (dotsHost && spinHost) {
-        this._loadingBtnsMounted = true;
-        void this.loadingBtnDots.mount(dotsHost);
-        void this.loadingBtnSpin.mount(spinHost);
-      }
-    }
-
-    const cfHost =
-      this.ids().coverFlowHost ||
-      (typeof document !== 'undefined'
-        ? document.getElementById('coverFlowHost')
-        : null);
-    if (cfHost && !this._coverFlowMounted) {
-      this._coverFlowMounted = true;
-      void this.coverFlow.mount(cfHost);
-    }
-
-    const mdHost =
-      this.ids().markdownEditorHost ||
-      (typeof document !== 'undefined'
-        ? document.getElementById('markdownEditorHost')
-        : null);
-    if (mdHost && !this._markdownMounted) {
-      this._markdownMounted = true;
-      void this.markdownEditor.mount(mdHost);
-    }
-
-    const jtHost =
-      this.ids().jsonTreeHost ||
-      (typeof document !== 'undefined'
-        ? document.getElementById('jsonTreeHost')
-        : null);
-    if (jtHost && !this._jsonTreeMounted) {
-      this._jsonTreeMounted = true;
-      void this.jsonTree.mount(jtHost).then(() => {
-        this.jsonTree.loadData({
-          product: 'gd5',
-          themes: ['orange', 'blue', 'green'],
-          engine: {
-            runtime: 'real-DOM',
-            bundler: false,
-            apis: ['Component', 'bind', 'LogProvider'],
-          },
-          ui: {
-            kits: 80,
-            overlays: ['Modal', 'Drawer', 'Toast'],
-            flags: { virtualJson: true, workflowDag: true },
-          },
-          metrics: {
-            score: 98.5,
-            samples: [1, 2, 3, 5, 8, 13],
-            ok: true,
-            note: null,
-          },
-        });
-      });
-    }
-
-    const wfHost =
-      this.ids().workflowHost ||
-      (typeof document !== 'undefined'
-        ? document.getElementById('workflowHost')
-        : null);
-    if (wfHost && !this._workflowMounted) {
-      this._workflowMounted = true;
-      void this.workflow.mount(wfHost).then(() => {
-        this.workflow.setGraph({
-          columns: [
-            {
-              key: 'ingest',
-              title: 'Ingest',
-              nodes: [
-                {
-                  key: 'n-source',
-                  title: 'Source sync',
-                  status: 'success',
-                  description: 'Pull events from upstream queue.',
-                },
-                {
-                  key: 'n-validate',
-                  title: 'Validate',
-                  status: 'running',
-                  description: 'Schema + freshness checks.',
-                },
-              ],
-            },
-            {
-              key: 'transform',
-              title: 'Transform',
-              nodes: [
-                {
-                  key: 'n-enrich',
-                  title: 'Enrich',
-                  status: 'pending',
-                  description: 'Join dimensions and tags.',
-                },
-                {
-                  key: 'n-aggregate',
-                  title: 'Aggregate',
-                  status: 'pending',
-                  description: 'Roll up by tenant and day.',
-                },
-              ],
-            },
-            {
-              key: 'deliver',
-              title: 'Deliver',
-              nodes: [
-                {
-                  key: 'n-warehouse',
-                  title: 'Warehouse load',
-                  status: 'pending',
-                  description: 'Write parquet partitions.',
-                },
-                {
-                  key: 'n-notify',
-                  title: 'Notify',
-                  status: 'pending',
-                  description: 'Slack + email on completion.',
-                },
-              ],
-            },
-            {
-              key: 'observe',
-              title: 'Observe',
-              nodes: [
-                {
-                  key: 'n-metrics',
-                  title: 'Metrics',
-                  status: 'pending',
-                  description: 'Emit pipeline SLIs.',
-                },
-              ],
-            },
-          ],
-          edges: [
-            { from: 'n-source', to: 'n-enrich' },
-            { from: 'n-validate', to: 'n-enrich' },
-            { from: 'n-enrich', to: 'n-aggregate' },
-            { from: 'n-aggregate', to: 'n-warehouse' },
-            { from: 'n-warehouse', to: 'n-notify' },
-            { from: 'n-notify', to: 'n-metrics' },
-          ],
-        });
-      });
-    }
   }
 }
 
-const page = new GalleryPage();
-await page.mount(document.getElementById('app'));
+startDemoApp({ home: GalleryPage }, undefined, { demo: 'ui-gallery' });

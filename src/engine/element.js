@@ -11,6 +11,7 @@
  *
  * 组合（降噪）：
  * - 尾参 children：`d.div(props, child1, child2)`（仍支持 `.childList`）
+ * - children 可以是 Element、文本，或 **Component**（与 Element 同有 `.dom()`，像 React 里写 `<Child />`）
  * - `bind(d)` / `D.tags()`：解构短名 + `h`
  * - `d.map(list, render, keyOf)`：列表自动带 key
  *
@@ -364,14 +365,41 @@ export class D {
 }
 
 /**
+ * Component class?: has mount + render on prototype (avoids importing Component here).
+ * @param {unknown} type
+ */
+function isComponentClass(type) {
+  return (
+    typeof type === 'function' &&
+    type.prototype != null &&
+    type.prototype.constructor === type &&
+    typeof type.prototype.mount === 'function' &&
+    typeof type.prototype.render === 'function'
+  );
+}
+
+/**
  * 绑定到同一个 D 实例，便于解构短名。
  * @param {D} [d]
  */
 export function bind(d = new D()) {
   const api = {
     d,
-    h(tag, props, ...children) {
-      return d.el(tag, props, ...children);
+    /**
+     * Hyperscript: DOM tag, UI primitive, or Component class / factory.
+     * `h(TodoList, { items })` / `h(CoverFlow, { items })` — React createElement 同形。
+     * @param {string|Function} type
+     * @param {object} [props]
+     * @param {...any} children
+     */
+    h(type, props, ...children) {
+      if (isComponentClass(type)) {
+        return new type(props || {});
+      }
+      if (typeof type === 'function') {
+        return type(props || {}, ...children);
+      }
+      return d.el(type, props, ...children);
     },
     map(list, render, keyOf) {
       return d.map(list, render, keyOf);

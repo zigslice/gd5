@@ -25,17 +25,29 @@ import {
 页面与页内子组件**共用** `mount` / `unmount`：
 
 ```
-ComponentRender.navigate / child.mount(host)
+ComponentRender.navigate / 树里写子 Component → child.mount(host)
   → componentDidMount(params)
   → render()
   → componentDidAttachEvents()
 
-goBack / child.unmount()
+goBack / parent.unmount()
+  → 先卸组合子组件
   → componentDidUnMount()   // 只做业务清理
   → 引擎卸 on() 监听、清宿主、重置 ref
 ```
 
-宿主可用 `display: contents`，让子组件根节点直接参与父级布局。
+子组件和 `div` / `Button({})` 一样写进树（就地组合，不必先 `this.x = new …`）：
+
+```js
+div(
+  { id: 'root' },
+  h1({ text: 'Hi' }),
+  TodoList({ items }),           // factory → Component（有 .dom()）
+  h(CoverFlow, { items }),       // Component class ≈ React createElement
+);
+```
+
+`ensureShell` 只建一次，就地 `TodoList({…})` 也只创建一次。引擎插入 `display: contents` 宿主再 `mount`。
 
 ## 写组件时怎么少踩坑
 
@@ -43,6 +55,7 @@ goBack / child.unmount()
 |--------|----------|
 | 手写 `D.clear` → `bind` → `get` → `append` | `paint(build)` / `ensureShell(probe, build)` |
 | refresh 拆掉壳 → AttachEvents 失效 | `ensureShell`：壳只建一次 |
+| 子组件事后 `ids().host` + `_mounted` flag | 树里直接写 `this.child`（同 div） |
 | `getElementById` 与 `host()` 两套 | 页面也走 `mount`，统一 `this.host()` |
 | 事件写在 AttachEvents，和 DOM 分离 | props 里 `onClick` / `onChange` |
 | window 监听忘卸 | `this.on(window, …)`，unmount 自动卸 |
@@ -93,7 +106,7 @@ export class ToolbarComponent extends Component {
 | `ComponentRender.init` | 自动传入页面 |
 | 父组件 `new Child(deps)` | 父把 `navigator: this.navigator, logger: this.logger` 写进 deps |
 
-没有新的组合 API；子组件不会「另学一套」。
+子组件与页面同一套 `this.navigator` / `this.logger`；组合方式与 React 同形——实例当 children。
 
 ```js
 app.init({ loading: 'home', home: 'home' }, {
@@ -101,7 +114,7 @@ app.init({ loading: 'home', home: 'home' }, {
   preview: { type: PreviewPage, isModal: true },
 });
 
-// 页面
+// 页面构造（像保留 Child 的 ref）
 this.toolbar = new Toolbar({
   navigator: this.navigator,
   logger: this.logger,
@@ -137,7 +150,9 @@ export class Panel extends Component {
             type: 'button',
             text: '保存',
             onClick: () => this.save(),
-          })
+          }),
+          // 像 React：<div><TodoList items={…} /></div>
+          TodoList({ items: this.store.getTodos() })
         );
       }
     );
@@ -195,6 +210,8 @@ const [ref, root] = get();
 ## 页面槽
 
 `index.html` 里为每个组件准备同名 `id` 节点。`ComponentRender.init` 的 `id` 必须与之对应。
+
+UI 示例（`examples/*-demo.html`、`examples/ui-gallery.html`）同样是标准 gd5 应用：页槽 + `ComponentRender` / `LogProvider`，引导代码见 [`examples/demoApp.js`](../examples/demoApp.js)。
 
 ## 与产品的边界
 

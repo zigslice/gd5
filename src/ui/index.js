@@ -93,8 +93,10 @@ export {
 } from './CoverFlow.js';
 export {
   TodoList,
+  TodoListView,
   Todos,
   Todo,
+  createTodoList,
   normalizeTodoItems,
   normalizeTodoStatus,
   countTodoProgress,

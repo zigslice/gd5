@@ -113,8 +113,21 @@ section('layout: product vs engine');
     'docs/images/theme-orange.png',
     'docs/images/theme-blue.png',
     'docs/images/theme-green.png',
+    'examples/demoApp.js',
+    'examples/demo-shell.css',
     'examples/ui-gallery.html',
     'examples/ui-gallery.js',
+    'examples/ui-gallery.css',
+    'examples/todo-demo.html',
+    'examples/todo-demo.js',
+    'examples/code-block-demo.html',
+    'examples/code-block-demo.js',
+    'examples/markdown-editor-demo.html',
+    'examples/markdown-editor-demo.js',
+    'examples/coverflow-demo.html',
+    'examples/coverflow-demo.js',
+    'examples/loading-button-demo.html',
+    'examples/loading-button-demo.js',
     'src/engine/styles.js',
     'src/product/css/tokens.css',
     'src/product/css/base.css',
@@ -457,6 +470,107 @@ section('engine: paint / ensureShell / on');
   assert((listeners.get(btn) || []).length === 0, 'unmount removes listeners');
   assert(host.children.length === 0, 'unmount clears host');
   assert(Object.keys(panel.ids()).length === 0, 'unmount resets ref');
+}
+
+section('engine: Component as tree child');
+{
+  function makeEl(id) {
+    return {
+      id,
+      children: [],
+      firstChild: null,
+      style: {},
+      dataset: {},
+      appendChild(child) {
+        this.children.push(child);
+        this.firstChild = this.children[0] || null;
+      },
+      removeChild(child) {
+        this.children = this.children.filter((c) => c !== child);
+        this.firstChild = this.children[0] || null;
+      },
+      addEventListener() {},
+      removeEventListener() {},
+      setAttribute(name, value) {
+        this[name] = value;
+      },
+    };
+  }
+
+  globalThis.document = {
+    createElement(tag) {
+      return makeEl(tag);
+    },
+    createTextNode(text) {
+      return { nodeType: 3, textContent: String(text) };
+    },
+    getElementById() {
+      return null;
+    },
+    head: { appendChild() {} },
+  };
+
+  class Child extends Component {
+    constructor(deps) {
+      super(deps);
+      this.mounts = 0;
+      this.unmounts = 0;
+    }
+    async componentDidMount() {
+      this.mounts += 1;
+    }
+    componentDidUnMount() {
+      this.unmounts += 1;
+    }
+    render() {
+      this.ensureShell(
+        (ids) => ids.childRoot,
+        ({ div }) => {
+          div({ id: 'childRoot', className: 'child', text: 'hi' });
+        }
+      );
+    }
+  }
+
+  let mountedCb = 0;
+  class Parent extends Component {
+    constructor() {
+      super();
+      this.child = new Child({
+        onMount: () => {
+          mountedCb += 1;
+        },
+      });
+    }
+    render() {
+      // React-like: div({}, this.child) — Component.dom() like Element.dom()
+      this.ensureShell(
+        (ids) => ids.parentRoot,
+        ({ div }) => {
+          div({ id: 'parentRoot', className: 'parent' }, this.child);
+        }
+      );
+    }
+  }
+
+  const host = makeEl('host');
+  const parent = new Parent();
+  assert(typeof parent.child.dom === 'function', 'Component.dom matches Element shape');
+  await parent.mount(host);
+  await new Promise((r) => queueMicrotask(r));
+  await new Promise((r) => queueMicrotask(r));
+  assert(parent.child.mounts === 1, 'tree child mounts once');
+  assert(parent.child.isMounted(), 'tree child isMounted');
+  assert(!!parent.child.ids().childRoot, 'tree child painted');
+  assert(mountedCb === 1, 'deps.onMount runs after mount');
+
+  parent.refresh();
+  await new Promise((r) => queueMicrotask(r));
+  assert(parent.child.mounts === 1, 'ensureShell refresh does not remount child');
+
+  parent.unmount();
+  assert(parent.child.unmounts === 1, 'parent unmount unmounts tree child');
+  assert(!parent.child.isMounted(), 'tree child unmounted');
 }
 
 section('product: component ergonomics');
@@ -896,6 +1010,7 @@ section('ui kit');
   assert(typeof ui.normalizeCoverFlowItems === 'function', 'normalizeCoverFlowItems exported');
   assert(typeof ui.TodoList === 'function', 'TodoList exported');
   assert(ui.Todos === ui.TodoList, 'Todos aliases TodoList');
+  assert(typeof ui.createTodoList === 'function', 'createTodoList exported');
   {
     const items = ui.normalizeTodoItems([
       { text: 'A', status: 'in_progress' },
@@ -906,6 +1021,19 @@ section('ui kit');
     assert(ui.countTodoProgress(items).done === 1 && ui.countTodoProgress(items).total === 3, 'countTodoProgress');
     assert(ui.nextTodoStatus('pending') === 'active', 'nextTodoStatus pending→active');
     assert(ui.nextTodoStatus('active') === 'done', 'nextTodoStatus active→done');
+    const todos = ui.TodoList({
+      items: [
+        { key: '1', text: 'Ship LoadingButton', status: 'active' },
+        { key: '2', text: 'Write docs', status: 'pending' },
+        { key: '3', text: 'Open PR', status: 'done' },
+      ],
+    });
+    assert(typeof todos.mount === 'function' && typeof todos.dom === 'function', 'TodoList() returns Component');
+    assert(todos.getItems().length === 3, 'TodoList.getItems');
+    assert(todos.getProgress().done === 1 && todos.getProgress().total === 3, 'TodoList.getProgress');
+    todos.setItems([{ text: 'Only', status: 'pending' }]);
+    assert(todos.getItems().length === 1 && todos.getProgress().done === 0, 'TodoList.setItems');
+    assert(typeof ui.TodoListView === 'function', 'TodoListView class exported');
   }
   {
     const items = ui.normalizeCoverFlowItems(['A', { key: 'b', title: 'Bee', subtitle: 'x' }]);
@@ -1058,27 +1186,86 @@ section('ui kit');
   assert(docs.includes('MarkdownEditor') && docs.includes('renderMarkdown'), 'docs cover MarkdownEditor');
   assert(docs.includes('CoverFlow') && docs.includes('封面流'), 'docs cover CoverFlow');
   assert(docs.includes('TodoList') && docs.includes('To-dos'), 'docs cover TodoList');
+  assert(docs.includes('setItems') && docs.includes('TodoList({'), 'docs show inline TodoList({…}) composition');
   assert(docs.includes('LoadingButton') && docs.includes('Loading Button'), 'docs cover LoadingButton');
+  assert(docs.includes('demoApp.js'), 'docs mention demoApp bootstrap');
+
+  {
+    const demos = [
+      'examples/ui-gallery.html',
+      'examples/todo-demo.html',
+      'examples/code-block-demo.html',
+      'examples/markdown-editor-demo.html',
+      'examples/coverflow-demo.html',
+      'examples/loading-button-demo.html',
+    ];
+    for (const rel of demos) {
+      const html = readFileSync(join(root, rel), 'utf8');
+      assert(html.includes('id="home"'), `${rel} has ComponentRender home slot`);
+      assert(/<script\s+type="module"\s+src="\.\//.test(html), `${rel} loads external module`);
+      assert(!/<script\s+type="module">/.test(html), `${rel} has no inline module script`);
+    }
+    const boot = readFileSync(join(root, 'examples/demoApp.js'), 'utf8');
+    assert(boot.includes('ComponentRender') && boot.includes('LogProvider'), 'demoApp.js is standard gd5 boot');
+    assert(!existsSync(join(root, 'examples/loading-button-showcase.html')), 'ad-hoc showcase removed');
+    const todoDemo = readFileSync(join(root, 'examples/todo-demo.js'), 'utf8');
+    assert(todoDemo.includes('TodoList({'), 'todo-demo composes TodoList({…}) inline');
+    assert(!todoDemo.includes('this.todoList'), 'todo-demo does not pre-new on this');
+    assert(!todoDemo.includes('replaceChildren'), 'todo-demo does not use replaceChildren');
+    assert(!todoDemo.includes('_mountedTodo'), 'todo-demo has no mount flag');
+    const gallerySrc = readFileSync(join(root, 'examples/ui-gallery.js'), 'utf8');
+    assert(gallerySrc.includes('TodoList({'), 'gallery composes TodoList({…}) inline');
+    assert(!gallerySrc.includes('this.todoList'), 'gallery does not pre-new TodoList on this');
+    assert(!gallerySrc.includes('replaceChildren'), 'gallery does not use replaceChildren');
+    const engineApi = readFileSync(join(root, 'docs/api.md'), 'utf8');
+    assert(engineApi.includes('createElement') || engineApi.includes('h(Type'), 'docs/api covers h(Type) composition');
+  }
 
   const listeners = [];
+  function makeUiNode(tag) {
+    const node = {
+      tagName: String(tag).toUpperCase(),
+      children: [],
+      firstChild: null,
+      style: {},
+      dataset: {},
+      classList: { toggle() {} },
+      className: '',
+      innerText: '',
+      _textContent: '',
+      onload: null,
+      onerror: null,
+      appendChild(child) {
+        this.children.push(child);
+        this.firstChild = this.children[0] || null;
+      },
+      removeChild(child) {
+        this.children = this.children.filter((c) => c !== child);
+        this.firstChild = this.children[0] || null;
+      },
+      setAttribute(name, value) {
+        this[name] = value;
+      },
+      addEventListener(type, handler) {
+        listeners.push({ type, handler });
+      },
+    };
+    Object.defineProperty(node, 'textContent', {
+      get() {
+        return this._textContent;
+      },
+      set(v) {
+        this._textContent = String(v);
+        this.children = [];
+        this.firstChild = null;
+      },
+      configurable: true,
+    });
+    return node;
+  }
   globalThis.document = {
     createElement(tag) {
-      return {
-        tagName: tag.toUpperCase(),
-        children: [],
-        style: {},
-        dataset: {},
-        classList: { toggle() {} },
-        appendChild(child) {
-          this.children.push(child);
-        },
-        setAttribute(name, value) {
-          this[name] = value;
-        },
-        addEventListener(type, handler) {
-          listeners.push({ type, handler });
-        },
-      };
+      return makeUiNode(tag);
     },
     createElementNS(_ns, tag) {
       return globalThis.document.createElement(tag);
@@ -1086,7 +1273,13 @@ section('ui kit');
     createTextNode(text) {
       return { nodeType: 3, textContent: String(text) };
     },
-    head: { appendChild() {} },
+    head: {
+      appendChild(el) {
+        if (el && typeof el.onload === 'function') {
+          queueMicrotask(() => el.onload());
+        }
+      },
+    },
   };
 
   let clicked = false;
@@ -1177,29 +1370,35 @@ section('ui kit');
     assert(hl.length === 1, 'highlightLines marks target');
     assert(find(block.e, (n) => n.tagName === 'TABLE').length === 0, 'CodeBlock does not use table layout');
 
-    const todo = ui.TodoList({
-      title: 'To-dos',
-      items: [
-        { key: '1', text: 'Ship LoadingButton', status: 'active' },
-        { key: '2', text: 'Write docs', status: 'pending' },
-        { key: '3', text: 'Open PR', status: 'done' },
-      ],
-    });
-    assert(String(todo.e.className || '').includes('gd-todo'), 'TodoList root class');
-    assert(
-      find(todo.e, (n) => String(n.className || '').includes('gd-todo__icon--active')).length === 1,
-      'TodoList renders active icon'
-    );
-    assert(
-      find(todo.e, (n) => String(n.className || '').includes('gd-todo__icon--pending')).length === 1,
-      'TodoList renders pending icon'
-    );
-    assert(
-      find(todo.e, (n) => String(n.className || '').includes('gd-todo__progress')).some(
-        (n) => n.innerText === '1/3'
-      ),
-      'TodoList progress shows done/total'
-    );
+    // TodoList is a Component — mount into a host (composition via child.mount)
+    {
+      const host = makeUiNode('div');
+      const todos = ui.TodoList({
+        title: 'To-dos',
+        items: [
+          { key: '1', text: 'Ship LoadingButton', status: 'active' },
+          { key: '2', text: 'Write docs', status: 'pending' },
+          { key: '3', text: 'Open PR', status: 'done' },
+        ],
+      });
+      await todos.mount(host);
+      const root = todos.ids().gdTodoRoot;
+      assert(String(root?.className || '').includes('gd-todo'), 'TodoList root class');
+      assert(
+        find(root, (n) => String(n.className || '').includes('gd-todo__icon--active')).length === 1,
+        'TodoList renders active icon'
+      );
+      assert(
+        find(root, (n) => String(n.className || '').includes('gd-todo__icon--pending')).length === 1,
+        'TodoList renders pending icon'
+      );
+      assert(
+        find(root, (n) => String(n.className || '').includes('gd-todo__progress')).some(
+          (n) => n.innerText === '1/3'
+        ),
+        'TodoList progress shows done/total'
+      );
+    }
 
     const diff = ui.DiffBlock({
       language: 'javascript',

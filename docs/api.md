@@ -76,8 +76,12 @@ Base class for pages and nested UI.
 
 | Method | Meaning |
 |--------|---------|
-| `paint(build, host?)` | `clear` → `bind` tree → assign `state.ref` → append |
+| `paint(build, host?)` | `clear` → `bind` tree → assign `state.ref` → append；tree may include child Components |
 | `ensureShell(probe, build)` | Build shell once if `probe(ids())` is falsy |
+| `dom()` | Same shape as `Element.dom` — Component instances are valid hyperscript children |
+| `h(Type, props)` (via `bind` / `ensureShell`) | `createElement`-like: Component class → `new Type(props)`; factory / primitive → call it |
+| `slot(child, hostProps?)` | Optional real-host wrapper; prefer `TodoList({…})` / `h(Type, props)` inline |
+| `deps.onMount` | Optional callback after `mount` completes |
 | `ids()` | `state.ref.id` |
 | `keys()` | `state.ref.key` |
 | `on(target, type, fn, options?)` | `addEventListener` + auto-remove on `unmount` |
