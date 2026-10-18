@@ -163,6 +163,16 @@ section('layout: product vs engine');
     'src/product/agent/components/AgentChatComponent.js',
     'src/product/agent/components/AgentSideComponent.js',
     'src/product/agent/components/AgentSettingsComponent.js',
+    'escape.html',
+    'src/product/escape/main.js',
+    'src/product/escape/lib/store.js',
+    'src/product/escape/lib/world.js',
+    'src/product/escape/components/EscapeBootComponent.js',
+    'src/product/escape/components/GameComponent.js',
+    'src/product/escape/components/SceneComponent.js',
+    'src/product/escape/components/InventoryComponent.js',
+    'src/product/escape/components/SidePanelComponent.js',
+    'src/product/escape/components/WinComponent.js',
   ]) {
     assert(existsSync(join(root, path)), `${path} exists`);
   }
@@ -1004,6 +1014,72 @@ section('product: coding agent');
   assert(usage.includes('agent.html') && usage.includes('Coding Agent'), 'usage docs cover Coding Agent');
   const arch = readFileSync(join(root, 'docs/architecture.md'), 'utf8');
   assert(arch.includes('src/product/agent/') || arch.includes('Coding Agent'), 'architecture mentions agent product');
+}
+
+section('product: escape room');
+{
+  const escapeHtml = readFileSync(join(root, 'escape.html'), 'utf8');
+  assert(escapeHtml.includes('id="boot"') && escapeHtml.includes('id="game"'), 'escape.html has page slots');
+  assert(escapeHtml.includes('id="win"'), 'escape.html has win modal slot');
+  assert(escapeHtml.includes('src/product/escape/main.js'), 'escape.html boots escape main');
+  assert(!/<script\s+type="module">/.test(escapeHtml), 'escape.html has no inline module script');
+
+  const escapeMain = readFileSync(join(root, 'src/product/escape/main.js'), 'utf8');
+  assert(escapeMain.includes('ComponentRender') && escapeMain.includes('GameComponent'), 'escape main uses ComponentRender');
+  assert(escapeMain.includes("home: 'game'"), 'escape home is game');
+  assert(escapeMain.includes('isModal: true'), 'escape win is modal page');
+
+  const gameSrc = readFileSync(join(root, 'src/product/escape/components/GameComponent.js'), 'utf8');
+  assert(gameSrc.includes('ensureShell') && gameSrc.includes('.mount('), 'game composes child mounts');
+  assert(gameSrc.includes('SceneComponent') && gameSrc.includes('InventoryComponent'), 'game panels present');
+
+  const { createEscapeStore } = await import('../src/product/escape/lib/store.js');
+  const { SAFE_CODE, DOOR_CODE } = await import('../src/product/escape/lib/world.js');
+
+  const store = createEscapeStore();
+  const snap0 = store.getState();
+  assert(snap0.status === 'playing' && snap0.inventory.length === 0, 'escape starts empty');
+  assert(snap0.log.length >= 2, 'escape has intro log');
+  assert(snap0.hotspots.some((h) => h.id === 'lamp'), 'escape has lamp hotspot');
+
+  store.interact('lamp');
+  assert(store.getState().flags.lampOn, 'lamp turns on');
+  assert(store.getState().inventory.some((i) => i.id === 'note'), 'lamp gives note');
+
+  store.interact('clock');
+  assert(store.getState().examine?.kind === 'clock', 'clock opens examine');
+  store.closeExamine();
+
+  store.interact('bookshelf');
+  store.takeVolume();
+  assert(store.getState().inventory.some((i) => i.id === 'volume'), 'volume collected');
+
+  store.interact('painting');
+  assert(store.getState().flags.paintingMoved, 'painting moves');
+  assert(store.getState().hotspots.some((h) => h.id === 'safe'), 'safe hotspot appears');
+
+  store.interact('safe');
+  assert(store.trySafeCode('0000').ok === false, 'wrong safe code fails');
+  assert(store.trySafeCode(SAFE_CODE).ok === true, 'safe code opens');
+  assert(store.getState().inventory.some((i) => i.id === 'brass_key'), 'brass key obtained');
+
+  store.selectItem('brass_key');
+  store.interact('drawer');
+  assert(store.getState().flags.drawerOpen, 'drawer opens with key');
+  assert(store.getState().inventory.some((i) => i.id === 'door_slip'), 'door slip obtained');
+
+  store.interact('door');
+  assert(store.tryDoorCode('WRONG').ok === false, 'wrong door code fails');
+  assert(store.tryDoorCode(DOOR_CODE).ok === true, 'door code unlocks');
+  assert(store.getState().status === 'won' && store.getState().flags.escaped, 'escape won');
+
+  store.reset();
+  assert(store.getState().status === 'playing' && store.getState().moves === 0, 'escape reset works');
+
+  const usageEscape = readFileSync(join(root, 'docs/usage.md'), 'utf8');
+  assert(usageEscape.includes('escape.html') && usageEscape.includes('Escape Room'), 'usage docs cover Escape Room');
+  const archEscape = readFileSync(join(root, 'docs/architecture.md'), 'utf8');
+  assert(archEscape.includes('src/product/escape/') || archEscape.includes('Escape Room'), 'architecture mentions escape product');
 }
 
 section('ui kit');

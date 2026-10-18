@@ -6,7 +6,7 @@
 |----|------|------|
 | **引擎 (Engine)** | `src/engine/` | 迷你实模式 DOM 运行时：`Component` / `ComponentRender` / `D` / `LogProvider` |
 | **组件库 (UI)** | `src/ui/` | 对标 antd 的常用组件（Button / Input / Modal…），默认**橙色主色 + 白色面板** |
-| **产品 (Product)** | `src/product/` | 示例应用：ProtoLive + Coding Agent（可用引擎 + UI 库） |
+| **产品 (Product)** | `src/product/` | 示例应用：ProtoLive + Coding Agent + Escape Room（可用引擎 + UI 库） |
 
 ```
 src/engine  ──►  src/ui（组件库）
@@ -33,6 +33,14 @@ agent store ──► Workspace / Settings pages
                    │
      FileTree · CodePane · AgentChat · AgentSide · Toolbar
      (+ UI: Tree, CodeBlock, DiffBlock, TodoList, ChatBubble, CommandPalette)
+```
+
+Escape Room（`src/product/escape/`，入口 `escape.html`）是 2D 密室逃脱产品 demo：
+
+```
+escape store ──► Game / Win pages
+                   │
+     Scene（热点） · Inventory · SidePanel（调查/日志）
 ```
 
 ## 引擎
@@ -66,6 +74,10 @@ src/product/
   css/          # 仅 tokens.css + base.css（全局）
   main.js       # ProtoLive boot
   agent/        # Coding Agent product demo
+    main.js
+    components/
+    lib/
+  escape/       # Escape Room (2D) product demo
     main.js
     components/
     lib/

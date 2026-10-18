@@ -1,0 +1,45 @@
+.escape-win {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  padding: 1.5rem;
+}
+
+.escape-win__card {
+  width: min(440px, 100%);
+  padding: 1.75rem 1.5rem;
+  border-radius: 14px;
+  border: 1px solid rgba(243, 214, 176, 0.35);
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 0%, rgba(232, 106, 23, 0.2), transparent 55%),
+    #171d25;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  text-align: center;
+}
+
+.escape-win__title {
+  margin: 0 0 0.75rem;
+  font-size: 1.75rem;
+  color: #f3d6b0;
+  letter-spacing: 0.06em;
+}
+
+.escape-win__lead {
+  margin: 0 0 0.75rem;
+  color: var(--text-primary, #e8eef5);
+  line-height: 1.5;
+}
+
+.escape-win__meta {
+  margin: 0 0 1.25rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary, #9aabbc);
+  line-height: 1.45;
+}
+
+.escape-win__actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}

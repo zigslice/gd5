@@ -23,7 +23,9 @@ body {
 #editor,
 #preview,
 #workspace,
-#settings {
+#settings,
+#game,
+#win {
   height: 100%;
 }
 
@@ -34,12 +36,14 @@ body {
 }
 
 #editor,
-#workspace {
+#workspace,
+#game {
   overflow: hidden;
 }
 
 #preview,
-#settings {
+#settings,
+#win {
   position: fixed;
   inset: 0;
   z-index: 100;

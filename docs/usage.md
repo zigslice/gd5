@@ -6,6 +6,7 @@
 python3 -m http.server 8080
 # ProtoLive:      http://localhost:8080/
 # Coding Agent:   http://localhost:8080/agent.html
+# Escape Room:    http://localhost:8080/escape.html
 ```
 
 ## Coding Agent（产品能力全景 demo）
@@ -23,6 +24,21 @@ python3 -m http.server 8080
 | 主题 | Settings 模态 → `setTheme` |
 
 Agent 回合是**本地模拟**（读写 store、刷 todos/diff/terminal），用于探测产品组合能力，不接真实 LLM。
+
+## Escape Room（2D 密室逃脱产品 demo）
+
+入口：[`escape.html`](../escape.html) → `src/product/escape/main.js`。
+
+点阵式 **2D 密室逃脱**（Midnight Archive）：CSS 场景 + 热点、背包、调查面板、密码锁 / 门口令，通关弹出 Win 模态。
+
+| 操作 | 方式 |
+|------|------|
+| 调查 | 点击场景热点（灯、钟、书架、油画、保险箱、抽屉、门…） |
+| 用物品 | 背包里选中物品，再点目标（如钥匙 → 抽屉） |
+| 解谜 | 保险箱四位码（钟面）→ 出门口令（抽屉纸条） |
+| 重置 | 顶栏「重置」或通关后「再玩一次」 |
+
+同样用 `ComponentRender` 页槽 + 子组件 `mount` + store 驱动，展示非 IDE 类产品组合。
 
 ## ProtoLive 操作
 
