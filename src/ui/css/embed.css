@@ -1,9 +1,10 @@
 /**
- * EChart / ThreeView — third-party embed hosts.
+ * EChart / ThreeView / SparkView — third-party embed hosts.
  */
 
 .gd-echart,
-.gd-three {
+.gd-three,
+.gd-spark {
   box-sizing: border-box;
   position: relative;
   min-width: 0;
@@ -14,15 +15,34 @@
   overflow: hidden;
 }
 
+.gd-spark {
+  background: #111;
+}
+
 .gd-echart__host,
-.gd-three__host {
+.gd-three__host,
+.gd-spark__host {
   box-sizing: border-box;
   width: 100%;
   height: 100%;
 }
 
-.gd-three__host canvas {
+.gd-three__host canvas,
+.gd-spark__host canvas {
   display: block;
   width: 100% !important;
   height: 100% !important;
+}
+
+.gd-spark__error {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 1rem;
+  color: #f5f5f4;
+  font: 13px/1.4 system-ui, sans-serif;
+  text-align: center;
 }

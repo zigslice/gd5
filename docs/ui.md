@@ -60,6 +60,7 @@ Primitives return **real-DOM `Element`s**. Overlay widgets are **`Component`s** 
 | To-dos | `TodoList`, `Todos`, `createTodoList`, `normalizeTodoItems` | **Component** |
 | ECharts embed | `EChart`, `EChartView`, `createEChart`, `loadEcharts` | **Component** (CDN) |
 | three.js 3D | `ThreeView`, `ThreeScene`, `createThreeView`, `loadThree` | **Component** (CDN) |
+| Spark.js GS | `SparkView`, `SplatView`, `createSparkView`, `loadSpark` | **Component** (CDN) |
 | Chat Bubble | `ChatBubble` | primitive |
 | Combobox | `Combobox` | primitive |
 | Command Palette | `CommandPalette` | **Component** |
@@ -290,6 +291,33 @@ this.ensureShell((ids) => ids.root, ({ div }) => {
 - `EChart({ option, height, onReady, echarts })` — `getChart()` / `setOption()` / `resize()`
 - `ThreeView({ onInit, onFrame, three, background })` — `getContext()`; `onInit` may return a dispose fn
 - Demo: [`examples/embed-demo.html`](../examples/embed-demo.html)
+
+## SparkView
+
+Thin host for **[Spark.js](https://sparkjs.dev/)** (`@sparkjsdev/spark`) — 3D Gaussian Splatting on THREE.js. Same nesting as `TodoList`. Not a core dep.
+
+Requires Spark **2.x** + **three ≥ 0.180**, and an HTML **importmap** for bare `three` / `three/addons/` / `@sparkjsdev/spark` (see the demo). Renderer uses `antialias: false` (GS requirement).
+
+```js
+import { SparkView } from './src/ui/index.js';
+
+this.ensureShell((ids) => ids.root, ({ div }) => {
+  div(
+    { id: 'root' },
+    SparkView({
+      height: 420,
+      url: 'https://sparkjs.dev/assets/splats/butterfly.spz',
+      onReady({ splat, spark, renderer }) {
+        splat.position.set(0, 0, -3);
+      },
+    })
+  );
+});
+```
+
+- `SparkView({ url, onReady, onFrame, autoRotate, spark, three })` — `getContext()` / `getSpark()` / `getSplat()`
+- Upstream: [sparkjsdev/spark](https://github.com/sparkjsdev/spark)
+- Demo: [`examples/spark-demo.html`](../examples/spark-demo.html)
 
 ## Cover Flow
 

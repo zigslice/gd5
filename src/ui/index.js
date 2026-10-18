@@ -116,6 +116,18 @@ export {
   loadThree,
 } from './ThreeView.js';
 export {
+  SparkView,
+  SparkViewView,
+  SplatView,
+  createSparkView,
+  loadSpark,
+  loadSparkThree,
+  ensureSparkImportMap,
+  DEFAULT_SPARK_URL,
+  DEFAULT_SPLAT_URL,
+  DEFAULT_SPARK_THREE_URL,
+} from './SparkView.js';
+export {
   BentoGrid,
   BentoTile,
   Masonry,

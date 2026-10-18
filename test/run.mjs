@@ -122,6 +122,8 @@ section('layout: product vs engine');
     'examples/todo-demo.js',
     'examples/embed-demo.html',
     'examples/embed-demo.js',
+    'examples/spark-demo.html',
+    'examples/spark-demo.js',
     'examples/code-block-demo.html',
     'examples/code-block-demo.js',
     'examples/markdown-editor-demo.html',
@@ -132,6 +134,7 @@ section('layout: product vs engine');
     'examples/loading-button-demo.js',
     'src/ui/EChart.js',
     'src/ui/ThreeView.js',
+    'src/ui/SparkView.js',
     'src/ui/css/embed.css',
     'src/engine/styles.js',
     'src/product/css/tokens.css',
@@ -1024,6 +1027,11 @@ section('ui kit');
   assert(ui.ThreeScene === ui.ThreeView, 'ThreeScene aliases ThreeView');
   assert(typeof ui.createThreeView === 'function', 'createThreeView exported');
   assert(typeof ui.loadThree === 'function', 'loadThree exported');
+  assert(typeof ui.SparkView === 'function', 'SparkView exported');
+  assert(ui.SplatView === ui.SparkView, 'SplatView aliases SparkView');
+  assert(typeof ui.createSparkView === 'function', 'createSparkView exported');
+  assert(typeof ui.loadSpark === 'function', 'loadSpark exported');
+  assert(typeof ui.ensureSparkImportMap === 'function', 'ensureSparkImportMap exported');
   {
     const items = ui.normalizeTodoItems([
       { text: 'A', status: 'in_progress' },
@@ -1053,6 +1061,9 @@ section('ui kit');
     const three = ui.ThreeView({ height: 200 });
     assert(typeof three.mount === 'function' && typeof three.dom === 'function', 'ThreeView() returns Component');
     assert(typeof three.getContext === 'function', 'ThreeView.getContext');
+    const spark = ui.SparkView({ height: 200, autoSplat: false });
+    assert(typeof spark.mount === 'function' && typeof spark.dom === 'function', 'SparkView() returns Component');
+    assert(typeof spark.getContext === 'function' && typeof spark.getSpark === 'function', 'SparkView API');
   }
   {
     const items = ui.normalizeCoverFlowItems(['A', { key: 'b', title: 'Bee', subtitle: 'x' }]);
@@ -1186,7 +1197,7 @@ section('ui kit');
     'BottomNav', 'Sidebar', 'Toolbar', 'Tooltip', 'Popover', 'DropdownMenu', 'HoverCard',
     'Combobox', 'TagInput', 'MultiSelect', 'Transfer', 'Slider', 'ColorWell', 'DatePicker',
     'Timeline', 'ChatBubble', 'Carousel', 'CoverFlow', 'BentoGrid', 'Marquee', 'Fab', 'Lightbox',
-    'EChart', 'ThreeView', 'PieChart', 'DonutChart', 'SearchInput', 'SignInForm', 'Truncate', 'Splitter',
+    'EChart', 'ThreeView', 'SparkView', 'PieChart', 'DonutChart', 'SearchInput', 'SignInForm', 'Truncate', 'Splitter',
     'InputNumber', 'Rate', 'Cascader', 'Upload', 'Mentions', 'TreeSelect', 'Form', 'FormItem',
     'List', 'Descriptions', 'Statistic', 'Calendar', 'Image', 'Result', 'Popconfirm',
     'Notification', 'Watermark', 'Flex', 'Row', 'Col', 'Layout', 'Menu', 'Affix', 'Anchor',
@@ -1208,6 +1219,8 @@ section('ui kit');
   assert(docs.includes('setItems') && docs.includes('TodoList({'), 'docs show inline TodoList({…}) composition');
   assert(docs.includes('EChart') && docs.includes('ThreeView'), 'docs cover EChart / ThreeView');
   assert(docs.includes('three.js'), 'docs mention three.js 3D');
+  assert(docs.includes('SparkView') && docs.includes('Gaussian Splatting'), 'docs cover SparkView');
+  assert(docs.includes('sparkjsdev/spark') || docs.includes('@sparkjsdev/spark'), 'docs cite Spark upstream');
   assert(docs.includes('LoadingButton') && docs.includes('Loading Button'), 'docs cover LoadingButton');
   assert(docs.includes('demoApp.js'), 'docs mention demoApp bootstrap');
 
@@ -1216,6 +1229,7 @@ section('ui kit');
       'examples/ui-gallery.html',
       'examples/todo-demo.html',
       'examples/embed-demo.html',
+      'examples/spark-demo.html',
       'examples/code-block-demo.html',
       'examples/markdown-editor-demo.html',
       'examples/coverflow-demo.html',
@@ -1240,9 +1254,16 @@ section('ui kit');
     assert(embedDemo.includes('ThreeView({'), 'embed-demo composes ThreeView({…}) inline');
     assert(!embedDemo.includes('this.echart') && !embedDemo.includes('this.three'), 'embed-demo does not pre-new embeds on this');
     assert(!embedDemo.includes('replaceChildren'), 'embed-demo does not use replaceChildren');
+    const sparkDemo = readFileSync(join(root, 'examples/spark-demo.js'), 'utf8');
+    assert(sparkDemo.includes('SparkView({'), 'spark-demo composes SparkView({…}) inline');
+    assert(!sparkDemo.includes('this.spark'), 'spark-demo does not pre-new SparkView on this');
+    assert(!sparkDemo.includes('replaceChildren'), 'spark-demo does not use replaceChildren');
+    const sparkHtml = readFileSync(join(root, 'examples/spark-demo.html'), 'utf8');
+    assert(sparkHtml.includes('type="importmap"') && sparkHtml.includes('@sparkjsdev/spark'), 'spark-demo has Spark importmap');
     const gallerySrc = readFileSync(join(root, 'examples/ui-gallery.js'), 'utf8');
     assert(gallerySrc.includes('TodoList({'), 'gallery composes TodoList({…}) inline');
     assert(gallerySrc.includes('EChart({') && gallerySrc.includes('ThreeView({'), 'gallery composes EChart/ThreeView inline');
+    assert(gallerySrc.includes('SparkView({'), 'gallery composes SparkView({…}) inline');
     assert(!gallerySrc.includes('this.todoList'), 'gallery does not pre-new TodoList on this');
     assert(!gallerySrc.includes('replaceChildren'), 'gallery does not use replaceChildren');
     const engineApi = readFileSync(join(root, 'docs/api.md'), 'utf8');
@@ -1428,7 +1449,7 @@ section('ui kit');
       );
     }
 
-    // EChart / ThreeView — shell + injected libs (no CDN in tests)
+    // EChart / ThreeView / SparkView — shell + injected libs (no CDN in tests)
     {
       const prevRaf = globalThis.requestAnimationFrame;
       const prevCaf = globalThis.cancelAnimationFrame;
@@ -1460,7 +1481,8 @@ section('ui kit');
           updateProjectionMatrix() {}
         },
         WebGLRenderer: class {
-          constructor() {
+          constructor(opts = {}) {
+            this.antialias = opts.antialias;
             this.domElement = makeUiNode('canvas');
             this.domElement.remove = () => {};
           }
@@ -1499,6 +1521,68 @@ section('ui kit');
       assert(inited, 'ThreeView onInit called');
       assert(three.getContext().THREE === fakeTHREE, 'ThreeView context exposes THREE');
       three.unmount();
+
+      const sparkScene = { children: [], add(obj) { this.children.push(obj); }, remove() {} };
+      let sparkAntialias = undefined;
+      const fakeSparkTHREE = {
+        Scene: class { constructor() { return sparkScene; } },
+        PerspectiveCamera: class {
+          constructor() { this.position = { set() {} }; this.aspect = 1; }
+          updateProjectionMatrix() {}
+        },
+        WebGLRenderer: class {
+          constructor(opts = {}) {
+            sparkAntialias = opts.antialias;
+            this.domElement = makeUiNode('canvas');
+            this.domElement.remove = () => {};
+          }
+          setPixelRatio() {}
+          setSize() {}
+          setClearColor() {}
+          render() {}
+          dispose() {}
+        },
+      };
+      const fakeSparkRenderer = { disposed: false, dispose() { this.disposed = true; } };
+      const fakeSplat = {
+        rotation: { y: 0 },
+        quaternion: { set() {} },
+        position: { set() {} },
+        dispose() {},
+      };
+      const fakeSparkMod = {
+        SparkRenderer: class {
+          constructor() {
+            return fakeSparkRenderer;
+          }
+        },
+        SplatMesh: class {
+          constructor() {
+            return fakeSplat;
+          }
+        },
+      };
+      const sparkHost = makeUiNode('div');
+      sparkHost.clientWidth = 320;
+      sparkHost.clientHeight = 200;
+      let sparkReady = false;
+      const sparkView = ui.SparkView({
+        height: 200,
+        url: 'https://example.test/demo.spz',
+        three: fakeSparkTHREE,
+        spark: fakeSparkMod,
+        autoRotate: false,
+        onReady() { sparkReady = true; },
+      });
+      await sparkView.mount(sparkHost);
+      await new Promise((r) => setTimeout(r, 0));
+      assert(String(sparkView.ids().gdSparkRoot?.className || '').includes('gd-spark'), 'SparkView root class');
+      assert(sparkAntialias === false, 'SparkView uses antialias:false');
+      assert(sparkReady, 'SparkView onReady called');
+      assert(sparkView.getSpark() === fakeSparkRenderer, 'SparkView.getSpark');
+      assert(sparkView.getSplat() === fakeSplat, 'SparkView.getSplat');
+      sparkView.unmount();
+      assert(fakeSparkRenderer.disposed, 'SparkView disposes SparkRenderer');
 
       if (prevRaf) globalThis.requestAnimationFrame = prevRaf;
       else delete globalThis.requestAnimationFrame;
