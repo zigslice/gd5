@@ -218,12 +218,13 @@ Button({ type: 'primary', text: 'Wait', loading: true, indicator: 'spin' })
 
 Cursor-style checklist card (Component): header title + `done/total`, active item with filled arrow disc, pending with dashed ring, done with check.
 
-Compose like Cover Flow — construct once, mount into a host, update via `setItems` (not `replaceChildren`).
+Compose inside `ensureShell` with `slot` — construct once, update via `setItems` (not `replaceChildren` / post-hoc `mount`).
 
 ```js
 import { TodoList, nextTodoStatus } from './src/ui/index.js';
 
-const todos = new TodoList({
+// in page constructor:
+this.todos = new TodoList({
   title: 'To-dos',
   items: [
     { key: '1', text: 'Ship LoadingButton', status: 'active' },
@@ -231,13 +232,17 @@ const todos = new TodoList({
     { key: '3', text: 'Open PR', status: 'pending' },
   ],
   onItemClick: (_item, i) => {
-    const items = todos.getItems().map((t, idx) =>
+    const items = this.todos.getItems().map((t, idx) =>
       idx === i ? { ...t, status: nextTodoStatus(t.status) } : t
     );
-    todos.setItems(items);
+    this.todos.setItems(items);
   },
 });
-await todos.mount(host);
+
+// in render:
+this.ensureShell((ids) => ids.root, ({ div, slot }) => {
+  div({ id: 'root' }, slot(this.todos));
+});
 ```
 
 Statuses: `pending` · `active` (`in_progress`) · `done` (`completed`).

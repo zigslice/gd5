@@ -30,7 +30,6 @@ class MarkdownEditorDemoPage extends Component {
         'Visit [gd5](https://github.com/zigslice/gd5).',
       ].join('\n'),
     });
-    this._mountedEditor = false;
   }
 
   async componentDidMount() {
@@ -40,7 +39,7 @@ class MarkdownEditorDemoPage extends Component {
   render() {
     this.ensureShell(
       (ids) => ids.root,
-      ({ div, h1, p }) => {
+      ({ div, h1, p, slot }) => {
         div(
           { id: 'root', className: 'gd-demo' },
           h1({ className: 'gd-demo__title', text: 'MarkdownEditor' }),
@@ -48,16 +47,10 @@ class MarkdownEditorDemoPage extends Component {
             className: 'gd-demo__hint',
             text: '默认 Markdown 编辑 · 顶部工具栏 · 编辑 / 分栏 / 预览',
           }),
-          div({ id: 'host', className: 'gd-demo__body' })
+          slot(this.editor, { className: 'gd-demo__body' })
         );
       }
     );
-
-    const host = this.ids().host;
-    if (host && !this._mountedEditor) {
-      this._mountedEditor = true;
-      void this.editor.mount(host);
-    }
   }
 }
 

@@ -72,9 +72,18 @@ render() {
 ## Skill：产品页要薄，靠 Component 组合
 
 - 页面与页内模块**都是** `extends Component`
-- 父组件 `ensureShell` 出宿主，子组件 `mount(host)` / `unmount()` / `refresh()`
+- 父组件在 `ensureShell` 树里 `slot(child)`（或 `this.slot(child)`）；不必事后 `ids().host` + `_mounted` flag
+- 子组件自行 `setData` / `refresh`；父 `unmount` 会卸 slot 子组件
 - 一组件一事：Toolbar / Palette / Artboard / Inspector
 - 画布 kind 用 `nodes/*` 注册表，禁止在 Editor 里 `switch (kind)`
+
+```js
+render() {
+  this.ensureShell((ids) => ids.root, ({ div, slot }) => {
+    div({ id: 'root' }, slot(this.toolbar), slot(this.palette));
+  });
+}
+```
 
 ## Skill：模态页
 

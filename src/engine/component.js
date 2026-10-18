@@ -11,7 +11,7 @@ import { adoptStyles, adoptStylesFor, applyStyleScope } from './styles.js';
  *
  * 两种挂载方式（同一套生命周期）：
  * 1. 页面：ComponentRender.navigate → mount(页槽)
- * 2. 组合：父组件 ensureShell/paint 出宿主后，子组件 mount(host)
+ * 2. 组合：在 ensureShell / paint 树里 `slot(child)`（或 `this.slot(child)`）
  *
  * 样式与组件同目录：
  *   static styles = new URL('./FooComponent.css', import.meta.url);
@@ -21,11 +21,13 @@ import { adoptStyles, adoptStylesFor, applyStyleScope } from './styles.js';
  * - setData(patch) 合并 this.state.data，并默认调用 refresh()
  * - refresh() 默认再跑 render()；AttachEvents 只在首次 mount
  * - render 用 ensureShell 建壳，refresh 路径不要 D.clear 整棵树（否则事件丢失）
+ * - ensureShell 只建一次 → slot 只挂一次，不必手写 `_mountedX` flag
  *
  * 易错点由引擎收掉：
  * - paint / ensureShell：不必手写 clear → bind → get → append
+ * - 子组件组合：`slot(child)` 写在树里，不必 ensureShell 后再 mount
  * - DOM 事件写在 props（onClick…）；window 等用 on()，unmount 自动卸
- * - unmount 默认清宿主 DOM + 重置 ref（DidUnMount 只做业务清理）
+ * - unmount 默认卸 slot 子组件 + 清宿主 DOM + 重置 ref（DidUnMount 只做业务清理）
  * - 样式旁挂 + mount 注入，不必在 index.html 堆全量 CSS
  * - `static styles` 默认自动 scope：CSS / className 仍写 `.toolbar`，引擎改写选择器并在 host 打 `data-gd-c`；`stylesScoped = false` 关闭
  * - navigator / logger：页面由 ComponentRender 注入；子组件由父写入 deps，用法同为 this.navigator
@@ -67,6 +69,8 @@ export class Component {
     this._host = null;
     this._mounted = false;
     this._listeners = [];
+    /** @type {Component[]} */
+    this._slotted = [];
     this.state = { data: {}, ref: {} };
     this.navigator = deps.navigator ?? null;
     this.logger = deps.logger ?? null;
@@ -127,14 +131,51 @@ export class Component {
   }
 
   /**
-   * 卸载：先业务 DidUnMount，再卸监听、清宿主、重置 ref。
+   * 卸载：先卸 slot 子组件，再业务 DidUnMount，再卸监听、清宿主、重置 ref。
    */
   unmount() {
     if (!this._mounted) return;
+    this._unmountSlots();
     this.componentDidUnMount();
     this._teardown();
     this._mounted = false;
     this._host = null;
+  }
+
+  /**
+   * 声明式子组件组合：在 ensureShell / paint 树里直接写 `slot(child)`。
+   * 返回宿主 Element（可作尾参 child）；宿主入树后自动 `child.mount`。
+   * ensureShell 只建一次 → 只 mount 一次，不必 `_mountedX` flag / 事后 mount。
+   *
+   * @param {Component} child
+   * @param {object} [hostProps] 宿主 div 的 props；`onMount(child)` 在 mount 完成后回调（不进 DOM）
+   * @returns {import('./element.js').Element}
+   *
+   * @example
+   * this.ensureShell((ids) => ids.root, ({ div, h1, slot }) => {
+   *   div({ id: 'root' }, h1({ text: 'Hi' }), slot(this.todoList, { className: 'body' }));
+   * });
+   */
+  slot(child, hostProps = {}) {
+    if (!child || typeof child.mount !== 'function') {
+      throw new Error('Component.slot: expected a Component');
+    }
+    const { onMount, ...domProps } = hostProps;
+    const d = new D();
+    const host = d.el('div', domProps);
+    const hostEl = host.dom();
+
+    if (!this._slotted.includes(child)) {
+      this._slotted.push(child);
+    }
+
+    queueMicrotask(() => {
+      void Promise.resolve(child.mount(hostEl)).then(() => {
+        if (typeof onMount === 'function') onMount(child);
+      });
+    });
+
+    return host;
   }
 
   /**
@@ -167,15 +208,18 @@ export class Component {
   /**
    * 清宿主 → bind 建树 → 写入 state.ref → append。
    * 只用于「整棵重建」；可刷新壳请用 ensureShell。
-   * @param {(api: ReturnType<typeof bind>) => void} build
+   * build 的 api 带 `slot`（同 `this.slot`），可在树里直接组合子组件。
+   * @param {(api: ReturnType<typeof bind> & { slot: typeof Component.prototype.slot }) => void} build
    * @param {HTMLElement} [host]
    */
   paint(build, host = this.host()) {
     if (!host) {
       throw new Error('Component.paint: no host');
     }
+    this._unmountSlots();
     D.clear(host);
     const api = bind();
+    api.slot = (child, hostProps) => this.slot(child, hostProps);
     build(api);
     const [ref, root] = api.get();
     this.state.ref = ref;
@@ -187,7 +231,7 @@ export class Component {
    * 壳只建一次：probe(ids) 已有则跳过，否则 paint。
    * 解决「refresh 拆掉已绑事件节点」的常见错误。
    * @param {(ids: Record<string, HTMLElement>) => any} probe
-   * @param {(api: ReturnType<typeof bind>) => void} build
+   * @param {(api: ReturnType<typeof bind> & { slot: typeof Component.prototype.slot }) => void} build
    * @returns {boolean} true = 本次新建了壳
    */
   ensureShell(probe, build) {
@@ -220,6 +264,19 @@ export class Component {
    */
   onId(id, type, handler, options) {
     return this.on(this.ids()[id], type, handler, options);
+  }
+
+  /** @private */
+  _unmountSlots() {
+    const kids = this._slotted;
+    this._slotted = [];
+    for (const child of kids) {
+      try {
+        child.unmount();
+      } catch {
+        /* ignore */
+      }
+    }
   }
 
   /** @private */

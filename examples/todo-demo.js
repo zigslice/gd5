@@ -21,7 +21,6 @@ class TodoDemoPage extends Component {
         this.todoList.setItems(items);
       },
     });
-    this._mountedTodo = false;
   }
 
   async componentDidMount() {
@@ -31,21 +30,15 @@ class TodoDemoPage extends Component {
   render() {
     this.ensureShell(
       (ids) => ids.root,
-      ({ div, h1, p }) => {
+      ({ div, h1, p, slot }) => {
         div(
           { id: 'root', className: 'gd-demo' },
           h1({ className: 'gd-demo__title', text: 'TodoList' }),
           p({ className: 'gd-demo__hint', text: '点击条目可循环：pending → active → done' }),
-          div({ id: 'host', className: 'gd-demo__body' })
+          slot(this.todoList, { className: 'gd-demo__body' })
         );
       }
     );
-
-    const host = this.ids().host;
-    if (host && !this._mountedTodo) {
-      this._mountedTodo = true;
-      void this.todoList.mount(host);
-    }
   }
 }
 

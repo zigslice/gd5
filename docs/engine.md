@@ -25,17 +25,18 @@ import {
 页面与页内子组件**共用** `mount` / `unmount`：
 
 ```
-ComponentRender.navigate / child.mount(host)
+ComponentRender.navigate / slot(child) → child.mount(host)
   → componentDidMount(params)
   → render()
   → componentDidAttachEvents()
 
-goBack / child.unmount()
+goBack / parent.unmount()
+  → 先卸 slot 子组件
   → componentDidUnMount()   // 只做业务清理
   → 引擎卸 on() 监听、清宿主、重置 ref
 ```
 
-宿主可用 `display: contents`，让子组件根节点直接参与父级布局。
+子组件写在 `ensureShell` 树里用 `slot(child)`（或 `this.slot(child)`）；宿主可用 `display: contents`，让子组件根节点直接参与父级布局。
 
 ## 写组件时怎么少踩坑
 
@@ -43,6 +44,7 @@ goBack / child.unmount()
 |--------|----------|
 | 手写 `D.clear` → `bind` → `get` → `append` | `paint(build)` / `ensureShell(probe, build)` |
 | refresh 拆掉壳 → AttachEvents 失效 | `ensureShell`：壳只建一次 |
+| 子组件事后 `ids().host` + `_mounted` flag | 树里 `slot(child)`，ensureShell 只挂一次 |
 | `getElementById` 与 `host()` 两套 | 页面也走 `mount`，统一 `this.host()` |
 | 事件写在 AttachEvents，和 DOM 分离 | props 里 `onClick` / `onChange` |
 | window 监听忘卸 | `this.on(window, …)`，unmount 自动卸 |
@@ -93,7 +95,7 @@ export class ToolbarComponent extends Component {
 | `ComponentRender.init` | 自动传入页面 |
 | 父组件 `new Child(deps)` | 父把 `navigator: this.navigator, logger: this.logger` 写进 deps |
 
-没有新的组合 API；子组件不会「另学一套」。
+子组件与页面同一套 `this.navigator` / `this.logger`；组合用 `slot`。
 
 ```js
 app.init({ loading: 'home', home: 'home' }, {
@@ -101,7 +103,7 @@ app.init({ loading: 'home', home: 'home' }, {
   preview: { type: PreviewPage, isModal: true },
 });
 
-// 页面
+// 页面构造
 this.toolbar = new Toolbar({
   navigator: this.navigator,
   logger: this.logger,
@@ -119,6 +121,7 @@ export class Panel extends Component {
   constructor(deps) {
     super(deps); // 已带 navigator / logger
     this.store = deps.store;
+    this.todos = new TodoList({ items: deps.items });
   }
 
   componentDidAttachEvents() {
@@ -129,7 +132,7 @@ export class Panel extends Component {
   render() {
     this.ensureShell(
       (ids) => ids.panel,
-      ({ div, button }) => {
+      ({ div, button, slot }) => {
         div(
           { className: 'panel', id: 'panel' },
           button({
@@ -137,7 +140,8 @@ export class Panel extends Component {
             type: 'button',
             text: '保存',
             onClick: () => this.save(),
-          })
+          }),
+          slot(this.todos, { className: 'panel__todos' })
         );
       }
     );

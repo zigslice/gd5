@@ -24,7 +24,6 @@ class LoadingButtonDemoPage extends Component {
       indicator: 'spin',
       onClick: () => wait(1800),
     });
-    this._mountedBtns = false;
   }
 
   async componentDidMount() {
@@ -34,7 +33,7 @@ class LoadingButtonDemoPage extends Component {
   render() {
     this.ensureShell(
       (ids) => ids.root,
-      ({ div, h1, p }) => {
+      ({ div, h1, p, slot }) => {
         div(
           { id: 'root', className: 'gd-demo' },
           h1({ className: 'gd-demo__title', text: 'Loading Button' }),
@@ -47,54 +46,28 @@ class LoadingButtonDemoPage extends Component {
             div(
               { className: 'gd-demo__row' },
               div({ className: 'gd-demo__lab', text: 'Idle' }),
-              div({ id: 'idleHost' })
+              Button({ type: 'default', text: 'Save' })
             ),
             div(
               { className: 'gd-demo__row' },
               div({ className: 'gd-demo__lab', text: 'Dots' }),
-              div({ id: 'dotsBusyHost' })
+              Button({ type: 'primary', text: 'Saving', loading: true, indicator: 'dots' })
             ),
             div(
               { className: 'gd-demo__row' },
               div({ className: 'gd-demo__lab', text: 'Spin' }),
-              div({ id: 'spinBusyHost' })
+              Button({ type: 'primary', text: 'Publishing', loading: true, indicator: 'spin' })
             ),
             p({
               className: 'gd-demo__hint',
               text: 'Interactive — click locks until async finishes:',
               style: { marginTop: '20px', marginBottom: '10px' },
             }),
-            div(
-              { className: 'gd-demo__row' },
-              div({ id: 'dotsHost' }),
-              div({ id: 'spinHost' })
-            )
+            div({ className: 'gd-demo__row' }, slot(this.dotsBtn), slot(this.spinBtn))
           )
         );
       }
     );
-
-    const idle = this.ids().idleHost;
-    const dotsBusy = this.ids().dotsBusyHost;
-    const spinBusy = this.ids().spinBusyHost;
-    if (idle && !idle.dataset.ready) {
-      idle.dataset.ready = '1';
-      idle.appendChild(Button({ type: 'default', text: 'Save' }).dom());
-      dotsBusy.appendChild(
-        Button({ type: 'primary', text: 'Saving', loading: true, indicator: 'dots' }).dom()
-      );
-      spinBusy.appendChild(
-        Button({ type: 'primary', text: 'Publishing', loading: true, indicator: 'spin' }).dom()
-      );
-    }
-
-    const dotsHost = this.ids().dotsHost;
-    const spinHost = this.ids().spinHost;
-    if (dotsHost && spinHost && !this._mountedBtns) {
-      this._mountedBtns = true;
-      void this.dotsBtn.mount(dotsHost);
-      void this.spinBtn.mount(spinHost);
-    }
   }
 }
 

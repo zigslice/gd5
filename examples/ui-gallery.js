@@ -130,8 +130,6 @@ import {
   setTheme,
   getTheme,
 } from '../src/ui/index.js';
-import { el } from '../src/ui/util.js';
-
 class GalleryPage extends Component {
   static styles = [new URL('./ui-gallery.css', import.meta.url)];
 
@@ -186,13 +184,11 @@ class GalleryPage extends Component {
     this.cmd = new CommandPalette({});
     this.notification = new Notification({});
     this.workflow = new WorkflowDAG({});
-    this._workflowMounted = false;
     this.jsonTree = new JsonTree({
       height: 320,
       defaultExpand: 2,
       onPath: (path) => this.toast.show({ message: path, type: 'info' }),
     });
-    this._jsonTreeMounted = false;
     this.markdownEditor = new MarkdownEditor({
       height: 280,
       mode: 'split',
@@ -200,7 +196,6 @@ class GalleryPage extends Component {
         '# Markdown editor\n\nWrite **bold**, *italic*, and `code`.\n\n- Toolbar wraps selection\n- Switch 编辑 / 分栏 / 预览\n\n```js\nconst ok = true;\n```\n\n> Preview updates as you type.\n',
       onChange: () => {},
     });
-    this._markdownMounted = false;
     this.coverFlow = new CoverFlow({
       height: 300,
       index: 2,
@@ -213,7 +208,6 @@ class GalleryPage extends Component {
       ],
       onChange: (i, item) => this.toast.show({ message: `Selected ${item.title}`, type: 'info' }),
     });
-    this._coverFlowMounted = false;
     this.todoList = new TodoList({
       title: 'To-dos',
       items: [
@@ -232,7 +226,6 @@ class GalleryPage extends Component {
         this.todoList.setItems(items);
       },
     });
-    this._todoListMounted = false;
     this.loadingBtnDots = new LoadingButton({
       text: 'Save',
       loadingText: 'Saving',
@@ -248,7 +241,6 @@ class GalleryPage extends Component {
       indicator: 'spin',
       onClick: () => new Promise((r) => setTimeout(r, 1600)),
     });
-    this._loadingBtnsMounted = false;
   }
 
   async componentDidMount() {
@@ -387,8 +379,8 @@ class GalleryPage extends Component {
               }),
               Space(
                 {},
-                el('div', { id: 'loadingBtnDotsHost', className: 'component-host' }),
-                el('div', { id: 'loadingBtnSpinHost', className: 'component-host' })
+                this.slot(this.loadingBtnDots, { className: 'component-host' }),
+                this.slot(this.loadingBtnSpin, { className: 'component-host' })
               )
             )
           ),
@@ -626,10 +618,7 @@ class GalleryPage extends Component {
                 type: 'secondary',
                 text: 'TodoList — active arrow · pending dashed ring · done check. Click a row to cycle status.',
               }),
-              el('div', {
-                id: 'todoListHost',
-                className: 'component-host',
-              })
+              this.slot(this.todoList, { className: 'component-host' })
             )
           ),
 
@@ -641,8 +630,7 @@ class GalleryPage extends Component {
                 type: 'secondary',
                 text: 'Cover Flow（封面流）— game character-select style: center card faces forward, neighbors tilt & stack. Drag / arrows / dots.',
               }),
-              el('div', {
-                id: 'coverFlowHost',
+              this.slot(this.coverFlow, {
                 className: 'component-host',
                 style: { minHeight: '360px' },
               })
@@ -657,8 +645,7 @@ class GalleryPage extends Component {
                 type: 'secondary',
                 text: 'Default Markdown editing with a basic top toolbar and live preview (编辑 / 分栏 / 预览).',
               }),
-              el('div', {
-                id: 'markdownEditorHost',
+              this.slot(this.markdownEditor, {
                 className: 'component-host',
                 style: { minHeight: '300px' },
               })
@@ -705,11 +692,31 @@ class GalleryPage extends Component {
                 type: 'secondary',
                 text: 'Virtualized JSON viewer (jsonTreeViewer-style). Expand / mark / JSONPath; theme-aware type colors.',
               }),
-              // Use standalone el() — nested bind div() steals D.root inside ensureShell.
-              el('div', {
-                id: 'jsonTreeHost',
+              this.slot(this.jsonTree, {
                 className: 'component-host',
                 style: { minHeight: '340px' },
+                onMount: (jt) => {
+                  jt.loadData({
+                    product: 'gd5',
+                    themes: ['orange', 'blue', 'green'],
+                    engine: {
+                      runtime: 'real-DOM',
+                      bundler: false,
+                      apis: ['Component', 'bind', 'LogProvider'],
+                    },
+                    ui: {
+                      kits: 80,
+                      overlays: ['Modal', 'Drawer', 'Toast'],
+                      flags: { virtualJson: true, workflowDag: true },
+                    },
+                    metrics: {
+                      score: 98.5,
+                      samples: [1, 2, 3, 5, 8, 13],
+                      ok: true,
+                      note: null,
+                    },
+                  });
+                },
               })
             )
           ),
@@ -722,10 +729,89 @@ class GalleryPage extends Component {
                 type: 'secondary',
                 text: 'Multi-column DAG: scroll, drag blank area to pan, click a node for the right drawer.',
               }),
-              el('div', {
-                id: 'workflowHost',
+              this.slot(this.workflow, {
                 className: 'component-host',
                 style: { minHeight: '360px' },
+                onMount: (wf) => {
+                  wf.setGraph({
+                    columns: [
+                      {
+                        key: 'ingest',
+                        title: 'Ingest',
+                        nodes: [
+                          {
+                            key: 'n-source',
+                            title: 'Source sync',
+                            status: 'success',
+                            description: 'Pull events from upstream queue.',
+                          },
+                          {
+                            key: 'n-validate',
+                            title: 'Validate',
+                            status: 'running',
+                            description: 'Schema + freshness checks.',
+                          },
+                        ],
+                      },
+                      {
+                        key: 'transform',
+                        title: 'Transform',
+                        nodes: [
+                          {
+                            key: 'n-enrich',
+                            title: 'Enrich',
+                            status: 'pending',
+                            description: 'Join dimensions and tags.',
+                          },
+                          {
+                            key: 'n-aggregate',
+                            title: 'Aggregate',
+                            status: 'pending',
+                            description: 'Roll up by tenant and day.',
+                          },
+                        ],
+                      },
+                      {
+                        key: 'deliver',
+                        title: 'Deliver',
+                        nodes: [
+                          {
+                            key: 'n-warehouse',
+                            title: 'Warehouse load',
+                            status: 'pending',
+                            description: 'Write parquet partitions.',
+                          },
+                          {
+                            key: 'n-notify',
+                            title: 'Notify',
+                            status: 'pending',
+                            description: 'Slack + email on completion.',
+                          },
+                        ],
+                      },
+                      {
+                        key: 'observe',
+                        title: 'Observe',
+                        nodes: [
+                          {
+                            key: 'n-metrics',
+                            title: 'Metrics',
+                            status: 'pending',
+                            description: 'Emit pipeline SLIs.',
+                          },
+                        ],
+                      },
+                    ],
+                    edges: [
+                      { from: 'n-source', to: 'n-enrich' },
+                      { from: 'n-validate', to: 'n-enrich' },
+                      { from: 'n-enrich', to: 'n-aggregate' },
+                      { from: 'n-aggregate', to: 'n-warehouse' },
+                      { from: 'n-warehouse', to: 'n-notify' },
+                      { from: 'n-notify', to: 'n-metrics' },
+                    ],
+                  });
+                },
               })
             )
           ),
@@ -1176,168 +1262,6 @@ class GalleryPage extends Component {
         );
       }
     );
-
-    if (!this._loadingBtnsMounted) {
-      const dotsHost =
-        this.ids().loadingBtnDotsHost ||
-        (typeof document !== 'undefined' ? document.getElementById('loadingBtnDotsHost') : null);
-      const spinHost =
-        this.ids().loadingBtnSpinHost ||
-        (typeof document !== 'undefined' ? document.getElementById('loadingBtnSpinHost') : null);
-      if (dotsHost && spinHost) {
-        this._loadingBtnsMounted = true;
-        void this.loadingBtnDots.mount(dotsHost);
-        void this.loadingBtnSpin.mount(spinHost);
-      }
-    }
-
-    const todoHost =
-      this.ids().todoListHost ||
-      (typeof document !== 'undefined' ? document.getElementById('todoListHost') : null);
-    if (todoHost && !this._todoListMounted) {
-      this._todoListMounted = true;
-      void this.todoList.mount(todoHost);
-    }
-
-    const cfHost =
-      this.ids().coverFlowHost ||
-      (typeof document !== 'undefined'
-        ? document.getElementById('coverFlowHost')
-        : null);
-    if (cfHost && !this._coverFlowMounted) {
-      this._coverFlowMounted = true;
-      void this.coverFlow.mount(cfHost);
-    }
-
-    const mdHost =
-      this.ids().markdownEditorHost ||
-      (typeof document !== 'undefined'
-        ? document.getElementById('markdownEditorHost')
-        : null);
-    if (mdHost && !this._markdownMounted) {
-      this._markdownMounted = true;
-      void this.markdownEditor.mount(mdHost);
-    }
-
-    const jtHost =
-      this.ids().jsonTreeHost ||
-      (typeof document !== 'undefined'
-        ? document.getElementById('jsonTreeHost')
-        : null);
-    if (jtHost && !this._jsonTreeMounted) {
-      this._jsonTreeMounted = true;
-      void this.jsonTree.mount(jtHost).then(() => {
-        this.jsonTree.loadData({
-          product: 'gd5',
-          themes: ['orange', 'blue', 'green'],
-          engine: {
-            runtime: 'real-DOM',
-            bundler: false,
-            apis: ['Component', 'bind', 'LogProvider'],
-          },
-          ui: {
-            kits: 80,
-            overlays: ['Modal', 'Drawer', 'Toast'],
-            flags: { virtualJson: true, workflowDag: true },
-          },
-          metrics: {
-            score: 98.5,
-            samples: [1, 2, 3, 5, 8, 13],
-            ok: true,
-            note: null,
-          },
-        });
-      });
-    }
-
-    const wfHost =
-      this.ids().workflowHost ||
-      (typeof document !== 'undefined'
-        ? document.getElementById('workflowHost')
-        : null);
-    if (wfHost && !this._workflowMounted) {
-      this._workflowMounted = true;
-      void this.workflow.mount(wfHost).then(() => {
-        this.workflow.setGraph({
-          columns: [
-            {
-              key: 'ingest',
-              title: 'Ingest',
-              nodes: [
-                {
-                  key: 'n-source',
-                  title: 'Source sync',
-                  status: 'success',
-                  description: 'Pull events from upstream queue.',
-                },
-                {
-                  key: 'n-validate',
-                  title: 'Validate',
-                  status: 'running',
-                  description: 'Schema + freshness checks.',
-                },
-              ],
-            },
-            {
-              key: 'transform',
-              title: 'Transform',
-              nodes: [
-                {
-                  key: 'n-enrich',
-                  title: 'Enrich',
-                  status: 'pending',
-                  description: 'Join dimensions and tags.',
-                },
-                {
-                  key: 'n-aggregate',
-                  title: 'Aggregate',
-                  status: 'pending',
-                  description: 'Roll up by tenant and day.',
-                },
-              ],
-            },
-            {
-              key: 'deliver',
-              title: 'Deliver',
-              nodes: [
-                {
-                  key: 'n-warehouse',
-                  title: 'Warehouse load',
-                  status: 'pending',
-                  description: 'Write parquet partitions.',
-                },
-                {
-                  key: 'n-notify',
-                  title: 'Notify',
-                  status: 'pending',
-                  description: 'Slack + email on completion.',
-                },
-              ],
-            },
-            {
-              key: 'observe',
-              title: 'Observe',
-              nodes: [
-                {
-                  key: 'n-metrics',
-                  title: 'Metrics',
-                  status: 'pending',
-                  description: 'Emit pipeline SLIs.',
-                },
-              ],
-            },
-          ],
-          edges: [
-            { from: 'n-source', to: 'n-enrich' },
-            { from: 'n-validate', to: 'n-enrich' },
-            { from: 'n-enrich', to: 'n-aggregate' },
-            { from: 'n-aggregate', to: 'n-warehouse' },
-            { from: 'n-warehouse', to: 'n-notify' },
-            { from: 'n-notify', to: 'n-metrics' },
-          ],
-        });
-      });
-    }
   }
 }
 

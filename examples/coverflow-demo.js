@@ -18,7 +18,6 @@ class CoverFlowDemoPage extends Component {
         { key: 'cleric', title: 'Cleric', subtitle: 'Support · Dawn', color: 'linear-gradient(145deg,#2b6cb0,#1a365d)' },
       ],
     });
-    this._mountedCf = false;
   }
 
   async componentDidMount() {
@@ -28,7 +27,7 @@ class CoverFlowDemoPage extends Component {
   render() {
     this.ensureShell(
       (ids) => ids.root,
-      ({ div, h1, p }) => {
+      ({ div, h1, p, slot }) => {
         div(
           { id: 'root', className: 'gd-demo' },
           h1({ className: 'gd-demo__title', text: 'Cover Flow' }),
@@ -36,16 +35,10 @@ class CoverFlowDemoPage extends Component {
             className: 'gd-demo__hint',
             text: '封面流 — 居中正面卡片，左右倾斜叠放（游戏选角色那种）',
           }),
-          div({ id: 'host', className: 'gd-demo__body' })
+          slot(this.coverFlow, { className: 'gd-demo__body' })
         );
       }
     );
-
-    const host = this.ids().host;
-    if (host && !this._mountedCf) {
-      this._mountedCf = true;
-      void this.coverFlow.mount(host);
-    }
   }
 }
 
