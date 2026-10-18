@@ -47,8 +47,10 @@ Base class for pages and nested UI.
 | Member | Meaning |
 |--------|---------|
 | `static styles` | `URL` \| CSS text \| array — co-located stylesheets; adopted once on `mount` |
-| `Component.adoptStyles(spec, key?)` | Manually inject a stylesheet / CSS text |
-| `Component.adoptStylesFor(Ctor)` | Adopt `Ctor.styles` |
+| `static stylesScoped` | Default `true` — auto-scope without author prefixes |
+| `static styleScope` | Optional scope id (default class name) |
+| `Component.adoptStyles(spec, key?)` | Manually inject a stylesheet / CSS text (global) |
+| `Component.adoptStylesFor(Ctor)` | Adopt `Ctor.styles` (scoped by default) |
 
 ### Lifecycle (override)
 
@@ -163,10 +165,14 @@ Inside a `Component`, prefer `ensureShell` / `paint` over manual `get` + `append
 | API | Meaning |
 |-----|---------|
 | `static styles = new URL('./X.css', import.meta.url)` | Co-located CSS |
-| `adoptStyles(spec, key?)` | Inject once (URL / path / CSS text) |
-| `adoptStylesFor(ComponentClass)` | Read `static styles` |
+| `static stylesScoped` | Default `true`: auto-scope selectors to host `[data-gd-c]` (authors still write `.toolbar`) |
+| `static styleScope` | Optional scope id (default: class name) |
+| `adoptStyles(spec, key?)` | Inject once globally (URL / path / CSS text) |
+| `adoptStylesFor(ComponentClass)` | Read `static styles` (scoped unless `stylesScoped = false`) |
+| `scopeCssText(css, scopeId)` | Rewrite selectors with `[data-gd-c="…"]` prefix |
+| `applyStyleScope(host, Ctor)` | Stamp `data-gd-c` on host |
 
-Unmount does **not** remove adopted styles.
+Authors and callers do **not** write the scope attribute — `mount` stamps it and rewrites CSS. Unmount does **not** remove adopted styles.
 
 ---
 
