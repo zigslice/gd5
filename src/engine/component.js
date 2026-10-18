@@ -1,5 +1,5 @@
 import { D, bind } from './element.js';
-import { adoptStyles, adoptStylesFor } from './styles.js';
+import { adoptStyles, adoptStylesFor, applyStyleScope } from './styles.js';
 
 /**
  * 迷你实模式 HTML 组件规范（引擎）
@@ -27,6 +27,7 @@ import { adoptStyles, adoptStylesFor } from './styles.js';
  * - DOM 事件写在 props（onClick…）；window 等用 on()，unmount 自动卸
  * - unmount 默认清宿主 DOM + 重置 ref（DidUnMount 只做业务清理）
  * - 样式旁挂 + mount 注入，不必在 index.html 堆全量 CSS
+ * - `static styles` 默认自动 scope：CSS / className 仍写 `.toolbar`，引擎改写选择器并在 host 打 `data-gd-c`；`stylesScoped = false` 关闭
  * - navigator / logger：页面由 ComponentRender 注入；子组件由父写入 deps，用法同为 this.navigator
  *
  * API 一览：docs/api.md
@@ -37,6 +38,19 @@ export class Component {
    * @type {string|URL|Array<string|URL>|null}
    */
   static styles = null;
+
+  /**
+   * 是否对 `static styles` 自动 scope（默认 true）。
+   * 作者不写前缀；注入时改写成 `[data-gd-c="Name"] …`。
+   * @type {boolean}
+   */
+  static stylesScoped = true;
+
+  /**
+   * 覆盖 scope id（默认用 class name）。
+   * @type {string|null}
+   */
+  static styleScope = null;
 
   /** @see {adoptStyles} */
   static adoptStyles = adoptStyles;
@@ -104,6 +118,7 @@ export class Component {
       throw new Error('Component.mount: host not found');
     }
     await adoptStylesFor(this.constructor);
+    applyStyleScope(this._host, this.constructor);
     await this.componentDidMount(params);
     this.render();
     this.componentDidAttachEvents();

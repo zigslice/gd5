@@ -27,4 +27,9 @@ export {
   adoptStylesFor,
   adoptedStyleKeys,
   resetAdoptedStyles,
+  scopeCssText,
+  styleScopeId,
+  styleScopeSelector,
+  applyStyleScope,
+  STYLE_SCOPE_ATTR,
 } from './styles.js';

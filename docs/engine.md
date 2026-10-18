@@ -75,12 +75,14 @@ input({ id: 'name', onChange: (e) => this.setData({ name: e.target.value }) });
 ```js
 export class ToolbarComponent extends Component {
   static styles = new URL('./ToolbarComponent.css', import.meta.url);
-  // …
+  // CSS 仍写 .toolbar；className 仍写 'toolbar' —— 不必加前缀
 }
 ```
 
 - `mount` 前会 `adoptStylesFor(this.constructor)`，相同 URL / 文本只注入一次
-- **全局**：`css/tokens.css` + `css/base.css`；**组件私有**旁挂 CSS
+- **自动 scope（默认开）**：引擎把选择器改写成 `[data-gd-c="ToolbarComponent"] .toolbar`，并在 host 上打 `data-gd-c`。作者 / 使用方都零前缀噪音
+- 关闭：`static stylesScoped = false`；自定义 id：`static styleScope = 'toolbar'`
+- **全局**：`css/tokens.css` + `css/base.css`（以及 UI kit 的 `gd-*`）；**组件私有**旁挂 CSS
 
 ### navigator / logger：同一套用法
 

@@ -20,6 +20,10 @@ import {
   adoptStylesFor,
   adoptedStyleKeys,
   resetAdoptedStyles,
+  scopeCssText,
+  styleScopeId,
+  STYLE_SCOPE_ATTR,
+  applyStyleScope,
   domEventType,
 } from '../src/engine/index.js';
 import { createStore, DEFAULT_DOC } from '../src/product/lib/store.js';
@@ -505,25 +509,90 @@ section('engine: adoptStyles');
   assert(headKids.length === before, 'adoptStyles dedupes by key');
   assert(adoptedStyleKeys().includes('text-x'), 'adoptedStyleKeys lists keys');
 
+  // Auto-scope: authors write .panel; engine prefixes [data-gd-c="…"]
+  const scoped = scopeCssText('.toolbar { color: red } .toolbar:hover { color: blue }', 'ToolbarComponent');
+  assert(scoped.includes('[data-gd-c="ToolbarComponent"] .toolbar'), 'scopeCssText prefixes class selectors');
+  assert(scoped.includes('[data-gd-c="ToolbarComponent"] .toolbar:hover'), 'scopeCssText keeps pseudo');
+  assert(!scoped.includes('[data-gd-c="ToolbarComponent"] .toolbar { color: red } .toolbar:hover'), 'each selector prefixed');
+  const media = scopeCssText('@media (min-width: 1px) { .x { a: 1 } }', 'A');
+  assert(media.includes('@media') && media.includes('[data-gd-c="A"] .x'), 'scopeCssText recurses into @media');
+  const frames = scopeCssText('@keyframes spin { from { opacity: 0 } } .y { animation: spin 1s }', 'B');
+  assert(frames.includes('@keyframes spin'), 'scopeCssText leaves @keyframes global');
+  assert(frames.includes('[data-gd-c="B"] .y'), 'scopeCssText still scopes sibling rules');
+  assert(
+    /^:root\s*\{/.test(scopeCssText(':root { --x: 1 }', 'C').trim()) &&
+      !scopeCssText(':root { --x: 1 }', 'C').includes('[data-gd-c'),
+    'scopeCssText leaves :root'
+  );
+  assert(styleScopeId({ name: 'Foo' }) === 'Foo', 'styleScopeId uses class name');
+  assert(styleScopeId({ name: 'Foo', styleScope: 'bar' }) === 'bar', 'styleScopeId respects styleScope');
+  assert(STYLE_SCOPE_ATTR === 'data-gd-c', 'STYLE_SCOPE_ATTR stable');
+
   class Styled extends Component {
     static styles = '.panel { display: block }';
   }
   await adoptStylesFor(Styled);
   assert(
-    headKids.some((el) => el.tagName === 'STYLE' && el.textContent.includes('display: block')),
-    'adoptStylesFor reads static styles'
+    headKids.some(
+      (el) =>
+        el.tagName === 'STYLE' &&
+        el.textContent.includes('[data-gd-c="Styled"] .panel') &&
+        el.textContent.includes('display: block')
+    ),
+    'adoptStylesFor auto-scopes static styles'
+  );
+
+  class GlobalStyled extends Component {
+    static styles = '.naked { display: flex }';
+    static stylesScoped = false;
+  }
+  await adoptStylesFor(GlobalStyled);
+  assert(
+    headKids.some(
+      (el) => el.tagName === 'STYLE' && el.textContent.includes('.naked { display: flex }') && !el.textContent.includes('[data-gd-c="GlobalStyled"]')
+    ),
+    'stylesScoped=false keeps global selectors'
   );
 
   class Linked extends Component {
     static styles = new URL('http://example.test/panel.css');
+    static stylesScoped = false; // URL link path (no fetch in this mock)
     render() {}
   }
-  const host = { id: 'h', firstChild: null, removeChild() {}, appendChild() {} };
+  const host = {
+    id: 'h',
+    firstChild: null,
+    removeChild() {},
+    appendChild() {},
+    setAttribute(name, value) {
+      this[name] = value;
+    },
+  };
   const linked = new Linked();
   await linked.mount(host);
   assert(
     headKids.some((el) => el.tagName === 'LINK' && el.href.includes('panel.css')),
-    'mount adopts URL stylesheet'
+    'mount adopts URL stylesheet when unscoped'
+  );
+  // stylesScoped=false → no data-gd-c stamp required; scoped components stamp host
+  class Local extends Component {
+    static styles = '.z { color: #000 }';
+    render() {}
+  }
+  const host2 = {
+    attrs: {},
+    setAttribute(name, value) {
+      this.attrs[name] = value;
+    },
+    firstChild: null,
+    removeChild() {},
+    appendChild() {},
+  };
+  await new Local().mount(host2);
+  assert(host2.attrs['data-gd-c'] === 'Local', 'mount stamps data-gd-c on host');
+  assert(
+    headKids.some((el) => el.tagName === 'STYLE' && el.textContent.includes('[data-gd-c="Local"] .z')),
+    'mount injects scoped CSS for Local'
   );
   resetAdoptedStyles();
 }
