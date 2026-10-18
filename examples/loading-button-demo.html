@@ -3,48 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>LoadingButton demo</title>
+  <title>LoadingButton demo — gd5</title>
   <link rel="stylesheet" href="../src/ui/css/ui.css" />
-  <style>
-    body {
-      margin: 24px;
-      font-family: var(--gd-font);
-      background: var(--gd-bg-spotlight);
-      color: var(--gd-text);
-    }
-    h1 { margin: 0 0 6px; font-size: 22px; }
-    .hint { margin: 0 0 20px; color: var(--gd-text-secondary); font-size: 14px; }
-    .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
-  </style>
 </head>
 <body>
-  <h1>Loading Button</h1>
-  <p class="hint">点击后换色 + 散点/转圈，处理中不可重复触发；结束后只显示文本</p>
-  <div class="row">
-    <div id="dots"></div>
-    <div id="spin"></div>
-  </div>
-  <script type="module">
-    import { LoadingButton } from '../src/ui/index.js';
-
-    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-
-    await new LoadingButton({
-      text: 'Save',
-      loadingText: 'Saving',
-      type: 'default',
-      loadingType: 'primary',
-      indicator: 'dots',
-      onClick: () => wait(1800),
-    }).mount(document.getElementById('dots'));
-
-    await new LoadingButton({
-      text: 'Publish',
-      loadingText: 'Publishing',
-      type: 'primary',
-      indicator: 'spin',
-      onClick: () => wait(1800),
-    }).mount(document.getElementById('spin'));
-  </script>
+  <div id="home"></div>
+  <script type="module" src="./loading-button-demo.js"></script>
 </body>
 </html>

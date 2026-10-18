@@ -203,7 +203,7 @@ div(
 src/engine/     运行时
 src/ui/         组件库
 src/product/    示例应用（可选）
-examples/       ui-gallery.html
+examples/       标准 gd5 应用（页槽 + ComponentRender）— ui-gallery、各 demo
 docs/           api.md · ui.md · engine.md · architecture.md
 ```
 
@@ -219,8 +219,12 @@ docs/           api.md · ui.md · engine.md · architecture.md
 
 ProtoLive（`src/product/`）在真实编辑器里演示组合用法。嵌入引擎时可忽略。
 
+`examples/` 下的 UI 演示都是**标准 gd5 应用**：HTML 页槽 + `ComponentRender` / `LogProvider`（见 `examples/demoApp.js`），结构与 `src/product/main.js` 一致。
+
 ```bash
 python3 -m http.server 8080   # http://localhost:8080
+# 画廊：examples/ui-gallery.html
+# 演示：examples/*-demo.html
 node test/run.mjs
 ```
 

@@ -1,0 +1,101 @@
+import { Component } from '../src/engine/index.js';
+import { loadUi, Button, LoadingButton } from '../src/ui/index.js';
+import { startDemoApp } from './demoApp.js';
+
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+class LoadingButtonDemoPage extends Component {
+  static styles = [new URL('./demo-shell.css', import.meta.url)];
+
+  constructor(deps) {
+    super(deps);
+    this.dotsBtn = new LoadingButton({
+      text: 'Save',
+      loadingText: 'Saving',
+      type: 'default',
+      loadingType: 'primary',
+      indicator: 'dots',
+      onClick: () => wait(1800),
+    });
+    this.spinBtn = new LoadingButton({
+      text: 'Publish',
+      loadingText: 'Publishing',
+      type: 'primary',
+      indicator: 'spin',
+      onClick: () => wait(1800),
+    });
+    this._mountedBtns = false;
+  }
+
+  async componentDidMount() {
+    await loadUi();
+  }
+
+  render() {
+    this.ensureShell(
+      (ids) => ids.root,
+      ({ div, h1, p }) => {
+        div(
+          { id: 'root', className: 'gd-demo' },
+          h1({ className: 'gd-demo__title', text: 'Loading Button' }),
+          p({
+            className: 'gd-demo__hint',
+            text: 'Idle → busy（换色 + 散点/转圈，不可重复点）→ done 纯文本',
+          }),
+          div(
+            { className: 'gd-demo__body' },
+            div(
+              { className: 'gd-demo__row' },
+              div({ className: 'gd-demo__lab', text: 'Idle' }),
+              div({ id: 'idleHost' })
+            ),
+            div(
+              { className: 'gd-demo__row' },
+              div({ className: 'gd-demo__lab', text: 'Dots' }),
+              div({ id: 'dotsBusyHost' })
+            ),
+            div(
+              { className: 'gd-demo__row' },
+              div({ className: 'gd-demo__lab', text: 'Spin' }),
+              div({ id: 'spinBusyHost' })
+            ),
+            p({
+              className: 'gd-demo__hint',
+              text: 'Interactive — click locks until async finishes:',
+              style: { marginTop: '20px', marginBottom: '10px' },
+            }),
+            div(
+              { className: 'gd-demo__row' },
+              div({ id: 'dotsHost' }),
+              div({ id: 'spinHost' })
+            )
+          )
+        );
+      }
+    );
+
+    const idle = this.ids().idleHost;
+    const dotsBusy = this.ids().dotsBusyHost;
+    const spinBusy = this.ids().spinBusyHost;
+    if (idle && !idle.dataset.ready) {
+      idle.dataset.ready = '1';
+      idle.appendChild(Button({ type: 'default', text: 'Save' }).dom());
+      dotsBusy.appendChild(
+        Button({ type: 'primary', text: 'Saving', loading: true, indicator: 'dots' }).dom()
+      );
+      spinBusy.appendChild(
+        Button({ type: 'primary', text: 'Publishing', loading: true, indicator: 'spin' }).dom()
+      );
+    }
+
+    const dotsHost = this.ids().dotsHost;
+    const spinHost = this.ids().spinHost;
+    if (dotsHost && spinHost && !this._mountedBtns) {
+      this._mountedBtns = true;
+      void this.dotsBtn.mount(dotsHost);
+      void this.spinBtn.mount(spinHost);
+    }
+  }
+}
+
+startDemoApp({ home: LoadingButtonDemoPage }, undefined, { demo: 'loading-button' });

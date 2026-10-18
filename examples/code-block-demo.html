@@ -1,37 +1,13 @@
 <!DOCTYPE html>
-<html lang="en" data-gd-theme="orange">
+<html lang="zh-CN" data-gd-theme="orange">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CodeBlock demo — gd5</title>
   <link rel="stylesheet" href="../src/ui/css/ui.css" />
 </head>
-<body style="margin:24px;font-family:var(--gd-font)">
-  <h1>CodeBlock demo</h1>
-  <div id="app"></div>
-  <script type="module">
-    import { CodeBlock, DiffBlock, splitCodeLines } from '../src/ui/index.js';
-    const code = `/** demo */\nexport function add(a, b) {\n  // sum\n  return a + b;\n}\n`;
-    console.log('lines', splitCodeLines(code).length);
-    const block = CodeBlock({
-      language: 'javascript',
-      highlightLines: [4],
-      startFrom: 1,
-      code,
-    });
-    document.getElementById('app').appendChild(block.dom());
-    document.getElementById('app').appendChild(
-      CodeBlock({
-        language: 'json',
-        startFrom: 10,
-        code: '{\n  "ok": true,\n  "n": 1\n}\n',
-      }).dom()
-    );
-    document.getElementById('app').appendChild(
-      DiffBlock({
-        language: 'javascript',
-        diff:
-          '@@ -1,4 +1,5 @@\n /** demo */\n-export function add(a, b) {\n-  // sum\n-  return a + b;\n+export function add(a, b, c = 0) {\n+  // sum\n+  return a + b + c;\n }\n',
-      }).dom()
-    );
-  </script>
+<body>
+  <div id="home"></div>
+  <script type="module" src="./code-block-demo.js"></script>
 </body>
 </html>

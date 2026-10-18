@@ -1,8 +1,10 @@
 /**
  * Live gallery for gd5 UI kit — NameThatUI-aligned catalog.
+ * Standard gd5 app: page slot `#home` + ComponentRender (see demoApp.js).
  * Open examples/ui-gallery.html via static server.
  */
 import { Component } from '../src/engine/index.js';
+import { startDemoApp } from './demoApp.js';
 import {
   loadUi,
   Button,
@@ -131,8 +133,10 @@ import {
 import { el } from '../src/ui/util.js';
 
 class GalleryPage extends Component {
-  constructor() {
-    super({});
+  static styles = [new URL('./ui-gallery.css', import.meta.url)];
+
+  constructor(deps = {}) {
+    super(deps);
     this.state.data = {
       name: '',
       notify: true,
@@ -267,7 +271,7 @@ class GalleryPage extends Component {
       (ids) => ids.galleryRoot,
       ({ div }) => {
         div(
-          { id: 'galleryRoot' },
+          { id: 'galleryRoot', className: 'gallery' },
           Banner({
             type: 'info',
             message: 'gd5 UI — NameThatUI + Ant Design coverage. White panels; accent theme is selectable.',
@@ -1325,5 +1329,4 @@ class GalleryPage extends Component {
   }
 }
 
-const page = new GalleryPage();
-await page.mount(document.getElementById('app'));
+startDemoApp({ home: GalleryPage }, undefined, { demo: 'ui-gallery' });

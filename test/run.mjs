@@ -113,8 +113,21 @@ section('layout: product vs engine');
     'docs/images/theme-orange.png',
     'docs/images/theme-blue.png',
     'docs/images/theme-green.png',
+    'examples/demoApp.js',
+    'examples/demo-shell.css',
     'examples/ui-gallery.html',
     'examples/ui-gallery.js',
+    'examples/ui-gallery.css',
+    'examples/todo-demo.html',
+    'examples/todo-demo.js',
+    'examples/code-block-demo.html',
+    'examples/code-block-demo.js',
+    'examples/markdown-editor-demo.html',
+    'examples/markdown-editor-demo.js',
+    'examples/coverflow-demo.html',
+    'examples/coverflow-demo.js',
+    'examples/loading-button-demo.html',
+    'examples/loading-button-demo.js',
     'src/engine/styles.js',
     'src/product/css/tokens.css',
     'src/product/css/base.css',
@@ -1059,6 +1072,27 @@ section('ui kit');
   assert(docs.includes('CoverFlow') && docs.includes('封面流'), 'docs cover CoverFlow');
   assert(docs.includes('TodoList') && docs.includes('To-dos'), 'docs cover TodoList');
   assert(docs.includes('LoadingButton') && docs.includes('Loading Button'), 'docs cover LoadingButton');
+  assert(docs.includes('demoApp.js'), 'docs mention demoApp bootstrap');
+
+  {
+    const demos = [
+      'examples/ui-gallery.html',
+      'examples/todo-demo.html',
+      'examples/code-block-demo.html',
+      'examples/markdown-editor-demo.html',
+      'examples/coverflow-demo.html',
+      'examples/loading-button-demo.html',
+    ];
+    for (const rel of demos) {
+      const html = readFileSync(join(root, rel), 'utf8');
+      assert(html.includes('id="home"'), `${rel} has ComponentRender home slot`);
+      assert(/<script\s+type="module"\s+src="\.\//.test(html), `${rel} loads external module`);
+      assert(!/<script\s+type="module">/.test(html), `${rel} has no inline module script`);
+    }
+    const boot = readFileSync(join(root, 'examples/demoApp.js'), 'utf8');
+    assert(boot.includes('ComponentRender') && boot.includes('LogProvider'), 'demoApp.js is standard gd5 boot');
+    assert(!existsSync(join(root, 'examples/loading-button-showcase.html')), 'ad-hoc showcase removed');
+  }
 
   const listeners = [];
   globalThis.document = {

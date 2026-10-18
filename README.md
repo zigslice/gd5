@@ -203,7 +203,7 @@ div(
 src/engine/     runtime
 src/ui/         component library
 src/product/    example app (optional)
-examples/       ui-gallery.html
+examples/       gd5 apps (page slots + ComponentRender) — ui-gallery, demos
 docs/           api.md · ui.md · engine.md · architecture.md
 ```
 
@@ -219,8 +219,12 @@ docs/           api.md · ui.md · engine.md · architecture.md
 
 ProtoLive (`src/product/`) shows composition in a real editor. Safe to ignore when embedding the engine.
 
+UI kit demos under `examples/` are **standard gd5 apps**: HTML page slots + `ComponentRender` / `LogProvider` (via `examples/demoApp.js`), same shape as `src/product/main.js`.
+
 ```bash
 python3 -m http.server 8080   # http://localhost:8080
+# gallery:  examples/ui-gallery.html
+# demos:    examples/*-demo.html
 node test/run.mjs
 ```
 

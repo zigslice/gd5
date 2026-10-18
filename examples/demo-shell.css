@@ -1,0 +1,58 @@
+/**
+ * Shared shell for gd5 example apps (co-located via Component.static styles).
+ */
+
+html {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--gd-font);
+  background: var(--gd-bg-spotlight, #f5f5f5);
+  color: var(--gd-text, #1f1a17);
+}
+
+.gd-demo {
+  box-sizing: border-box;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 28px 20px 64px;
+}
+
+.gd-demo__title {
+  margin: 0 0 6px;
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.gd-demo__hint {
+  margin: 0 0 18px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--gd-text-secondary, #5c534c);
+}
+
+.gd-demo__body {
+  min-width: 0;
+}
+
+.gd-demo__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.gd-demo__row + .gd-demo__row {
+  margin-top: 12px;
+}
+
+.gd-demo__lab {
+  width: 72px;
+  flex: 0 0 auto;
+  font-size: 12px;
+  color: var(--gd-text-muted, #8a8178);
+}

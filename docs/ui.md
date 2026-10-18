@@ -144,7 +144,7 @@ Primitives return **real-DOM `Element`s**. Overlay widgets are **`Component`s** 
 
 **Not shipped as components** (CSS motion / vibe, not controls): easing, spring, text scramble, parallax, hover-lift effects, Name That Vibe styles. Use CSS / your app layer.
 
-Live gallery: [`examples/ui-gallery.html`](../examples/ui-gallery.html)
+Live gallery: [`examples/ui-gallery.html`](../examples/ui-gallery.html) (standard gd5 app: `#home` slot + `ComponentRender`). Other demos (`examples/*-demo.html`) use the same bootstrap via [`examples/demoApp.js`](../examples/demoApp.js).
 
 ## Modal / Drawer / Toast
 

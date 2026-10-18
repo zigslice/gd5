@@ -3,48 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TodoList demo</title>
+  <title>TodoList demo — gd5</title>
   <link rel="stylesheet" href="../src/ui/css/ui.css" />
-  <style>
-    body {
-      margin: 24px;
-      font-family: var(--gd-font);
-      background: #f3f3f3;
-      color: var(--gd-text);
-    }
-    h1 { margin: 0 0 6px; font-size: 20px; }
-    .hint { margin: 0 0 16px; color: var(--gd-text-secondary); font-size: 13px; }
-  </style>
 </head>
 <body>
-  <h1>TodoList</h1>
-  <p class="hint">点击条目可循环：pending → active → done</p>
-  <div id="host"></div>
-  <script type="module">
-    import { TodoList, nextTodoStatus } from '../src/ui/index.js';
-
-    let items = [
-      { key: '1', text: 'Add Button loading + LoadingButton with dots/spin', status: 'active' },
-      { key: '2', text: 'CSS, gallery, docs, tests, demo', status: 'pending' },
-      { key: '3', text: 'Commit, push, open PR', status: 'pending' },
-    ];
-
-    const host = document.getElementById('host');
-    const paint = () => {
-      host.replaceChildren(
-        TodoList({
-          title: 'To-dos',
-          items,
-          onItemClick: (item, index) => {
-            items = items.map((t, i) =>
-              i === index ? { ...t, status: nextTodoStatus(t.status) } : t
-            );
-            paint();
-          },
-        }).dom()
-      );
-    };
-    paint();
-  </script>
+  <!-- Engine page slots (ComponentRender) -->
+  <div id="home"></div>
+  <script type="module" src="./todo-demo.js"></script>
 </body>
 </html>
