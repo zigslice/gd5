@@ -7,11 +7,21 @@ class TodoDemoPage extends Component {
 
   constructor(deps) {
     super(deps);
-    this.state.data.items = [
-      { key: '1', text: 'Add Button loading + LoadingButton with dots/spin', status: 'active' },
-      { key: '2', text: 'CSS, gallery, docs, tests, demo', status: 'pending' },
-      { key: '3', text: 'Commit, push, open PR', status: 'pending' },
-    ];
+    this.todoList = new TodoList({
+      title: 'To-dos',
+      items: [
+        { key: '1', text: 'Add Button loading + LoadingButton with dots/spin', status: 'active' },
+        { key: '2', text: 'CSS, gallery, docs, tests, demo', status: 'pending' },
+        { key: '3', text: 'Commit, push, open PR', status: 'pending' },
+      ],
+      onItemClick: (_item, index) => {
+        const items = this.todoList.getItems().map((t, i) =>
+          i === index ? { ...t, status: nextTodoStatus(t.status) } : t
+        );
+        this.todoList.setItems(items);
+      },
+    });
+    this._mountedTodo = false;
   }
 
   async componentDidMount() {
@@ -19,8 +29,6 @@ class TodoDemoPage extends Component {
   }
 
   render() {
-    const { items } = this.state.data;
-
     this.ensureShell(
       (ids) => ids.root,
       ({ div, h1, p }) => {
@@ -34,20 +42,10 @@ class TodoDemoPage extends Component {
     );
 
     const host = this.ids().host;
-    if (!host) return;
-    host.replaceChildren(
-      TodoList({
-        title: 'To-dos',
-        items,
-        onItemClick: (_item, index) => {
-          this.setData({
-            items: items.map((t, i) =>
-              i === index ? { ...t, status: nextTodoStatus(t.status) } : t
-            ),
-          });
-        },
-      }).dom()
-    );
+    if (host && !this._mountedTodo) {
+      this._mountedTodo = true;
+      void this.todoList.mount(host);
+    }
   }
 }
 

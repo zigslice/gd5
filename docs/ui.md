@@ -57,7 +57,7 @@ Primitives return **real-DOM `Element`s**. Overlay widgets are **`Component`s** 
 | Card | `Card` | primitive |
 | Carousel / Page Control | `Carousel`, `PageControl` | primitive |
 | Cover Flow (封面流) | `CoverFlow`, `CoverflowCarousel`, `createCoverFlow` | **Component** |
-| To-dos | `TodoList`, `Todos`, `normalizeTodoItems` | primitive |
+| To-dos | `TodoList`, `Todos`, `createTodoList`, `normalizeTodoItems` | **Component** |
 | Chat Bubble | `ChatBubble` | primitive |
 | Combobox | `Combobox` | primitive |
 | Command Palette | `CommandPalette` | **Component** |
@@ -216,22 +216,28 @@ Button({ type: 'primary', text: 'Wait', loading: true, indicator: 'spin' })
 
 ## To-dos
 
-Cursor-style checklist card: header title + `done/total`, active item with filled arrow disc, pending with dashed ring, done with check.
+Cursor-style checklist card (Component): header title + `done/total`, active item with filled arrow disc, pending with dashed ring, done with check.
+
+Compose like Cover Flow — construct once, mount into a host, update via `setItems` (not `replaceChildren`).
 
 ```js
 import { TodoList, nextTodoStatus } from './src/ui/index.js';
 
-TodoList({
+const todos = new TodoList({
   title: 'To-dos',
   items: [
     { key: '1', text: 'Ship LoadingButton', status: 'active' },
     { key: '2', text: 'Write docs', status: 'pending' },
     { key: '3', text: 'Open PR', status: 'pending' },
   ],
-  onItemClick: (item, i) => {
-    items[i].status = nextTodoStatus(item.status);
+  onItemClick: (_item, i) => {
+    const items = todos.getItems().map((t, idx) =>
+      idx === i ? { ...t, status: nextTodoStatus(t.status) } : t
+    );
+    todos.setItems(items);
   },
-})
+});
+await todos.mount(host);
 ```
 
 Statuses: `pending` · `active` (`in_progress`) · `done` (`completed`).

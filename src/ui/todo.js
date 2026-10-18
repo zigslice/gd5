@@ -1,4 +1,5 @@
-import { cx, el, omit } from './util.js';
+import { Component } from '../engine/index.js';
+import { cx, el, loadUi } from './util.js';
 
 /**
  * @typedef {'pending'|'active'|'done'} TodoStatus
@@ -58,6 +59,18 @@ export function countTodoProgress(items = []) {
   return { done, total };
 }
 
+/**
+ * Cycle pending → active → done → pending (handy for demos).
+ * @param {TodoStatus} status
+ * @returns {TodoStatus}
+ */
+export function nextTodoStatus(status) {
+  const s = normalizeTodoStatus(status);
+  if (s === 'pending') return 'active';
+  if (s === 'active') return 'done';
+  return 'pending';
+}
+
 function statusIcon(status) {
   if (status === 'active') {
     return el(
@@ -86,110 +99,165 @@ function statusIcon(status) {
 }
 
 /**
- * TodoList — card checklist matching Cursor-style to-dos.
+ * TodoList — Cursor-style to-dos card (mountable Component).
+ *
+ * Compose: `new TodoList({ items })` → parent ensureShell host → `todo.mount(host)`.
+ * Update: `setItems` / `setData` (do not rebuild via replaceChildren).
  *
  * Statuses:
  * - `pending`  dashed circle, muted text
  * - `active`   filled circle + arrow (current)
  * - `done`     filled check (counts toward n/total)
  *
- * @param {object} [props]
- * @param {string} [props.title]
- * @param {TodoItemInput[]|string[]} [props.items]
- * @param {boolean} [props.showProgress]
- * @param {(item:object, index:number)=>void} [props.onItemClick]
- * @param {string} [props.className]
+ * @param {object} [deps]
+ * @param {string} [deps.title]
+ * @param {TodoItemInput[]|string[]} [deps.items]
+ * @param {boolean} [deps.showProgress]
+ * @param {(item:object, index:number)=>void} [deps.onItemClick]
+ * @param {string} [deps.className]
  */
-export function TodoList(props = {}) {
-  const {
-    title = 'To-dos',
-    items: rawItems = [],
-    showProgress = true,
-    onItemClick,
-    className,
-  } = props;
+export class TodoList extends Component {
+  constructor(deps = {}) {
+    super(deps);
+    this.state.data.title = deps.title ?? 'To-dos';
+    this.state.data.items = normalizeTodoItems(deps.items);
+    this.state.data.showProgress = deps.showProgress !== false;
+    this.state.data.className = deps.className || '';
+    this._onItemClick = deps.onItemClick || null;
+  }
 
-  const items = normalizeTodoItems(rawItems);
-  const { done, total } = countTodoProgress(items);
+  async mount(host, params = {}) {
+    await loadUi();
+    return super.mount(host, params);
+  }
 
-  return el(
-    'div',
-    {
-      ...omit(props, ['title', 'items', 'showProgress', 'onItemClick', 'className']),
-      className: cx('gd-todo', className),
-      attrs: {
-        role: 'list',
-        'aria-label': title,
+  /**
+   * @param {TodoItemInput[]|string[]} items
+   */
+  setItems(items) {
+    this.setData({ items: normalizeTodoItems(items) }, { refresh: !!this._mounted });
+    return this;
+  }
+
+  getItems() {
+    return this.state.data.items;
+  }
+
+  getProgress() {
+    return countTodoProgress(this.state.data.items);
+  }
+
+  setTitle(title) {
+    this.setData({ title: String(title ?? '') }, { refresh: !!this._mounted });
+    return this;
+  }
+
+  _renderItem(item, index) {
+    const interactive = typeof this._onItemClick === 'function' && !item.disabled;
+    const body = [statusIcon(item.status), el('span', { className: 'gd-todo__text', text: item.text })];
+    return el(
+      'li',
+      {
+        key: item.key,
+        className: cx(
+          'gd-todo__item',
+          `gd-todo__item--${item.status}`,
+          item.disabled && 'gd-todo__item--disabled'
+        ),
+        attrs: {
+          role: 'listitem',
+          'data-status': item.status,
+          'aria-current': item.status === 'active' ? 'step' : undefined,
+        },
       },
-    },
-    el(
-      'div',
-      { className: 'gd-todo__header' },
-      el('span', { className: 'gd-todo__title', text: title }),
-      showProgress
-        ? el('span', {
-            className: 'gd-todo__progress',
-            text: `${done}/${total}`,
-            attrs: { 'aria-label': `${done} of ${total} completed` },
-          })
-        : null
-    ),
-    el(
-      'ul',
-      { className: 'gd-todo__list' },
-      ...items.map((item, index) => {
-        const interactive = typeof onItemClick === 'function' && !item.disabled;
-        const body = [
-          statusIcon(item.status),
-          el('span', { className: 'gd-todo__text', text: item.text }),
-        ];
-        return el(
-          'li',
-          {
-            key: item.key,
-            className: cx(
-              'gd-todo__item',
-              `gd-todo__item--${item.status}`,
-              item.disabled && 'gd-todo__item--disabled'
-            ),
-            attrs: {
-              role: 'listitem',
-              'data-status': item.status,
-              'aria-current': item.status === 'active' ? 'step' : undefined,
+      interactive
+        ? el(
+            'button',
+            {
+              type: 'button',
+              className: 'gd-todo__row gd-todo__row--interactive',
+              onClick: (e) => {
+                e.preventDefault();
+                this._onItemClick?.(item, index);
+              },
             },
+            ...body
+          )
+        : el('div', { className: 'gd-todo__row' }, ...body)
+    );
+  }
+
+  render() {
+    const { title, items, showProgress, className } = this.state.data;
+    const { done, total } = countTodoProgress(items);
+
+    this.ensureShell(
+      (ids) => ids.gdTodoRoot,
+      ({ div, ul, span }) => {
+        div(
+          {
+            id: 'gdTodoRoot',
+            className: cx('gd-todo', className),
+            attrs: { role: 'list', 'aria-label': title },
           },
-          interactive
-            ? el(
-                'button',
-                {
-                  type: 'button',
-                  className: 'gd-todo__row gd-todo__row--interactive',
-                  onClick: (e) => {
-                    e.preventDefault();
-                    onItemClick(item, index);
-                  },
-                },
-                ...body
-              )
-            : el('div', { className: 'gd-todo__row' }, ...body)
+          div(
+            { className: 'gd-todo__header' },
+            span({ id: 'gdTodoTitle', className: 'gd-todo__title', text: title }),
+            showProgress
+              ? span({
+                  id: 'gdTodoProgress',
+                  className: 'gd-todo__progress',
+                  text: `${done}/${total}`,
+                  attrs: { 'aria-label': `${done} of ${total} completed` },
+                })
+              : null
+          ),
+          ul({ id: 'gdTodoList', className: 'gd-todo__list' })
         );
-      })
-    )
-  );
+      }
+    );
+
+    const root = this.ids().gdTodoRoot;
+    const titleEl = this.ids().gdTodoTitle;
+    const progressEl = this.ids().gdTodoProgress;
+    const list = this.ids().gdTodoList;
+    if (!root || !list) return;
+
+    if (titleEl) titleEl.innerText = title;
+    if (typeof root.setAttribute === 'function') {
+      root.setAttribute('aria-label', title);
+    }
+
+    if (progressEl) {
+      progressEl.innerText = `${done}/${total}`;
+      if (typeof progressEl.setAttribute === 'function') {
+        progressEl.setAttribute('aria-label', `${done} of ${total} completed`);
+      }
+    }
+
+    list.textContent = '';
+    for (let i = 0; i < items.length; i++) {
+      list.appendChild(this._renderItem(items[i], i).dom());
+    }
+  }
+}
+
+/**
+ * @param {object} [options]
+ * @param {HTMLElement|string} [host]
+ */
+export function createTodoList(options = {}, host) {
+  const list = new TodoList(options);
+  const elHost =
+    typeof host === 'string'
+      ? typeof document !== 'undefined'
+        ? document.getElementById(host)
+        : null
+      : host;
+  if (elHost) void list.mount(elHost);
+  return list;
 }
 
 /** Alias */
 export const Todos = TodoList;
 export const Todo = TodoList;
-
-/**
- * Cycle pending → active → done → pending (handy for demos).
- * @param {TodoStatus} status
- * @returns {TodoStatus}
- */
-export function nextTodoStatus(status) {
-  const s = normalizeTodoStatus(status);
-  if (s === 'pending') return 'active';
-  if (s === 'active') return 'done';
-  return 'pending';
-}

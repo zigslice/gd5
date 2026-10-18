@@ -95,6 +95,7 @@ export {
   TodoList,
   Todos,
   Todo,
+  createTodoList,
   normalizeTodoItems,
   normalizeTodoStatus,
   countTodoProgress,

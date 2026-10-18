@@ -178,15 +178,6 @@ class GalleryPage extends Component {
       popconfirmOpen: false,
       anchorKey: 'antd',
       theme: 'orange',
-      todos: [
-        {
-          key: '1',
-          text: 'Add Button loading + LoadingButton with dots/spin',
-          status: 'active',
-        },
-        { key: '2', text: 'CSS, gallery, docs, tests, demo', status: 'pending' },
-        { key: '3', text: 'Commit, push, open PR', status: 'pending' },
-      ],
     };
     this.modal = new Modal({});
     this.drawer = new Drawer({});
@@ -223,6 +214,25 @@ class GalleryPage extends Component {
       onChange: (i, item) => this.toast.show({ message: `Selected ${item.title}`, type: 'info' }),
     });
     this._coverFlowMounted = false;
+    this.todoList = new TodoList({
+      title: 'To-dos',
+      items: [
+        {
+          key: '1',
+          text: 'Add Button loading + LoadingButton with dots/spin',
+          status: 'active',
+        },
+        { key: '2', text: 'CSS, gallery, docs, tests, demo', status: 'pending' },
+        { key: '3', text: 'Commit, push, open PR', status: 'pending' },
+      ],
+      onItemClick: (_item, index) => {
+        const items = this.todoList.getItems().map((t, i) =>
+          i === index ? { ...t, status: nextTodoStatus(t.status) } : t
+        );
+        this.todoList.setItems(items);
+      },
+    });
+    this._todoListMounted = false;
     this.loadingBtnDots = new LoadingButton({
       text: 'Save',
       loadingText: 'Saving',
@@ -616,15 +626,9 @@ class GalleryPage extends Component {
                 type: 'secondary',
                 text: 'TodoList — active arrow · pending dashed ring · done check. Click a row to cycle status.',
               }),
-              TodoList({
-                title: 'To-dos',
-                items: d.todos,
-                onItemClick: (item, index) => {
-                  const todos = d.todos.map((t, i) =>
-                    i === index ? { ...t, status: nextTodoStatus(t.status) } : t
-                  );
-                  this.setData({ todos });
-                },
+              el('div', {
+                id: 'todoListHost',
+                className: 'component-host',
               })
             )
           ),
@@ -1185,6 +1189,14 @@ class GalleryPage extends Component {
         void this.loadingBtnDots.mount(dotsHost);
         void this.loadingBtnSpin.mount(spinHost);
       }
+    }
+
+    const todoHost =
+      this.ids().todoListHost ||
+      (typeof document !== 'undefined' ? document.getElementById('todoListHost') : null);
+    if (todoHost && !this._todoListMounted) {
+      this._todoListMounted = true;
+      void this.todoList.mount(todoHost);
     }
 
     const cfHost =
