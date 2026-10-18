@@ -183,11 +183,114 @@ class GalleryPage extends Component {
     this.lightbox = new Lightbox({});
     this.cmd = new CommandPalette({});
     this.notification = new Notification({});
-    this.workflow = new WorkflowDAG({});
+    this.workflow = new WorkflowDAG({
+      onMount: (wf) => {
+        wf.setGraph({
+          columns: [
+            {
+              key: 'ingest',
+              title: 'Ingest',
+              nodes: [
+                {
+                  key: 'n-source',
+                  title: 'Source sync',
+                  status: 'success',
+                  description: 'Pull events from upstream queue.',
+                },
+                {
+                  key: 'n-validate',
+                  title: 'Validate',
+                  status: 'running',
+                  description: 'Schema + freshness checks.',
+                },
+              ],
+            },
+            {
+              key: 'transform',
+              title: 'Transform',
+              nodes: [
+                {
+                  key: 'n-enrich',
+                  title: 'Enrich',
+                  status: 'pending',
+                  description: 'Join dimensions and tags.',
+                },
+                {
+                  key: 'n-aggregate',
+                  title: 'Aggregate',
+                  status: 'pending',
+                  description: 'Roll up by tenant and day.',
+                },
+              ],
+            },
+            {
+              key: 'deliver',
+              title: 'Deliver',
+              nodes: [
+                {
+                  key: 'n-warehouse',
+                  title: 'Warehouse load',
+                  status: 'pending',
+                  description: 'Write parquet partitions.',
+                },
+                {
+                  key: 'n-notify',
+                  title: 'Notify',
+                  status: 'pending',
+                  description: 'Slack + email on completion.',
+                },
+              ],
+            },
+            {
+              key: 'observe',
+              title: 'Observe',
+              nodes: [
+                {
+                  key: 'n-metrics',
+                  title: 'Metrics',
+                  status: 'pending',
+                  description: 'Emit pipeline SLIs.',
+                },
+              ],
+            },
+          ],
+          edges: [
+            { from: 'n-source', to: 'n-enrich' },
+            { from: 'n-validate', to: 'n-enrich' },
+            { from: 'n-enrich', to: 'n-aggregate' },
+            { from: 'n-aggregate', to: 'n-warehouse' },
+            { from: 'n-warehouse', to: 'n-notify' },
+            { from: 'n-notify', to: 'n-metrics' },
+          ],
+        });
+      },
+    });
     this.jsonTree = new JsonTree({
       height: 320,
       defaultExpand: 2,
       onPath: (path) => this.toast.show({ message: path, type: 'info' }),
+      onMount: (jt) => {
+        jt.loadData({
+          product: 'gd5',
+          themes: ['orange', 'blue', 'green'],
+          engine: {
+            runtime: 'real-DOM',
+            bundler: false,
+            apis: ['Component', 'bind', 'LogProvider'],
+          },
+          ui: {
+            kits: 80,
+            overlays: ['Modal', 'Drawer', 'Toast'],
+            flags: { virtualJson: true, workflowDag: true },
+          },
+          metrics: {
+            score: 98.5,
+            samples: [1, 2, 3, 5, 8, 13],
+            ok: true,
+            note: null,
+          },
+        });
+      },
     });
     this.markdownEditor = new MarkdownEditor({
       height: 280,
@@ -377,11 +480,7 @@ class GalleryPage extends Component {
                 type: 'secondary',
                 text: 'LoadingButton — click locks until async finishes (dots / spin).',
               }),
-              Space(
-                {},
-                this.slot(this.loadingBtnDots, { className: 'component-host' }),
-                this.slot(this.loadingBtnSpin, { className: 'component-host' })
-              )
+              Space({}, this.loadingBtnDots, this.loadingBtnSpin)
             )
           ),
 
@@ -618,7 +717,7 @@ class GalleryPage extends Component {
                 type: 'secondary',
                 text: 'TodoList — active arrow · pending dashed ring · done check. Click a row to cycle status.',
               }),
-              this.slot(this.todoList, { className: 'component-host' })
+              this.todoList
             )
           ),
 
@@ -630,10 +729,7 @@ class GalleryPage extends Component {
                 type: 'secondary',
                 text: 'Cover Flow（封面流）— game character-select style: center card faces forward, neighbors tilt & stack. Drag / arrows / dots.',
               }),
-              this.slot(this.coverFlow, {
-                className: 'component-host',
-                style: { minHeight: '360px' },
-              })
+              this.coverFlow
             )
           ),
 
@@ -645,10 +741,7 @@ class GalleryPage extends Component {
                 type: 'secondary',
                 text: 'Default Markdown editing with a basic top toolbar and live preview (编辑 / 分栏 / 预览).',
               }),
-              this.slot(this.markdownEditor, {
-                className: 'component-host',
-                style: { minHeight: '300px' },
-              })
+              this.markdownEditor
             )
           ),
 
@@ -692,32 +785,7 @@ class GalleryPage extends Component {
                 type: 'secondary',
                 text: 'Virtualized JSON viewer (jsonTreeViewer-style). Expand / mark / JSONPath; theme-aware type colors.',
               }),
-              this.slot(this.jsonTree, {
-                className: 'component-host',
-                style: { minHeight: '340px' },
-                onMount: (jt) => {
-                  jt.loadData({
-                    product: 'gd5',
-                    themes: ['orange', 'blue', 'green'],
-                    engine: {
-                      runtime: 'real-DOM',
-                      bundler: false,
-                      apis: ['Component', 'bind', 'LogProvider'],
-                    },
-                    ui: {
-                      kits: 80,
-                      overlays: ['Modal', 'Drawer', 'Toast'],
-                      flags: { virtualJson: true, workflowDag: true },
-                    },
-                    metrics: {
-                      score: 98.5,
-                      samples: [1, 2, 3, 5, 8, 13],
-                      ok: true,
-                      note: null,
-                    },
-                  });
-                },
-              })
+              this.jsonTree
             )
           ),
 
@@ -729,90 +797,7 @@ class GalleryPage extends Component {
                 type: 'secondary',
                 text: 'Multi-column DAG: scroll, drag blank area to pan, click a node for the right drawer.',
               }),
-              this.slot(this.workflow, {
-                className: 'component-host',
-                style: { minHeight: '360px' },
-                onMount: (wf) => {
-                  wf.setGraph({
-                    columns: [
-                      {
-                        key: 'ingest',
-                        title: 'Ingest',
-                        nodes: [
-                          {
-                            key: 'n-source',
-                            title: 'Source sync',
-                            status: 'success',
-                            description: 'Pull events from upstream queue.',
-                          },
-                          {
-                            key: 'n-validate',
-                            title: 'Validate',
-                            status: 'running',
-                            description: 'Schema + freshness checks.',
-                          },
-                        ],
-                      },
-                      {
-                        key: 'transform',
-                        title: 'Transform',
-                        nodes: [
-                          {
-                            key: 'n-enrich',
-                            title: 'Enrich',
-                            status: 'pending',
-                            description: 'Join dimensions and tags.',
-                          },
-                          {
-                            key: 'n-aggregate',
-                            title: 'Aggregate',
-                            status: 'pending',
-                            description: 'Roll up by tenant and day.',
-                          },
-                        ],
-                      },
-                      {
-                        key: 'deliver',
-                        title: 'Deliver',
-                        nodes: [
-                          {
-                            key: 'n-warehouse',
-                            title: 'Warehouse load',
-                            status: 'pending',
-                            description: 'Write parquet partitions.',
-                          },
-                          {
-                            key: 'n-notify',
-                            title: 'Notify',
-                            status: 'pending',
-                            description: 'Slack + email on completion.',
-                          },
-                        ],
-                      },
-                      {
-                        key: 'observe',
-                        title: 'Observe',
-                        nodes: [
-                          {
-                            key: 'n-metrics',
-                            title: 'Metrics',
-                            status: 'pending',
-                            description: 'Emit pipeline SLIs.',
-                          },
-                        ],
-                      },
-                    ],
-                    edges: [
-                      { from: 'n-source', to: 'n-enrich' },
-                      { from: 'n-validate', to: 'n-enrich' },
-                      { from: 'n-enrich', to: 'n-aggregate' },
-                      { from: 'n-aggregate', to: 'n-warehouse' },
-                      { from: 'n-warehouse', to: 'n-notify' },
-                      { from: 'n-notify', to: 'n-metrics' },
-                    ],
-                  });
-                },
-              })
+              this.workflow
             )
           ),
 

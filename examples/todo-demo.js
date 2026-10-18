@@ -30,12 +30,12 @@ class TodoDemoPage extends Component {
   render() {
     this.ensureShell(
       (ids) => ids.root,
-      ({ div, h1, p, slot }) => {
+      ({ div, h1, p }) => {
         div(
           { id: 'root', className: 'gd-demo' },
           h1({ className: 'gd-demo__title', text: 'TodoList' }),
           p({ className: 'gd-demo__hint', text: '点击条目可循环：pending → active → done' }),
-          slot(this.todoList, { className: 'gd-demo__body' })
+          div({ className: 'gd-demo__body' }, this.todoList)
         );
       }
     );

@@ -472,7 +472,7 @@ section('engine: paint / ensureShell / on');
   assert(Object.keys(panel.ids()).length === 0, 'unmount resets ref');
 }
 
-section('engine: slot composition');
+section('engine: Component as tree child');
 {
   function makeEl(id) {
     return {
@@ -511,8 +511,8 @@ section('engine: slot composition');
   };
 
   class Child extends Component {
-    constructor() {
-      super();
+    constructor(deps) {
+      super(deps);
       this.mounts = 0;
       this.unmounts = 0;
     }
@@ -532,16 +532,22 @@ section('engine: slot composition');
     }
   }
 
+  let mountedCb = 0;
   class Parent extends Component {
     constructor() {
       super();
-      this.child = new Child();
+      this.child = new Child({
+        onMount: () => {
+          mountedCb += 1;
+        },
+      });
     }
     render() {
+      // React-like: div({}, this.child) — Component.dom() like Element.dom()
       this.ensureShell(
         (ids) => ids.parentRoot,
-        ({ div, slot }) => {
-          div({ id: 'parentRoot', className: 'parent' }, slot(this.child, { className: 'slot-host' }));
+        ({ div }) => {
+          div({ id: 'parentRoot', className: 'parent' }, this.child);
         }
       );
     }
@@ -549,20 +555,22 @@ section('engine: slot composition');
 
   const host = makeEl('host');
   const parent = new Parent();
+  assert(typeof parent.child.dom === 'function', 'Component.dom matches Element shape');
   await parent.mount(host);
   await new Promise((r) => queueMicrotask(r));
   await new Promise((r) => queueMicrotask(r));
-  assert(parent.child.mounts === 1, 'slot mounts child once');
-  assert(parent.child.isMounted(), 'slotted child isMounted');
-  assert(!!parent.child.ids().childRoot, 'slotted child painted');
+  assert(parent.child.mounts === 1, 'tree child mounts once');
+  assert(parent.child.isMounted(), 'tree child isMounted');
+  assert(!!parent.child.ids().childRoot, 'tree child painted');
+  assert(mountedCb === 1, 'deps.onMount runs after mount');
 
   parent.refresh();
   await new Promise((r) => queueMicrotask(r));
-  assert(parent.child.mounts === 1, 'ensureShell refresh does not remount slot');
+  assert(parent.child.mounts === 1, 'ensureShell refresh does not remount child');
 
   parent.unmount();
-  assert(parent.child.unmounts === 1, 'parent unmount unmounts slotted child');
-  assert(!parent.child.isMounted(), 'slotted child unmounted');
+  assert(parent.child.unmounts === 1, 'parent unmount unmounts tree child');
+  assert(!parent.child.isMounted(), 'tree child unmounted');
 }
 
 section('product: component ergonomics');
@@ -1176,7 +1184,7 @@ section('ui kit');
   assert(docs.includes('MarkdownEditor') && docs.includes('renderMarkdown'), 'docs cover MarkdownEditor');
   assert(docs.includes('CoverFlow') && docs.includes('封面流'), 'docs cover CoverFlow');
   assert(docs.includes('TodoList') && docs.includes('To-dos'), 'docs cover TodoList');
-  assert(docs.includes('setItems') && docs.includes('slot(this.todos'), 'docs show TodoList slot composition');
+  assert(docs.includes('setItems') && docs.includes('this.todos'), 'docs show TodoList tree composition');
   assert(docs.includes('LoadingButton') && docs.includes('Loading Button'), 'docs cover LoadingButton');
   assert(docs.includes('demoApp.js'), 'docs mention demoApp bootstrap');
 
@@ -1200,16 +1208,18 @@ section('ui kit');
     assert(!existsSync(join(root, 'examples/loading-button-showcase.html')), 'ad-hoc showcase removed');
     const todoDemo = readFileSync(join(root, 'examples/todo-demo.js'), 'utf8');
     assert(todoDemo.includes('new TodoList'), 'todo-demo constructs TodoList Component');
-    assert(todoDemo.includes('slot(this.todoList'), 'todo-demo slots TodoList inside ensureShell');
+    assert(todoDemo.includes('this.todoList'), 'todo-demo composes TodoList as tree child');
     assert(!todoDemo.includes('replaceChildren'), 'todo-demo does not use replaceChildren');
     assert(!todoDemo.includes('_mountedTodo'), 'todo-demo has no mount flag');
+    assert(!todoDemo.includes('slot('), 'todo-demo does not need slot() wrapper');
     const gallerySrc = readFileSync(join(root, 'examples/ui-gallery.js'), 'utf8');
     assert(gallerySrc.includes('new TodoList'), 'gallery constructs TodoList Component');
-    assert(gallerySrc.includes('this.slot(this.todoList'), 'gallery slots TodoList inside ensureShell');
+    assert(gallerySrc.includes('this.todoList'), 'gallery composes TodoList as tree child');
     assert(!gallerySrc.includes('replaceChildren'), 'gallery does not use replaceChildren');
     assert(!gallerySrc.includes('_todoListMounted'), 'gallery has no TodoList mount flag');
+    assert(!gallerySrc.includes('this.slot('), 'gallery does not use slot() wrapper');
     const engineApi = readFileSync(join(root, 'docs/api.md'), 'utf8');
-    assert(engineApi.includes('slot(child'), 'docs/api covers Component.slot');
+    assert(engineApi.includes('dom()') && engineApi.includes('hyperscript child'), 'docs/api covers Component.dom composition');
   }
 
   const listeners = [];

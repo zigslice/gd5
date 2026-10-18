@@ -76,9 +76,11 @@ Base class for pages and nested UI.
 
 | Method | Meaning |
 |--------|---------|
-| `paint(build, host?)` | `clear` → `bind` tree → assign `state.ref` → append；`build` api includes `slot` |
+| `paint(build, host?)` | `clear` → `bind` tree → assign `state.ref` → append；tree may include child Components |
 | `ensureShell(probe, build)` | Build shell once if `probe(ids())` is falsy |
-| `slot(child, hostProps?)` | Declarative child composition: returns host `Element`, mounts `child` after insert. `hostProps.onMount(child)` runs after mount (not a DOM prop). Also available as `slot` on the `ensureShell` / `paint` api |
+| `dom()` | Same shape as `Element.dom` — use the Component as a hyperscript child (`div({}, this.child)`), like React `<Child />` |
+| `slot(child, hostProps?)` | Optional wrapper when you need a real host `className` / `style`; prefer bare `this.child` |
+| `deps.onMount` | Optional callback after `mount` completes |
 | `ids()` | `state.ref.id` |
 | `keys()` | `state.ref.key` |
 | `on(target, type, fn, options?)` | `addEventListener` + auto-remove on `unmount` |

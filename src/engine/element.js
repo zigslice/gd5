@@ -11,6 +11,7 @@
  *
  * 组合（降噪）：
  * - 尾参 children：`d.div(props, child1, child2)`（仍支持 `.childList`）
+ * - children 可以是 Element、文本，或 **Component**（与 Element 同有 `.dom()`，像 React 里写 `<Child />`）
  * - `bind(d)` / `D.tags()`：解构短名 + `h`
  * - `d.map(list, render, keyOf)`：列表自动带 key
  *

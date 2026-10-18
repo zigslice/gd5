@@ -25,18 +25,24 @@ import {
 页面与页内子组件**共用** `mount` / `unmount`：
 
 ```
-ComponentRender.navigate / slot(child) → child.mount(host)
+ComponentRender.navigate / 树里写子 Component → child.mount(host)
   → componentDidMount(params)
   → render()
   → componentDidAttachEvents()
 
 goBack / parent.unmount()
-  → 先卸 slot 子组件
+  → 先卸组合子组件
   → componentDidUnMount()   // 只做业务清理
   → 引擎卸 on() 监听、清宿主、重置 ref
 ```
 
-子组件写在 `ensureShell` 树里用 `slot(child)`（或 `this.slot(child)`）；宿主可用 `display: contents`，让子组件根节点直接参与父级布局。
+子组件和 `div` 一样写进树（Component 有 `.dom()`，与 Element 同形）：
+
+```js
+div({ id: 'root' }, h1({ text: 'Hi' }), this.todoList);
+```
+
+引擎插入 `display: contents` 宿主再 `mount`，布局由子组件自己的根节点承担。
 
 ## 写组件时怎么少踩坑
 
@@ -44,7 +50,7 @@ goBack / parent.unmount()
 |--------|----------|
 | 手写 `D.clear` → `bind` → `get` → `append` | `paint(build)` / `ensureShell(probe, build)` |
 | refresh 拆掉壳 → AttachEvents 失效 | `ensureShell`：壳只建一次 |
-| 子组件事后 `ids().host` + `_mounted` flag | 树里 `slot(child)`，ensureShell 只挂一次 |
+| 子组件事后 `ids().host` + `_mounted` flag | 树里直接写 `this.child`（同 div） |
 | `getElementById` 与 `host()` 两套 | 页面也走 `mount`，统一 `this.host()` |
 | 事件写在 AttachEvents，和 DOM 分离 | props 里 `onClick` / `onChange` |
 | window 监听忘卸 | `this.on(window, …)`，unmount 自动卸 |
@@ -95,7 +101,7 @@ export class ToolbarComponent extends Component {
 | `ComponentRender.init` | 自动传入页面 |
 | 父组件 `new Child(deps)` | 父把 `navigator: this.navigator, logger: this.logger` 写进 deps |
 
-子组件与页面同一套 `this.navigator` / `this.logger`；组合用 `slot`。
+子组件与页面同一套 `this.navigator` / `this.logger`；组合方式与 React 同形——实例当 children。
 
 ```js
 app.init({ loading: 'home', home: 'home' }, {
@@ -103,7 +109,7 @@ app.init({ loading: 'home', home: 'home' }, {
   preview: { type: PreviewPage, isModal: true },
 });
 
-// 页面构造
+// 页面构造（像保留 Child 的 ref）
 this.toolbar = new Toolbar({
   navigator: this.navigator,
   logger: this.logger,
@@ -132,7 +138,7 @@ export class Panel extends Component {
   render() {
     this.ensureShell(
       (ids) => ids.panel,
-      ({ div, button, slot }) => {
+      ({ div, button }) => {
         div(
           { className: 'panel', id: 'panel' },
           button({
@@ -141,7 +147,8 @@ export class Panel extends Component {
             text: '保存',
             onClick: () => this.save(),
           }),
-          slot(this.todos, { className: 'panel__todos' })
+          // 像 React：<div><TodoList /></div>
+          this.todos
         );
       }
     );

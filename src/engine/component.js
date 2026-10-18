@@ -2,6 +2,13 @@ import { D, bind } from './element.js';
 import { adoptStyles, adoptStylesFor, applyStyleScope } from './styles.js';
 
 /**
+ * paint / ensureShell 建树期间的组合父组件。
+ * Component.dom() 用它登记子组件，便于父 unmount 时卸掉。
+ * @type {Component|null}
+ */
+let composeParent = null;
+
+/**
  * 迷你实模式 HTML 组件规范（引擎）
  *
  * this.state = {
@@ -11,7 +18,7 @@ import { adoptStyles, adoptStylesFor, applyStyleScope } from './styles.js';
  *
  * 两种挂载方式（同一套生命周期）：
  * 1. 页面：ComponentRender.navigate → mount(页槽)
- * 2. 组合：在 ensureShell / paint 树里 `slot(child)`（或 `this.slot(child)`）
+ * 2. 组合：像 div 一样写进 ensureShell / bind 树（Component 有 .dom()，与 Element 同形）
  *
  * 样式与组件同目录：
  *   static styles = new URL('./FooComponent.css', import.meta.url);
@@ -21,13 +28,13 @@ import { adoptStyles, adoptStylesFor, applyStyleScope } from './styles.js';
  * - setData(patch) 合并 this.state.data，并默认调用 refresh()
  * - refresh() 默认再跑 render()；AttachEvents 只在首次 mount
  * - render 用 ensureShell 建壳，refresh 路径不要 D.clear 整棵树（否则事件丢失）
- * - ensureShell 只建一次 → slot 只挂一次，不必手写 `_mountedX` flag
+ * - ensureShell 只建一次 → 子组件只挂一次
  *
  * 易错点由引擎收掉：
  * - paint / ensureShell：不必手写 clear → bind → get → append
- * - 子组件组合：`slot(child)` 写在树里，不必 ensureShell 后再 mount
+ * - 子组件组合：`div({ id: 'root' }, this.child)`，与 React 把 <Child /> 写进树同形
  * - DOM 事件写在 props（onClick…）；window 等用 on()，unmount 自动卸
- * - unmount 默认卸 slot 子组件 + 清宿主 DOM + 重置 ref（DidUnMount 只做业务清理）
+ * - unmount 默认卸组合子组件 + 清宿主 DOM + 重置 ref（DidUnMount 只做业务清理）
  * - 样式旁挂 + mount 注入，不必在 index.html 堆全量 CSS
  * - `static styles` 默认自动 scope：CSS / className 仍写 `.toolbar`，引擎改写选择器并在 host 打 `data-gd-c`；`stylesScoped = false` 关闭
  * - navigator / logger：页面由 ComponentRender 注入；子组件由父写入 deps，用法同为 this.navigator
@@ -64,6 +71,7 @@ export class Component {
    * @param {object} [deps]
    * @param {object} [deps.navigator] 页栈遥控器（页面由引擎注入；子组件通常不需要）
    * @param {import('./log.js').Logger} [deps.logger]
+   * @param {(self: Component) => void} [deps.onMount] mount 完成后回调（组合后初始化数据等）
    */
   constructor(deps = {}) {
     this._host = null;
@@ -74,6 +82,7 @@ export class Component {
     this.state = { data: {}, ref: {} };
     this.navigator = deps.navigator ?? null;
     this.logger = deps.logger ?? null;
+    this._onMount = typeof deps.onMount === 'function' ? deps.onMount : null;
   }
 
   /**
@@ -108,6 +117,32 @@ export class Component {
   }
 
   /**
+   * 与 Element.dom 同形：作为 bind / el() 树的子节点时被调用。
+   * 像 React 里把 `<TodoList />` 写进 `<div>…</div>` —— 直接 `div({}, this.todoList)`。
+   *
+   * 插入 `display: contents` 宿主，入树后自动 mount；布局由子组件自己的根节点承担。
+   * @returns {HTMLElement}
+   */
+  dom() {
+    if (typeof document === 'undefined') {
+      throw new Error('Component.dom: no document');
+    }
+    const host = document.createElement('div');
+    host.style.display = 'contents';
+    host.setAttribute('data-gd-slot', this.constructor?.name || 'Component');
+
+    const parent = composeParent;
+    if (parent && !parent._slotted.includes(this)) {
+      parent._slotted.push(this);
+    }
+
+    queueMicrotask(() => {
+      void this.mount(host);
+    });
+    return host;
+  }
+
+  /**
    * 挂到宿主并走完整生命周期（页面与页内组合共用）。
    * @param {string|HTMLElement} host id 或元素
    * @param {object} [params]
@@ -127,11 +162,12 @@ export class Component {
     this.render();
     this.componentDidAttachEvents();
     this._mounted = true;
+    this._onMount?.(this);
     return this;
   }
 
   /**
-   * 卸载：先卸 slot 子组件，再业务 DidUnMount，再卸监听、清宿主、重置 ref。
+   * 卸载：先卸组合子组件，再业务 DidUnMount，再卸监听、清宿主、重置 ref。
    */
   unmount() {
     if (!this._mounted) return;
@@ -143,38 +179,33 @@ export class Component {
   }
 
   /**
-   * 声明式子组件组合：在 ensureShell / paint 树里直接写 `slot(child)`。
-   * 返回宿主 Element（可作尾参 child）；宿主入树后自动 `child.mount`。
-   * ensureShell 只建一次 → 只 mount 一次，不必 `_mountedX` flag / 事后 mount。
+   * 可选：需要包一层真实宿主（className / style / onMount）时用。
+   * 普通组合请直接把子组件当 children：`div({}, this.child)`。
    *
    * @param {Component} child
-   * @param {object} [hostProps] 宿主 div 的 props；`onMount(child)` 在 mount 完成后回调（不进 DOM）
-   * @returns {import('./element.js').Element}
-   *
-   * @example
-   * this.ensureShell((ids) => ids.root, ({ div, h1, slot }) => {
-   *   div({ id: 'root' }, h1({ text: 'Hi' }), slot(this.todoList, { className: 'body' }));
-   * });
+   * @param {object} [hostProps]
+   * @returns {import('./element.js').Element|Component}
    */
   slot(child, hostProps = {}) {
     if (!child || typeof child.mount !== 'function') {
       throw new Error('Component.slot: expected a Component');
     }
     const { onMount, ...domProps } = hostProps;
+    if (typeof onMount === 'function') {
+      child._onMount = onMount;
+    }
+    if (Object.keys(domProps).length === 0) {
+      return child;
+    }
     const d = new D();
     const host = d.el('div', domProps);
     const hostEl = host.dom();
-
     if (!this._slotted.includes(child)) {
       this._slotted.push(child);
     }
-
     queueMicrotask(() => {
-      void Promise.resolve(child.mount(hostEl)).then(() => {
-        if (typeof onMount === 'function') onMount(child);
-      });
+      void child.mount(hostEl);
     });
-
     return host;
   }
 
@@ -208,8 +239,8 @@ export class Component {
   /**
    * 清宿主 → bind 建树 → 写入 state.ref → append。
    * 只用于「整棵重建」；可刷新壳请用 ensureShell。
-   * build 的 api 带 `slot`（同 `this.slot`），可在树里直接组合子组件。
-   * @param {(api: ReturnType<typeof bind> & { slot: typeof Component.prototype.slot }) => void} build
+   * 建树期间子 Component 可直接作 children（走 .dom()）。
+   * @param {(api: ReturnType<typeof bind>) => void} build
    * @param {HTMLElement} [host]
    */
   paint(build, host = this.host()) {
@@ -220,7 +251,13 @@ export class Component {
     D.clear(host);
     const api = bind();
     api.slot = (child, hostProps) => this.slot(child, hostProps);
-    build(api);
+    const prev = composeParent;
+    composeParent = this;
+    try {
+      build(api);
+    } finally {
+      composeParent = prev;
+    }
     const [ref, root] = api.get();
     this.state.ref = ref;
     if (root) host.appendChild(root);
@@ -229,9 +266,8 @@ export class Component {
 
   /**
    * 壳只建一次：probe(ids) 已有则跳过，否则 paint。
-   * 解决「refresh 拆掉已绑事件节点」的常见错误。
    * @param {(ids: Record<string, HTMLElement>) => any} probe
-   * @param {(api: ReturnType<typeof bind> & { slot: typeof Component.prototype.slot }) => void} build
+   * @param {(api: ReturnType<typeof bind>) => void} build
    * @returns {boolean} true = 本次新建了壳
    */
   ensureShell(probe, build) {
@@ -242,7 +278,6 @@ export class Component {
 
   /**
    * 绑事件并登记，unmount 时自动 removeEventListener。
-   * target 为空则跳过（避免 ids.xxx 拼错直接炸）。
    * @param {EventTarget|null|undefined} target
    * @param {string} type
    * @param {EventListener} handler

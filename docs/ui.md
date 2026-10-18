@@ -218,12 +218,12 @@ Button({ type: 'primary', text: 'Wait', loading: true, indicator: 'spin' })
 
 Cursor-style checklist card (Component): header title + `done/total`, active item with filled arrow disc, pending with dashed ring, done with check.
 
-Compose inside `ensureShell` with `slot` — construct once, update via `setItems` (not `replaceChildren` / post-hoc `mount`).
+Compose like React — construct once, write the instance into the tree as a child (same as `div`), update via `setItems`.
 
 ```js
 import { TodoList, nextTodoStatus } from './src/ui/index.js';
 
-// in page constructor:
+// constructor — keep the instance (like a ref)
 this.todos = new TodoList({
   title: 'To-dos',
   items: [
@@ -239,9 +239,9 @@ this.todos = new TodoList({
   },
 });
 
-// in render:
-this.ensureShell((ids) => ids.root, ({ div, slot }) => {
-  div({ id: 'root' }, slot(this.todos));
+// render — <div><TodoList /></div>
+this.ensureShell((ids) => ids.root, ({ div }) => {
+  div({ id: 'root' }, this.todos);
 });
 ```
 

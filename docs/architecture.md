@@ -41,10 +41,10 @@ skills/blocks ──► product components (extends engine.Component)
 | 类型 | 例子 | 挂载方式 |
 |------|------|----------|
 | 页面 | Boot / Editor / Preview | `ComponentRender` 槽 `#boot` 等 |
-| 页内子组件 | Toolbar / Palette / Artboard / Inspector | 父 `ensureShell` 里 `slot(child)`（或 host + `mount`） |
+| 页内子组件 | Toolbar / Palette / Artboard / Inspector | 父树里直接写 `this.child`（同 div；或 host + `mount`） |
 | 节点模块 | `nodes/button.js` | 非 Component：`create` / `update` / `inspectorFields` |
 
-`EditorComponent` 只组合：`ensureShell` 出 `host-*` → `child.mount`（亦可 `slot(child)`）→ `store.subscribe → child.refresh`。
+`EditorComponent` 只组合：`ensureShell` 树里写子组件（或 `host-*` + `mount`）→ `store.subscribe → child.refresh`。
 
 ## 目录
 

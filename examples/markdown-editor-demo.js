@@ -39,7 +39,7 @@ class MarkdownEditorDemoPage extends Component {
   render() {
     this.ensureShell(
       (ids) => ids.root,
-      ({ div, h1, p, slot }) => {
+      ({ div, h1, p }) => {
         div(
           { id: 'root', className: 'gd-demo' },
           h1({ className: 'gd-demo__title', text: 'MarkdownEditor' }),
@@ -47,7 +47,7 @@ class MarkdownEditorDemoPage extends Component {
             className: 'gd-demo__hint',
             text: '默认 Markdown 编辑 · 顶部工具栏 · 编辑 / 分栏 / 预览',
           }),
-          slot(this.editor, { className: 'gd-demo__body' })
+          div({ className: 'gd-demo__body' }, this.editor)
         );
       }
     );

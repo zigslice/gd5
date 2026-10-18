@@ -33,7 +33,7 @@ class LoadingButtonDemoPage extends Component {
   render() {
     this.ensureShell(
       (ids) => ids.root,
-      ({ div, h1, p, slot }) => {
+      ({ div, h1, p }) => {
         div(
           { id: 'root', className: 'gd-demo' },
           h1({ className: 'gd-demo__title', text: 'Loading Button' }),
@@ -63,7 +63,7 @@ class LoadingButtonDemoPage extends Component {
               text: 'Interactive — click locks until async finishes:',
               style: { marginTop: '20px', marginBottom: '10px' },
             }),
-            div({ className: 'gd-demo__row' }, slot(this.dotsBtn), slot(this.spinBtn))
+            div({ className: 'gd-demo__row' }, this.dotsBtn, this.spinBtn)
           )
         );
       }

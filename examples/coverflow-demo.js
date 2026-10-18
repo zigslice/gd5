@@ -27,7 +27,7 @@ class CoverFlowDemoPage extends Component {
   render() {
     this.ensureShell(
       (ids) => ids.root,
-      ({ div, h1, p, slot }) => {
+      ({ div, h1, p }) => {
         div(
           { id: 'root', className: 'gd-demo' },
           h1({ className: 'gd-demo__title', text: 'Cover Flow' }),
@@ -35,7 +35,7 @@ class CoverFlowDemoPage extends Component {
             className: 'gd-demo__hint',
             text: '封面流 — 居中正面卡片，左右倾斜叠放（游戏选角色那种）',
           }),
-          slot(this.coverFlow, { className: 'gd-demo__body' })
+          div({ className: 'gd-demo__body' }, this.coverFlow)
         );
       }
     );
