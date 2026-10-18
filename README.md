@@ -9,7 +9,7 @@ Minimal **real-DOM** runtime (no VDOM, no bundler) plus an **antd-style** UI kit
 | Engine | `src/engine/` | [`docs/api.md`](docs/api.md) |
 | UI kit | `src/ui/` | [`docs/ui.md`](docs/ui.md) · [gallery](examples/ui-gallery.html) |
 
-[中文](#中文)
+[中文](README.zh_cn.md)
 
 ---
 
@@ -229,28 +229,3 @@ node test/run.mjs
 ## License
 
 MIT
-
----
-
-## 中文
-
-**gd5** = **引擎**（迷你实 DOM 运行时）+ **组件库**（`src/ui/`，白面板；主题 **橙 / 蓝 / 绿**）。`src/product/` 仅为示例。
-
-```html
-<link rel="stylesheet" href="./src/ui/css/ui.css">
-<script type="module">
-  import { Component, ComponentRender } from './src/engine/index.js';
-  import { Button, Modal, setTheme } from './src/ui/index.js';
-</script>
-```
-
-静态服务器打开即可。画廊与主题预览见上文 [UI kit](#ui-kit)；`setTheme('blue'|'green'|'orange')`。
-
-- 页面 / 子组件共用 `mount`；页面自带 `this.navigator`，子组件由父写入 deps
-- 常用控件用 `src/ui`，避免手写一堆 `div.btn`
-- **API** [`docs/api.md`](docs/api.md) · **组件库** [`docs/ui.md`](docs/ui.md)
-
-```bash
-python3 -m http.server 8080
-node test/run.mjs
-```
