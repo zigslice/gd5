@@ -19,7 +19,8 @@ export {
   THEME_ATTR,
 } from './theme.js';
 
-export { Button } from './button.js';
+export { Button, ButtonIndicator, onceAsync } from './button.js';
+export { LoadingButton, AsyncButton, createLoadingButton } from './LoadingButton.js';
 export { Input, TextArea, Select, Field } from './input.js';
 export { InputNumber } from './input-number.js';
 export { Checkbox, Switch, Badge } from './control.js';

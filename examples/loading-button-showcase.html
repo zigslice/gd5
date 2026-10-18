@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-gd-theme="orange">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" href="../src/ui/css/ui.css" />
+  <style>
+    body { margin: 24px; font-family: var(--gd-font); background: var(--gd-bg-spotlight); color: var(--gd-text); }
+    h1 { margin: 0 0 8px; font-size: 20px; }
+    .hint { margin: 0 0 16px; color: var(--gd-text-secondary); font-size: 13px; }
+    .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 12px; }
+    .lab { width: 72px; font-size: 12px; color: var(--gd-text-muted); }
+  </style>
+</head>
+<body>
+  <h1>Loading Button</h1>
+  <p class="hint">Idle → busy（换色 + 散点/转圈，不可重复点）→ done 纯文本</p>
+  <div class="row"><span class="lab">Idle</span><div id="idle"></div></div>
+  <div class="row"><span class="lab">Dots</span><div id="dots"></div></div>
+  <div class="row"><span class="lab">Spin</span><div id="spin"></div></div>
+  <script type="module">
+    import { Button } from '../src/ui/index.js';
+    const host = (id, node) => document.getElementById(id).appendChild(node.dom());
+    host('idle', Button({ type: 'default', text: 'Save' }));
+    host('dots', Button({ type: 'primary', text: 'Saving', loading: true, indicator: 'dots' }));
+    host('spin', Button({ type: 'primary', text: 'Publishing', loading: true, indicator: 'spin' }));
+  </script>
+</body>
+</html>

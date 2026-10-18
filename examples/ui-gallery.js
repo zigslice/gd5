@@ -121,6 +121,7 @@ import {
   DiffBlock,
   MarkdownEditor,
   CoverFlow,
+  LoadingButton,
   themes,
   setTheme,
   getTheme,
@@ -207,6 +208,22 @@ class GalleryPage extends Component {
       onChange: (i, item) => this.toast.show({ message: `Selected ${item.title}`, type: 'info' }),
     });
     this._coverFlowMounted = false;
+    this.loadingBtnDots = new LoadingButton({
+      text: 'Save',
+      loadingText: 'Saving',
+      type: 'default',
+      loadingType: 'primary',
+      indicator: 'dots',
+      onClick: () => new Promise((r) => setTimeout(r, 1600)),
+    });
+    this.loadingBtnSpin = new LoadingButton({
+      text: 'Publish',
+      loadingText: 'Publishing',
+      type: 'primary',
+      indicator: 'spin',
+      onClick: () => new Promise((r) => setTimeout(r, 1600)),
+    });
+    this._loadingBtnsMounted = false;
   }
 
   async componentDidMount() {
@@ -323,18 +340,31 @@ class GalleryPage extends Component {
           this.section(
             'Button / Split / FAB',
             Space(
-              {},
-              Button({ type: 'primary', text: 'Primary' }),
-              Button({ type: 'default', text: 'Default' }),
-              Button({ type: 'ghost', text: 'Ghost' }),
-              Button({ type: 'danger', text: 'Danger' }),
-              Button({ type: 'text', text: 'Text' }),
-              SplitButton({
-                text: 'Publish',
-                onClick: () => this.toast.show({ message: 'Published', type: 'success' }),
-                onMenuClick: () => this.setData({ overflowOpen: !d.overflowOpen }),
+              { direction: 'vertical', size: 'sm' },
+              Space(
+                {},
+                Button({ type: 'primary', text: 'Primary' }),
+                Button({ type: 'default', text: 'Default' }),
+                Button({ type: 'ghost', text: 'Ghost' }),
+                Button({ type: 'danger', text: 'Danger' }),
+                Button({ type: 'text', text: 'Text' }),
+                Button({ type: 'primary', text: 'Loading', loading: true, indicator: 'dots' }),
+                SplitButton({
+                  text: 'Publish',
+                  onClick: () => this.toast.show({ message: 'Published', type: 'success' }),
+                  onMenuClick: () => this.setData({ overflowOpen: !d.overflowOpen }),
+                }),
+                Tooltip({ title: 'Floating action' }, Button({ type: 'default', text: 'Hover me' }))
+              ),
+              Text({
+                type: 'secondary',
+                text: 'LoadingButton — click locks until async finishes (dots / spin).',
               }),
-              Tooltip({ title: 'Floating action' }, Button({ type: 'default', text: 'Hover me' }))
+              Space(
+                {},
+                el('div', { id: 'loadingBtnDotsHost', className: 'component-host' }),
+                el('div', { id: 'loadingBtnSpinHost', className: 'component-host' })
+              )
             )
           ),
 
@@ -1106,6 +1136,20 @@ class GalleryPage extends Component {
         );
       }
     );
+
+    if (!this._loadingBtnsMounted) {
+      const dotsHost =
+        this.ids().loadingBtnDotsHost ||
+        (typeof document !== 'undefined' ? document.getElementById('loadingBtnDotsHost') : null);
+      const spinHost =
+        this.ids().loadingBtnSpinHost ||
+        (typeof document !== 'undefined' ? document.getElementById('loadingBtnSpinHost') : null);
+      if (dotsHost && spinHost) {
+        this._loadingBtnsMounted = true;
+        void this.loadingBtnDots.mount(dotsHost);
+        void this.loadingBtnSpin.mount(spinHost);
+      }
+    }
 
     const cfHost =
       this.ids().coverFlowHost ||

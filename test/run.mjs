@@ -1042,6 +1042,7 @@ section('ui kit');
   assert(docs.includes('DiffBlock') && docs.includes('parseDiffLines'), 'docs cover DiffBlock');
   assert(docs.includes('MarkdownEditor') && docs.includes('renderMarkdown'), 'docs cover MarkdownEditor');
   assert(docs.includes('CoverFlow') && docs.includes('封面流'), 'docs cover CoverFlow');
+  assert(docs.includes('LoadingButton') && docs.includes('Loading Button'), 'docs cover LoadingButton');
 
   const listeners = [];
   globalThis.document = {
@@ -1081,9 +1082,53 @@ section('ui kit');
     },
   });
   assert(btn.e.className.includes('gd-btn--primary'), 'Button applies primary class');
-  assert(btn.e.innerText === 'Save', 'Button text set');
+  {
+    const label = (btn.e.children || []).find((c) => String(c.className || '').includes('gd-btn__label'));
+    assert(
+      (label && label.innerText === 'Save') || btn.e.innerText === 'Save',
+      'Button text set'
+    );
+  }
   listeners.find((l) => l.type === 'click')?.handler();
   assert(clicked, 'Button onClick fires');
+
+  const busy = Button({ type: 'primary', text: 'Go', loading: true, indicator: 'dots' });
+  assert(busy.e.className.includes('gd-btn--loading'), 'Button loading class');
+  assert(busy.e.disabled === true, 'Button loading disables');
+  assert(
+    (busy.e.children || []).some((c) => String(c.className || '').includes('gd-btn__indicator--dots')),
+    'Button loading shows dots indicator'
+  );
+  let busyClicks = 0;
+  const locked = Button({
+    text: 'Lock',
+    loading: true,
+    onClick: () => {
+      busyClicks += 1;
+    },
+  });
+  listeners.filter((l) => l.type === 'click').at(-1)?.handler({ preventDefault() {}, stopPropagation() {} });
+  assert(busyClicks === 0, 'Button loading blocks onClick');
+
+  assert(typeof ui.LoadingButton === 'function', 'LoadingButton exported');
+  assert(ui.AsyncButton === ui.LoadingButton, 'AsyncButton aliases LoadingButton');
+  {
+    let runs = 0;
+    const lb = new ui.LoadingButton({
+      text: 'Save',
+      onClick: async () => {
+        runs += 1;
+        await Promise.resolve();
+      },
+    });
+    assert(lb.isLoading() === false, 'LoadingButton idle');
+    const p1 = lb.trigger();
+    assert(lb.isLoading() === true, 'LoadingButton busy after trigger');
+    const p2 = lb.trigger();
+    await Promise.all([p1, p2]);
+    assert(runs === 1, 'LoadingButton ignores re-entry while pending');
+    assert(lb.isLoading() === false, 'LoadingButton settles');
+  }
 
   const card = Card({ title: 'Hi' }, Button({ text: 'Go' }));
   assert(card.e.className.includes('gd-card'), 'Card root class');
