@@ -95,6 +95,8 @@ section('layout: product vs engine');
     'src/ui/css/markdown-editor.css',
     'src/ui/CoverFlow.js',
     'src/ui/css/coverflow.css',
+    'src/ui/todo.js',
+    'src/ui/css/todo.css',
     'src/ui/input-number.js',
     'src/ui/rate.js',
     'src/ui/cascader.js',
@@ -892,6 +894,19 @@ section('ui kit');
   assert(typeof ui.CoverFlow === 'function', 'CoverFlow exported');
   assert(ui.CoverflowCarousel === ui.CoverFlow, 'CoverflowCarousel aliases CoverFlow');
   assert(typeof ui.normalizeCoverFlowItems === 'function', 'normalizeCoverFlowItems exported');
+  assert(typeof ui.TodoList === 'function', 'TodoList exported');
+  assert(ui.Todos === ui.TodoList, 'Todos aliases TodoList');
+  {
+    const items = ui.normalizeTodoItems([
+      { text: 'A', status: 'in_progress' },
+      { text: 'B', status: 'pending' },
+      { text: 'C', status: 'completed' },
+    ]);
+    assert(items[0].status === 'active' && items[2].status === 'done', 'normalizeTodoStatus aliases');
+    assert(ui.countTodoProgress(items).done === 1 && ui.countTodoProgress(items).total === 3, 'countTodoProgress');
+    assert(ui.nextTodoStatus('pending') === 'active', 'nextTodoStatus pending→active');
+    assert(ui.nextTodoStatus('active') === 'done', 'nextTodoStatus active→done');
+  }
   {
     const items = ui.normalizeCoverFlowItems(['A', { key: 'b', title: 'Bee', subtitle: 'x' }]);
     assert(items.length === 2 && items[0].title === 'A' && items[1].key === 'b', 'normalizeCoverFlowItems shapes items');
@@ -1042,6 +1057,7 @@ section('ui kit');
   assert(docs.includes('DiffBlock') && docs.includes('parseDiffLines'), 'docs cover DiffBlock');
   assert(docs.includes('MarkdownEditor') && docs.includes('renderMarkdown'), 'docs cover MarkdownEditor');
   assert(docs.includes('CoverFlow') && docs.includes('封面流'), 'docs cover CoverFlow');
+  assert(docs.includes('TodoList') && docs.includes('To-dos'), 'docs cover TodoList');
   assert(docs.includes('LoadingButton') && docs.includes('Loading Button'), 'docs cover LoadingButton');
 
   const listeners = [];
@@ -1160,6 +1176,30 @@ section('ui kit');
     const hl = find(block.e, (n) => String(n.className || '').includes('gd-code__line--hl'));
     assert(hl.length === 1, 'highlightLines marks target');
     assert(find(block.e, (n) => n.tagName === 'TABLE').length === 0, 'CodeBlock does not use table layout');
+
+    const todo = ui.TodoList({
+      title: 'To-dos',
+      items: [
+        { key: '1', text: 'Ship LoadingButton', status: 'active' },
+        { key: '2', text: 'Write docs', status: 'pending' },
+        { key: '3', text: 'Open PR', status: 'done' },
+      ],
+    });
+    assert(String(todo.e.className || '').includes('gd-todo'), 'TodoList root class');
+    assert(
+      find(todo.e, (n) => String(n.className || '').includes('gd-todo__icon--active')).length === 1,
+      'TodoList renders active icon'
+    );
+    assert(
+      find(todo.e, (n) => String(n.className || '').includes('gd-todo__icon--pending')).length === 1,
+      'TodoList renders pending icon'
+    );
+    assert(
+      find(todo.e, (n) => String(n.className || '').includes('gd-todo__progress')).some(
+        (n) => n.innerText === '1/3'
+      ),
+      'TodoList progress shows done/total'
+    );
 
     const diff = ui.DiffBlock({
       language: 'javascript',
