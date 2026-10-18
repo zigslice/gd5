@@ -217,14 +217,16 @@ docs/           api.md · ui.md · engine.md · architecture.md
 
 ## Example & tests
 
-ProtoLive (`src/product/`) shows composition in a real editor. Safe to ignore when embedding the engine.
+ProtoLive (`src/product/`) shows composition in a visual editor. **Coding Agent** (`agent.html` → `src/product/agent/`) is the fuller product demo: IDE chrome + UI kit embeds + store-driven agent turns. Safe to ignore when embedding the engine.
 
 UI kit demos under `examples/` are **standard gd5 apps**: HTML page slots + `ComponentRender` / `LogProvider` (via `examples/demoApp.js`), same shape as `src/product/main.js`.
 
 ```bash
-python3 -m http.server 8080   # http://localhost:8080
-# gallery:  examples/ui-gallery.html
-# demos:    examples/*-demo.html
+python3 -m http.server 8080
+# ProtoLive:     http://localhost:8080/
+# Coding Agent:  http://localhost:8080/agent.html
+# gallery:       examples/ui-gallery.html
+# demos:         examples/*-demo.html
 node test/run.mjs
 ```
 

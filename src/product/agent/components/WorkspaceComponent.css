@@ -1,0 +1,53 @@
+.agent-workspace {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100%;
+  min-height: 0;
+  background: var(--bg-app, #0f1419);
+  color: var(--text-primary, #e8eef5);
+}
+
+.agent-workspace__main {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) 320px;
+  min-height: 0;
+  height: 100%;
+}
+
+.agent-workspace__center {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) 220px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.agent-host {
+  min-width: 0;
+  min-height: 0;
+}
+
+.agent-host--toolbar {
+  z-index: 2;
+}
+
+@media (max-width: 960px) {
+  .agent-workspace__main {
+    grid-template-columns: 180px minmax(0, 1fr);
+    grid-template-rows: 1fr 280px;
+  }
+
+  .agent-host--chat {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 720px) {
+  .agent-workspace__main {
+    grid-template-columns: 1fr;
+    grid-template-rows: 160px 1fr 240px;
+  }
+
+  .agent-workspace__center {
+    grid-template-rows: minmax(0, 1fr) 160px;
+  }
+}

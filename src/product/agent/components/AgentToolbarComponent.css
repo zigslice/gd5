@@ -1,0 +1,58 @@
+.agent-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 52px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--border, #2a3544);
+  background: var(--bg-panel, #171d25);
+}
+
+.agent-toolbar__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.agent-toolbar__mark {
+  color: var(--accent, #2bb0a6);
+  font-size: 16px;
+}
+
+.agent-toolbar__title {
+  font-weight: 650;
+  font-size: 14px;
+  letter-spacing: 0.01em;
+  color: var(--text-primary, #e8eef5);
+}
+
+.agent-toolbar__pill {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border, #2a3544);
+  color: var(--text-muted, #6b7c8d);
+}
+
+.agent-toolbar__pill--running {
+  color: #f5d0a0;
+  border-color: rgba(245, 208, 160, 0.35);
+  background: rgba(245, 208, 160, 0.08);
+}
+
+.agent-toolbar__pill--idle {
+  color: var(--accent, #2bb0a6);
+  border-color: var(--accent-soft, rgba(43, 176, 166, 0.3));
+}
+
+.agent-toolbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}

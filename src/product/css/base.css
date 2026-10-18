@@ -21,7 +21,9 @@ body {
 /* Engine page mounts (ComponentRender toggles display) */
 #boot,
 #editor,
-#preview {
+#preview,
+#workspace,
+#settings {
   height: 100%;
 }
 
@@ -31,11 +33,13 @@ body {
   color: var(--text-secondary);
 }
 
-#editor {
+#editor,
+#workspace {
   overflow: hidden;
 }
 
-#preview {
+#preview,
+#settings {
   position: fixed;
   inset: 0;
   z-index: 100;

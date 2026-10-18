@@ -4,10 +4,27 @@
 
 ```bash
 python3 -m http.server 8080
-# http://localhost:8080
+# ProtoLive:      http://localhost:8080/
+# Coding Agent:   http://localhost:8080/agent.html
 ```
 
-## 产品操作
+## Coding Agent（产品能力全景 demo）
+
+入口：[`agent.html`](../agent.html) → `src/product/agent/main.js`。
+
+用引擎页面槽 + UI 组件库拼出的 **Coding Agent IDE**：文件树、代码高亮、Agent 对话、To-dos、Terminal、Diff、Command Palette、Settings 模态。
+
+| 操作 | 方式 |
+|------|------|
+| 切文件 | 左侧树 / 顶栏 Commands |
+| 发任务 | 右侧 Agent 输入框 ⌘↵，或「Run demo task」 |
+| 看补丁 | 底部 Diff 面板 |
+| 命令面板 | ⌘K / 「Commands」 |
+| 主题 | Settings 模态 → `setTheme` |
+
+Agent 回合是**本地模拟**（读写 store、刷 todos/diff/terminal），用于探测产品组合能力，不接真实 LLM。
+
+## ProtoLive 操作
 
 | 操作 | 方式 |
 |------|------|
@@ -19,9 +36,9 @@ python3 -m http.server 8080
 
 ## 用引擎写新产品页
 
-1. 在 `index.html` 增加 `<div id="myPage">`
+1. 在 HTML 增加 `<div id="myPage">`
 2. `class MyPage extends Component { ... }`
-3. 在 `src/product/main.js` 的 `componentsDef` 注册
+3. 在对应 `main.js` 的 `componentsDef` 注册
 4. `navigator.navigate('myPage', params)`
 
 详见 [engine.md](./engine.md) 与 [skills/engine/](../skills/engine/)。

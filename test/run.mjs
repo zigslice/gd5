@@ -146,6 +146,19 @@ section('layout: product vs engine');
     'src/product/components/EditorComponent.css',
     'src/product/components/PreviewComponent.css',
     'src/product/components/BootComponent.css',
+    'agent.html',
+    'src/product/agent/main.js',
+    'src/product/agent/lib/store.js',
+    'src/product/agent/lib/seed.js',
+    'src/product/agent/lib/agentRunner.js',
+    'src/product/agent/components/WorkspaceComponent.js',
+    'src/product/agent/components/AgentBootComponent.js',
+    'src/product/agent/components/AgentToolbarComponent.js',
+    'src/product/agent/components/FileTreeComponent.js',
+    'src/product/agent/components/CodePaneComponent.js',
+    'src/product/agent/components/AgentChatComponent.js',
+    'src/product/agent/components/AgentSideComponent.js',
+    'src/product/agent/components/AgentSettingsComponent.js',
   ]) {
     assert(existsSync(join(root, path)), `${path} exists`);
   }
@@ -936,6 +949,57 @@ section('product: nodes registry');
   assert(!/switch\s*\(\s*node\.kind/.test(editorSrc), 'EditorComponent has no kind switch');
   assert(editorSrc.includes('ToolbarComponent') && editorSrc.includes('.mount('), 'Editor mounts child Components');
   assert(!editorSrc.includes('ToolbarView'), 'Editor no longer uses View pattern');
+}
+
+section('product: coding agent');
+{
+  const agentHtml = readFileSync(join(root, 'agent.html'), 'utf8');
+  assert(agentHtml.includes('id="boot"') && agentHtml.includes('id="workspace"'), 'agent.html has page slots');
+  assert(agentHtml.includes('id="settings"'), 'agent.html has settings modal slot');
+  assert(agentHtml.includes('src/product/agent/main.js'), 'agent.html boots agent main');
+  assert(!/<script\s+type="module">/.test(agentHtml), 'agent.html has no inline module script');
+
+  const agentMain = readFileSync(join(root, 'src/product/agent/main.js'), 'utf8');
+  assert(agentMain.includes('ComponentRender') && agentMain.includes('WorkspaceComponent'), 'agent main uses ComponentRender');
+  assert(agentMain.includes("home: 'workspace'"), 'agent home is workspace');
+  assert(agentMain.includes('isModal: true'), 'agent settings is modal page');
+
+  const wsSrc = readFileSync(join(root, 'src/product/agent/components/WorkspaceComponent.js'), 'utf8');
+  assert(wsSrc.includes('ensureShell') && wsSrc.includes('.mount('), 'workspace composes child mounts');
+  assert(wsSrc.includes('CommandPalette'), 'workspace wires CommandPalette');
+  assert(wsSrc.includes('FileTreeComponent') && wsSrc.includes('AgentChatComponent'), 'workspace panels present');
+
+  const { createAgentStore } = await import('../src/product/agent/lib/store.js');
+  const { planDemoEdit, runAgentPlan, makeUnifiedDiff } = await import(
+    '../src/product/agent/lib/agentRunner.js'
+  );
+
+  const store = createAgentStore();
+  const snap0 = store.getState();
+  assert(snap0.files.length >= 4, 'agent store seeds files');
+  assert(snap0.activePath === 'src/app.js' || snap0.openTabs.includes(snap0.activePath), 'agent has active file');
+  assert(store.treeData().length >= 2, 'agent treeData builds folders');
+
+  store.appendMessage({ role: 'user', text: 'ping' });
+  assert(store.getState().messages.some((m) => m.text === 'ping'), 'agent appendMessage');
+
+  const diffText = makeUnifiedDiff('a.js', 'one\n', 'two\n');
+  assert(diffText.includes('--- a/a.js') && diffText.includes('+two'), 'makeUnifiedDiff shape');
+
+  const plan = planDemoEdit(store);
+  assert(plan && plan.steps.some((s) => s.kind === 'edit'), 'planDemoEdit produces edits');
+  await runAgentPlan(store, plan);
+  const snap1 = store.getState();
+  assert(!snap1.running && snap1.status === 'idle', 'agent plan settles');
+  assert(store.getFile('src/utils.js').content.includes('shout'), 'agent applied utils shout');
+  assert(store.getFile('src/app.js').content.includes('shout'), 'agent applied app shout');
+  assert(snap1.diff?.unified?.includes('shout'), 'agent diff recorded');
+  assert(snap1.todos.every((t) => t.status === 'done'), 'agent todos completed');
+
+  const usage = readFileSync(join(root, 'docs/usage.md'), 'utf8');
+  assert(usage.includes('agent.html') && usage.includes('Coding Agent'), 'usage docs cover Coding Agent');
+  const arch = readFileSync(join(root, 'docs/architecture.md'), 'utf8');
+  assert(arch.includes('src/product/agent/') || arch.includes('Coding Agent'), 'architecture mentions agent product');
 }
 
 section('ui kit');

@@ -217,12 +217,14 @@ docs/           api.md · ui.md · engine.md · architecture.md
 
 ## 示例与测试
 
-ProtoLive（`src/product/`）在真实编辑器里演示组合用法。嵌入引擎时可忽略。
+ProtoLive（`src/product/`）在可视化编辑器里演示组合用法。**Coding Agent**（`agent.html` → `src/product/agent/`）是更完整的产品 demo：IDE 壳 + UI 组件嵌入 + store 驱动的 Agent 回合。嵌入引擎时可忽略。
 
 `examples/` 下的 UI 演示都是**标准 gd5 应用**：HTML 页槽 + `ComponentRender` / `LogProvider`（见 `examples/demoApp.js`），结构与 `src/product/main.js` 一致。
 
 ```bash
-python3 -m http.server 8080   # http://localhost:8080
+python3 -m http.server 8080
+# ProtoLive：     http://localhost:8080/
+# Coding Agent：  http://localhost:8080/agent.html
 # 画廊：examples/ui-gallery.html
 # 演示：examples/*-demo.html
 node test/run.mjs

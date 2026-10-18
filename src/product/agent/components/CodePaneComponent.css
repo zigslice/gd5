@@ -1,0 +1,98 @@
+.agent-code {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  background: var(--bg-elevated, #1e2630);
+}
+
+.agent-code__tabs {
+  display: flex;
+  gap: 2px;
+  overflow-x: auto;
+  padding: 6px 8px 0;
+  border-bottom: 1px solid var(--border, #2a3544);
+  background: var(--bg-panel, #171d25);
+}
+
+.agent-code__tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  padding: 7px 10px;
+  background: transparent;
+  color: var(--text-secondary, #9aabbc);
+  cursor: pointer;
+  font: 12.5px/1 var(--font-mono, ui-monospace, monospace);
+}
+
+.agent-code__tab--active {
+  background: var(--bg-elevated, #1e2630);
+  color: var(--text-primary, #e8eef5);
+  border-color: var(--border, #2a3544);
+}
+
+.agent-code__tab-close {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  opacity: 0.55;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 2px;
+}
+
+.agent-code__tab-close:hover {
+  opacity: 1;
+}
+
+.agent-code__body {
+  min-height: 0;
+  overflow: auto;
+  padding: 10px 12px 4px;
+}
+
+.agent-code__path {
+  font: 11px/1.4 var(--font-mono, ui-monospace, monospace);
+  color: var(--text-muted, #6b7c8d);
+  margin-bottom: 8px;
+}
+
+.agent-code__empty {
+  padding: 48px 16px;
+  text-align: center;
+  color: var(--text-muted, #6b7c8d);
+}
+
+.agent-code__edit-wrap {
+  border-top: 1px solid var(--border, #2a3544);
+  padding: 8px 12px 12px;
+  background: var(--bg-panel, #171d25);
+}
+
+.agent-code__edit-label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted, #6b7c8d);
+  margin-bottom: 6px;
+}
+
+.agent-code__textarea {
+  width: 100%;
+  min-height: 88px;
+  resize: vertical;
+  border: 1px solid var(--border, #2a3544);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #0f1419;
+  color: var(--text-primary, #e8eef5);
+  font: 12.5px/1.45 var(--font-mono, ui-monospace, monospace);
+}
