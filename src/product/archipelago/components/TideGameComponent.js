@@ -2,6 +2,7 @@ import { Component, D, bind } from '../../../engine/index.js';
 import { loadUi, Button, Tag, Text, Title, ProgressBar } from '../../../ui/index.js';
 import { BattleView } from './BattleView.js';
 import { MapView } from './MapView.js';
+import { GARRISON_CAP } from '../lib/battle.js';
 import { getTideStore } from '../lib/store.js';
 import {
   SKILLS,
@@ -95,6 +96,8 @@ export class TideGameComponent extends Component {
   _syncHud() {
     const state = this.store.getState();
     if (state.phase !== this._view) void this._show(state.phase);
+    const root = this.ids().root;
+    if (root) root.dataset.phase = state.phase;
 
     const front = this.ids().frontTag;
     if (front) front.textContent = `前线 第 ${state.frontRow} 排`;
@@ -123,10 +126,27 @@ export class TideGameComponent extends Component {
 
   _paintMapSide(div, span, state) {
     const selected = state.islands[state.selectedId];
-    const reason = selected ? enterReason(state, selected.id) : '先选一座岛';
+    const reason = selected ? enterReason(state, selected.id) : '先点一座沙色岛';
     div(
       { className: 'tide-panel', key: 'map-side' },
-      Title({ level: 4, text: '岛屿', className: 'tide-h' }),
+      div(
+        { className: 'tide-guide', key: 'guide' },
+        Title({ level: 4, text: '第一步 · 进入岛屿视角', className: 'tide-h' }),
+        Text({
+          small: true,
+          text: '点击海图上发亮的沙色岛，或点下面的按钮。进入后，左侧会自动换成布防。',
+        })
+      ),
+      Button({
+        type: 'primary',
+        block: true,
+        size: 'lg',
+        className: 'tide-enter',
+        text: reason ? reason : `进入${selected.name} · 岛屿视角`,
+        disabled: !!reason,
+        onClick: () => selected && this.store.enter(selected.id),
+      }),
+      Title({ level: 5, text: '岛屿', className: 'tide-h' }),
       div(
         { className: 'tide-legend' },
         span({ className: 'tide-dot tide-dot--held', text: '' }),
@@ -153,8 +173,14 @@ export class TideGameComponent extends Component {
               size: 'sm',
               type: island.id === state.selectedId ? 'primary' : 'default',
               className: `tide-island tide-island--${island.status}`,
-              text: `${island.name} · ${statusLabel(island.status)}`,
-              onClick: () => this.store.selectIsland(island.id),
+              text:
+                island.status === 'open'
+                  ? `${island.name} · 点击进入`
+                  : `${island.name} · ${statusLabel(island.status)}`,
+              onClick: () => {
+                this.store.selectIsland(island.id);
+                if (island.status === 'open') this.store.enter(island.id);
+              },
             })
           ),
           ...row
@@ -190,13 +216,6 @@ export class TideGameComponent extends Component {
           )
         : null,
       Button({
-        type: 'primary',
-        block: true,
-        text: reason ? reason : `进入${selected.name}`,
-        disabled: !!reason,
-        onClick: () => selected && this.store.enter(selected.id),
-      }),
-      Button({
         block: true,
         text: '刷新前线',
         onClick: () => this.store.refresh(),
@@ -212,16 +231,97 @@ export class TideGameComponent extends Component {
 
   _paintBattleSide(div, span, state) {
     const battle = state.battle;
-    const island = state.islands[battle?.islandId];
+    if (battle?.status === 'deploy') {
+      this._paintDeploySide(div, span, state, battle);
+      return;
+    }
+    this._paintFightSide(div, span, state, battle);
+  }
+
+  _paintDeploySide(div, span, state, battle) {
+    const island = state.islands[battle.islandId];
+    const full = battle.units.length >= GARRISON_CAP;
+    const selected = battle.units.find((unit) => unit.id === state.selectedUnitId);
     div(
-      { className: 'tide-panel', key: 'battle-side' },
-      Title({ level: 4, text: island ? island.name : '防御', className: 'tide-h' }),
+      { className: 'tide-panel', key: 'deploy-side' },
+      div(
+        { className: 'tide-guide', key: 'deploy-guide' },
+        Title({ level: 4, text: `布防 · ${island?.name || ''}`, className: 'tide-h' }),
+        Text({
+          small: true,
+          text: '选一个兵种，再点岛面。兵会站在岛上。点自己的兵，再点地面，可以调动站位。',
+        })
+      ),
+      div(
+        { className: full ? 'tide-garrison tide-garrison--full' : 'tide-garrison', key: 'count' },
+        span({ text: `已部署 ${battle.units.length}/${GARRISON_CAP}` }),
+        span({ text: full ? '这座岛已满' : '还可以部署' })
+      ),
+      ...Object.values(TROOPS).map((spec) => this._troopButton(spec, state, full)),
+      Text({
+        type: 'secondary',
+        small: true,
+        text: selected
+          ? `已选中${TROOPS[selected.kind].name}。点岛面把它调过去。`
+          : '未选中已部署的兵时，点岛面会再放一个。',
+      }),
+      Button({
+        type: 'primary',
+        block: true,
+        size: 'lg',
+        disabled: battle.units.length === 0,
+        text: battle.units.length ? '开始回合' : '先部署兵种',
+        onClick: () => this.store.startRound(),
+      }),
+      Button({
+        block: true,
+        text: '返回海图',
+        onClick: () => this.store.leave(),
+      }),
+      Text({
+        type: 'muted',
+        small: true,
+        className: 'tide-rule',
+        text: '满员后不能再放任何兵种。敌人只会坐船，从码头这一个入口分批上岸。',
+      })
+    );
+  }
+
+  _troopButton(spec, state, full) {
+    const locked = state.level < spec.unlockLevel;
+    const cooling = (state.cooldowns[spec.id] || 0) > 0.05;
+    const active = state.selectedTroop === spec.id && !state.selectedUnitId;
+    let text = `部署 ${spec.name}`;
+    if (locked) text = `${spec.name} · ${spec.unlockLevel}级解锁`;
+    else if (full) text = `${spec.name} · 岛已满`;
+    else if (cooling) text = `${spec.name} · 冷却中`;
+    return Button({
+      type: active ? 'primary' : 'default',
+      block: true,
+      disabled: locked || full || cooling,
+      text,
+      onClick: () => this.store.selectTroop(spec.id),
+    });
+  }
+
+  _paintFightSide(div, span, state, battle) {
+    const island = state.islands[battle?.islandId];
+    const selected = battle?.units.find((unit) => unit.id === state.selectedUnitId);
+    div(
+      { className: 'tide-panel', key: 'fight-side' },
+      Title({ level: 4, text: island ? `交战 · ${island.name}` : '交战', className: 'tide-h' }),
       Text({
         type: 'secondary',
         small: true,
         text: battle
-          ? `第 ${battle.wave}/${battle.waveCount} 波 · 场上 ${battle.npcs.length} · ${battle.slow > 0 ? '退潮中' : '敌人全速'}`
+          ? `第 ${battle.wave}/${battle.waveCount} 批 · 来船 ${battle.boats.length} · 上岸 ${battle.npcs.length} · 我方 ${battle.units.length}`
           : '',
+      }),
+      Text({
+        small: true,
+        text: selected
+          ? `已选中${TROOPS[selected.kind].name}。点地面调动。`
+          : '点自己的兵，再点地面，调动站位。敌人从码头上岸后和你的兵对打。',
       }),
       ...(battle?.houses || []).map((house) =>
         div(
@@ -233,11 +333,14 @@ export class TideGameComponent extends Component {
           ProgressBar({ percent: (house.hp / house.maxHp) * 100, size: 'sm' })
         )
       ),
-      Text({
-        type: 'muted',
-        small: true,
-        className: 'tide-rule',
-        text: '选中下方兵种，再点岛上的圆点部署。冷却中的兵种不能再放。房子全毁则这座岛失守。',
+      ...Object.values(SKILLS).map((spec) => {
+        const cd = state.cooldowns[spec.id] || 0;
+        return Button({
+          block: true,
+          disabled: cd > 0.05,
+          text: cd > 0.05 ? `${spec.name} ${cd.toFixed(1)}s` : spec.name,
+          onClick: () => this.store.cast(spec.id),
+        });
       }),
       Button({
         type: 'danger',
@@ -252,8 +355,8 @@ export class TideGameComponent extends Component {
     const host = this.ids().dock;
     if (!host) return;
     D.clear(host);
+    if (state.phase !== 'map') return;
     const { div, get } = bind();
-    const battle = state.phase === 'battle';
     div(
       { className: 'tide-dock__row', key: 'dock' },
       ...Object.values(TROOPS).map((spec) => {
@@ -267,51 +370,37 @@ export class TideGameComponent extends Component {
             type: state.selectedTroop === spec.id ? 'primary' : 'default',
             size: 'sm',
             disabled: locked,
-            text: locked ? `${spec.name} · ${spec.unlockLevel}级` : cd > 0.05 ? `${spec.name} ${cd.toFixed(1)}s` : spec.name,
+            text: locked
+              ? `${spec.name} · ${spec.unlockLevel}级`
+              : cd > 0.05
+                ? `${spec.name} ${cd.toFixed(1)}s`
+                : spec.name,
             onClick: () => this.store.selectTroop(spec.id),
           }),
           Text({ as: 'span', small: true, type: 'muted', text: `${rank}阶 · ${spec.blurb}` }),
-          battle
-            ? null
-            : Button({
-                size: 'sm',
-                type: 'text',
-                disabled: locked || rank >= 4,
-                text: rank >= 4 ? '满阶' : `升阶 ${cost}金`,
-                onClick: () => this.store.upgradeTroop(spec.id),
-              })
-        );
-      }),
-      ...Object.values(SKILLS).map((spec) => {
-        const cd = state.cooldowns[spec.id] || 0;
-        return div(
-          { className: 'tide-card', key: spec.id },
           Button({
             size: 'sm',
-            type: 'default',
-            disabled: !battle || cd > 0.05,
-            text: cd > 0.05 ? `${spec.name} ${cd.toFixed(1)}s` : spec.name,
-            onClick: () => this.store.cast(spec.id),
-          }),
-          Text({ as: 'span', small: true, type: 'muted', text: spec.blurb })
+            type: 'text',
+            disabled: locked || rank >= 4,
+            text: rank >= 4 ? '满阶' : `升阶 ${cost}金`,
+            onClick: () => this.store.upgradeTroop(spec.id),
+          })
         );
       }),
-      battle
-        ? null
-        : div(
-            { className: 'tide-card', key: 'level' },
-            Button({
-              size: 'sm',
-              text: `升级到 ${state.level + 1} 级`,
-              onClick: () => this.store.upgradeLevel(),
-            }),
-            Text({
-              as: 'span',
-              small: true,
-              type: 'muted',
-              text: `花费 ${levelCost(state.level)} 金，提高全部兵种`,
-            })
-          )
+      div(
+        { className: 'tide-card', key: 'level' },
+        Button({
+          size: 'sm',
+          text: `升级到 ${state.level + 1} 级`,
+          onClick: () => this.store.upgradeLevel(),
+        }),
+        Text({
+          as: 'span',
+          small: true,
+          type: 'muted',
+          text: `花费 ${levelCost(state.level)} 金，提高全部兵种`,
+        })
+      )
     );
     const root = get()[1];
     if (root) host.appendChild(root);

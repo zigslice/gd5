@@ -248,11 +248,13 @@ export function mountMapScene(THREE, scene, camera, dom, hooks) {
       mesh.userData.shore.material.color.copy(color);
       const held = island.status === 'held' || island.id === 'home';
       mesh.userData.hill.material.color.set(held ? 0x8fd0a4 : 0xd5ddd8);
-      const onFront = island.row === state.frontRow && island.id !== 'home';
+      const open = island.status === 'open';
       const selected = island.id === state.selectedId;
-      mesh.userData.ring.visible = onFront || selected;
-      mesh.userData.ring.material.opacity = selected ? 1 : 0.4;
-      mesh.userData.ring.material.color.set(selected ? 0xf7f3ea : 0xf0b429);
+      mesh.userData.ring.visible = open || selected;
+      const pulse = open ? 0.55 + Math.sin(t * 3.2 + island.row) * 0.4 : 0.35;
+      mesh.userData.ring.material.opacity = selected || open ? pulse : 0.35;
+      mesh.userData.ring.material.emissiveIntensity = open ? 0.85 : 0.25;
+      mesh.userData.ring.material.color.set(open ? 0xf0b429 : 0xf7f3ea);
     }
 
     const at = state.islands[state.playerAt] || state.islands.home;

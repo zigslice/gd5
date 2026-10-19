@@ -157,6 +157,36 @@
   margin-top: 8px;
 }
 
+.tide-guide {
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(240, 180, 41, 0.16);
+  border: 1px solid rgba(240, 180, 41, 0.7);
+}
+
+.tide-guide .gd-title,
+.tide-guide .gd-text {
+  color: #fff6df;
+}
+
+.tide-enter.gd-btn {
+  margin: 4px 0 12px;
+}
+
+.tide-garrison {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 4px 0 8px;
+  font-size: 18px;
+  font-weight: 760;
+}
+
+.tide-garrison--full {
+  color: #ffb4a8;
+}
+
 .tide-panel .gd-btn,
 .tide-card .gd-btn {
   margin-top: 6px;
@@ -176,11 +206,24 @@
   font-size: 12px;
 }
 
+.tide[data-phase='battle'] .tide-dock {
+  display: none;
+}
+
+.tide[data-phase='battle'] .tide-side {
+  bottom: 12px;
+}
+
 @media (max-width: 860px) {
   .tide-side {
     top: auto;
     bottom: 168px;
     max-height: 38vh;
+  }
+
+  .tide[data-phase='battle'] .tide-side {
+    bottom: 12px;
+    max-height: 46vh;
   }
 
   .tide-dock {
