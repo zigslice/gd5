@@ -217,7 +217,7 @@ docs/           api.md · ui.md · engine.md · architecture.md
 
 ## Example & tests
 
-ProtoLive (`src/product/`) shows composition in a visual editor. **Coding Agent** (`agent.html` → `src/product/agent/`) is the fuller product demo: IDE chrome + UI kit embeds + store-driven agent turns. Safe to ignore when embedding the engine.
+ProtoLive (`src/product/`) shows composition in a visual editor. **Coding Agent** (`agent.html` → `src/product/agent/`) is the fuller product demo: IDE chrome + UI kit embeds + store-driven agent turns. **Escape Room** (`escape.html` → `src/product/escape/`) is a 2D point-and-click escape demo (Midnight Archive). Safe to ignore when embedding the engine.
 
 ![Coding Agent product demo](docs/images/coding-agent-demo.gif)
 
@@ -227,6 +227,7 @@ UI kit demos under `examples/` are **standard gd5 apps**: HTML page slots + `Com
 python3 -m http.server 8080
 # ProtoLive:     http://localhost:8080/
 # Coding Agent:  http://localhost:8080/agent.html
+# Escape Room:   http://localhost:8080/escape.html
 # gallery:       examples/ui-gallery.html
 # demos:         examples/*-demo.html
 node test/run.mjs

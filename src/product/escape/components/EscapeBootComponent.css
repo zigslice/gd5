@@ -1,0 +1,5 @@
+.escape-boot {
+  font: 500 15px/1.4 var(--font-display, system-ui, sans-serif);
+  color: var(--text-secondary, #9aabbc);
+  letter-spacing: 0.04em;
+}
