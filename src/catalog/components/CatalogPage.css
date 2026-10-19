@@ -184,7 +184,10 @@ body::before {
   gap: 14px;
 }
 
-.catalog-grid--product,
+.catalog-grid--product {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .catalog-grid--example {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }

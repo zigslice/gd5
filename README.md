@@ -203,7 +203,7 @@ div(
 src/engine/     runtime
 src/ui/         component library
 src/catalog/    site index (index.html) — products and example pages
-src/product/    example apps (optional): ProtoLive, Coding Agent, Escape Room
+src/product/    example apps (optional): ProtoLive, Coding Agent, Escape Room, Tidefront
 examples/       gd5 apps (page slots + ComponentRender) — ui-gallery, demos
 docs/           api.md · ui.md · engine.md · architecture.md
 ```
@@ -220,7 +220,7 @@ docs/           api.md · ui.md · engine.md · architecture.md
 
 `http://localhost:8080/` is the **index** (`index.html` → `src/catalog/`), a gd5 app that lists products and example pages. Open a card to enter that page.
 
-ProtoLive (`protolive.html` → `src/product/`) shows composition in a visual editor. **Coding Agent** (`agent.html` → `src/product/agent/`) is the fuller product demo: IDE chrome + UI kit embeds + store-driven agent turns. **Escape Room** (`escape.html` → `src/product/escape/`) is a 2D point-and-click escape demo (Midnight Archive). Safe to ignore when embedding the engine.
+ProtoLive (`protolive.html` → `src/product/`) shows composition in a visual editor. **Coding Agent** (`agent.html` → `src/product/agent/`) is the fuller product demo: IDE chrome + UI kit embeds + store-driven agent turns. **Escape Room** (`escape.html` → `src/product/escape/`) is a 2D point-and-click escape demo (Midnight Archive). **Tidefront** (`archipelago.html` → `src/product/archipelago/`) is a 3D island-defense demo: ocean routes, cooldowns, and a front line that advances when you refresh. Safe to ignore when embedding the engine.
 
 ![Coding Agent product demo](docs/images/coding-agent-demo.gif)
 
@@ -232,6 +232,7 @@ python3 -m http.server 8080
 # ProtoLive:     http://localhost:8080/protolive.html
 # Coding Agent:  http://localhost:8080/agent.html
 # Escape Room:   http://localhost:8080/escape.html
+# Tidefront:     http://localhost:8080/archipelago.html
 # gallery:       examples/ui-gallery.html
 # demos:         examples/*-demo.html
 node test/run.mjs

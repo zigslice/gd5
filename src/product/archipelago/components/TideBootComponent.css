@@ -1,0 +1,8 @@
+.tide-boot {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  color: #d5e7ee;
+  background: #06202c;
+  font-family: var(--gd-font, sans-serif);
+}
