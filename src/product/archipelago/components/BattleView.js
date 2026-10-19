@@ -3,7 +3,7 @@ import { ThreeView } from '../../../ui/index.js';
 import { mountBattleScene } from '../lib/battleScene.js';
 
 /**
- * 岛内防御画面。点部署点会调用 store.deploy。
+ * 岛内画面。点自己的兵再点地面是调动，布防阶段点空地是放置。
  */
 export class BattleView extends Component {
   static styles = new URL('./MapView.css', import.meta.url);
@@ -22,7 +22,7 @@ export class BattleView extends Component {
   render() {
     this.ensureShell(
       (ids) => ids.root,
-      ({ div }) => {
+      ({ div, span }) => {
         div(
           { id: 'root', className: 'tide-view' },
           ThreeView({
@@ -31,7 +31,8 @@ export class BattleView extends Component {
             background: 0x0c4a62,
             onInit: ({ THREE, scene, camera, renderer }) => {
               this._api = mountBattleScene(THREE, scene, camera, renderer.domElement, {
-                onPad: (padId) => this.store.deploy(padId),
+                onUnit: (id) => this.store.pickUnit(id),
+                onGround: (x, z) => this.store.ground(x, z),
               });
               return () => {
                 this._api?.dispose?.();
@@ -43,9 +44,10 @@ export class BattleView extends Component {
               this.store.tick(dt);
               const state = this.store.getState();
               if (state.phase !== 'battle') return;
-              this._api.update(state);
+              this._api.update(state, dt);
             },
-          })
+          }),
+          div({ className: 'tide-landing-note' }, span({ text: '码头是唯一上岸口' }))
         );
       }
     );

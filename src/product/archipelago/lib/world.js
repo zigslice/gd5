@@ -163,7 +163,8 @@ export function createCampaignState() {
     troopRank: { bulwark: 1, archer: 1, cannon: 1 },
     cooldowns: emptyCooldowns(),
     selectedTroop: 'archer',
-    message: '沿航线进入第一排。地图上的冷却不会自己结束，要按「刷新前线」。',
+    selectedUnitId: null,
+    message: '点击海图上的沙色岛屿，进入岛屿视角。进去后左侧会换成布防。',
     notice: '',
     battle: null,
   };
