@@ -163,6 +163,12 @@ section('layout: product vs engine');
     'src/product/agent/components/AgentChatComponent.js',
     'src/product/agent/components/AgentSideComponent.js',
     'src/product/agent/components/AgentSettingsComponent.js',
+    'index.html',
+    'protolive.html',
+    'src/catalog/main.js',
+    'src/catalog/entries.js',
+    'src/catalog/components/CatalogPage.js',
+    'src/catalog/components/CatalogPage.css',
     'escape.html',
     'src/product/escape/main.js',
     'src/product/escape/lib/store.js',
@@ -1877,6 +1883,41 @@ section('ui kit');
 
   const scoped = ui.ConfigProvider({ theme: 'blue' }, ui.Button({ type: 'primary', text: 'Hi' }));
   assert(scoped.e.className.includes('gd-config-provider'), 'ConfigProvider root');
+}
+
+section('catalog index');
+{
+  const indexHtml = readFileSync(join(root, 'index.html'), 'utf8');
+  assert(indexHtml.includes('id="home"'), 'index.html has home slot');
+  assert(indexHtml.includes('src/catalog/main.js'), 'index.html boots catalog');
+  assert(!indexHtml.includes('src/product/main.js'), 'index.html does not boot ProtoLive');
+  assert(!/<script\s+type="module">/.test(indexHtml), 'index.html has no inline module script');
+
+  const protoHtml = readFileSync(join(root, 'protolive.html'), 'utf8');
+  assert(protoHtml.includes('id="boot"') && protoHtml.includes('id="editor"'), 'protolive.html has page slots');
+  assert(protoHtml.includes('id="preview"'), 'protolive.html has preview slot');
+  assert(protoHtml.includes('src/product/main.js'), 'protolive.html boots ProtoLive');
+
+  const { CATALOG, filterCatalog, countCatalog } = await import('../src/catalog/entries.js');
+  assert(countCatalog(CATALOG, 'product') >= 3, 'catalog lists products');
+  assert(countCatalog(CATALOG, 'example') >= 8, 'catalog lists examples');
+  assert(filterCatalog(CATALOG, { kind: 'product' }).every((entry) => entry.kind === 'product'), 'filter kind=product');
+  assert(filterCatalog(CATALOG, { query: 'markdown' }).some((entry) => entry.id === 'markdown'), 'filter query');
+  assert(filterCatalog(CATALOG, { kind: 'example', query: 'ProtoLive' }).length === 0, 'filter kind and query');
+  assert(filterCatalog(CATALOG, { query: '___none___' }).length === 0, 'filter miss is empty');
+  for (const entry of CATALOG) {
+    assert(existsSync(join(root, entry.href)), `catalog href exists: ${entry.href}`);
+  }
+
+  const catalogSrc = readFileSync(join(root, 'src/catalog/components/CatalogPage.js'), 'utf8');
+  assert(catalogSrc.includes('ensureShell'), 'catalog page uses ensureShell');
+  assert(catalogSrc.includes('loadUi'), 'catalog page loads the UI kit');
+  assert(catalogSrc.includes('SegmentedControl'), 'catalog page uses SegmentedControl');
+  assert(catalogSrc.includes('filterCatalog'), 'catalog page filters entries');
+
+  const usage = readFileSync(join(root, 'docs/usage.md'), 'utf8');
+  assert(usage.includes('protolive.html'), 'usage points ProtoLive at protolive.html');
+  assert(usage.includes('src/catalog/'), 'usage documents the catalog');
 }
 
 section('skills blocks');

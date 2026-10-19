@@ -202,7 +202,8 @@ div(
 ```
 src/engine/     运行时
 src/ui/         组件库
-src/product/    示例应用（可选）
+src/catalog/    站点索引（index.html）— 产品与示例入口
+src/product/    示例应用（可选）：ProtoLive、Coding Agent、密室逃脱
 examples/       标准 gd5 应用（页槽 + ComponentRender）— ui-gallery、各 demo
 docs/           api.md · ui.md · engine.md · architecture.md
 ```
@@ -217,7 +218,9 @@ docs/           api.md · ui.md · engine.md · architecture.md
 
 ## 示例与测试
 
-ProtoLive（`src/product/`）在可视化编辑器里演示组合用法。**Coding Agent**（`agent.html` → `src/product/agent/`）是更完整的产品 demo：IDE 壳 + UI 组件嵌入 + store 驱动的 Agent 回合。**密室逃脱**（`escape.html` → `src/product/escape/`）是 2D 点选解谜产品 demo（Midnight Archive）。嵌入引擎时可忽略。
+`http://localhost:8080/` 是**索引**（`index.html` → `src/catalog/`），用 gd5 自己渲染，列出产品和示例页。点卡片才进入对应页面。
+
+ProtoLive（`protolive.html` → `src/product/`）在可视化编辑器里演示组合用法。**Coding Agent**（`agent.html` → `src/product/agent/`）是更完整的产品 demo：IDE 壳 + UI 组件嵌入 + store 驱动的 Agent 回合。**密室逃脱**（`escape.html` → `src/product/escape/`）是 2D 点选解谜产品 demo（Midnight Archive）。嵌入引擎时可忽略。
 
 ![Coding Agent 产品演示](docs/images/coding-agent-demo.gif)
 
@@ -225,7 +228,8 @@ ProtoLive（`src/product/`）在可视化编辑器里演示组合用法。**Codi
 
 ```bash
 python3 -m http.server 8080
-# ProtoLive：     http://localhost:8080/
+# 索引：          http://localhost:8080/
+# ProtoLive：     http://localhost:8080/protolive.html
 # Coding Agent：  http://localhost:8080/agent.html
 # 密室逃脱：      http://localhost:8080/escape.html
 # 画廊：examples/ui-gallery.html
