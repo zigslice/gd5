@@ -169,6 +169,17 @@ section('layout: product vs engine');
     'src/catalog/entries.js',
     'src/catalog/components/CatalogPage.js',
     'src/catalog/components/CatalogPage.css',
+    'archipelago.html',
+    'src/product/archipelago/main.js',
+    'src/product/archipelago/page.css',
+    'src/product/archipelago/lib/world.js',
+    'src/product/archipelago/lib/battle.js',
+    'src/product/archipelago/lib/store.js',
+    'src/product/archipelago/lib/mapScene.js',
+    'src/product/archipelago/lib/battleScene.js',
+    'src/product/archipelago/components/TideGameComponent.js',
+    'src/product/archipelago/components/MapView.js',
+    'src/product/archipelago/components/BattleView.js',
     'escape.html',
     'src/product/escape/main.js',
     'src/product/escape/lib/store.js',
@@ -1918,6 +1929,101 @@ section('catalog index');
   const usage = readFileSync(join(root, 'docs/usage.md'), 'utf8');
   assert(usage.includes('protolive.html'), 'usage points ProtoLive at protolive.html');
   assert(usage.includes('src/catalog/'), 'usage documents the catalog');
+}
+
+section('product: tidefront');
+{
+  const tideHtml = readFileSync(join(root, 'archipelago.html'), 'utf8');
+  assert(tideHtml.includes('id="boot"') && tideHtml.includes('id="game"'), 'archipelago.html has page slots');
+  assert(tideHtml.includes('src/product/archipelago/main.js'), 'archipelago.html boots tidefront');
+  assert(!/<script\s+type="module">/.test(tideHtml), 'archipelago.html has no inline module script');
+
+  const {
+    createCampaignState,
+    enterReason,
+    defendSuccess,
+    refreshFront,
+    markLost,
+    tickPressure,
+    HOME_ID,
+    PRESSURE_MAX,
+  } = await import('../src/product/archipelago/lib/world.js');
+  const { createBattle, tickBattle, deployUnit, castSkill } = await import(
+    '../src/product/archipelago/lib/battle.js'
+  );
+  const { createTideStore } = await import('../src/product/archipelago/lib/store.js');
+
+  const fresh = createCampaignState();
+  assert(fresh.islands.a1.status === 'open' && fresh.islands.a2.status === 'open', 'row 1 starts open');
+  assert(fresh.islands.b1.status === 'locked', 'row 2 starts locked');
+  assert(enterReason(fresh, 'a1') === '', 'can enter linked open island');
+  assert(enterReason(fresh, 'b1') !== '', 'cannot enter past the front');
+  assert(fresh.islands.a1.links.includes('home') && fresh.islands.home.links.includes('a1'), 'routes are bidirectional');
+
+  const camp = createCampaignState();
+  camp.cooldowns.archer = 6;
+  defendSuccess(camp, 'a1');
+  assert(camp.islands.a1.status === 'held', 'defense success marks island held');
+  assert(camp.latestHeldId === 'a1', 'latest held island updates');
+  assert(camp.gold > 40, 'defense grants gold');
+  assert(camp.cooldowns.archer === 6, 'success does not clear cooldowns');
+  const before = camp.frontRow;
+  const refreshed = refreshFront(camp);
+  assert(refreshed.advanced && camp.frontRow === 2 && camp.frontRow > before, 'refresh advances front to the row ahead');
+  assert(camp.cooldowns.archer === 0, 'refresh clears cooldowns');
+  assert(camp.islands.b1.status === 'open' && camp.islands.b2.status === 'open', 'linked next-row islands open');
+  assert(camp.islands.b3.status === 'locked', 'island without a held route stays locked');
+
+  const idle = createCampaignState();
+  refreshFront(idle);
+  assert(idle.frontRow === 1, 'refresh without a victory does not advance');
+
+  const collapse = createCampaignState();
+  defendSuccess(collapse, 'a1');
+  refreshFront(collapse);
+  markLost(collapse, 'b1');
+  assert(collapse.islands.a1.status === 'held', 'one front loss keeps earlier islands');
+  const wiped = markLost(collapse, 'b2');
+  assert(wiped.collapsed, 'losing the whole front collapses');
+  assert(collapse.islands.a1.status !== 'held', 'held islands are lost again');
+  assert(collapse.frontRow === 1 && collapse.latestHeldId === HOME_ID, 'front returns to the first row');
+
+  const pressure = createCampaignState();
+  tickPressure(pressure, PRESSURE_MAX / 6 + 0.2);
+  assert(pressure.notice.includes('整排失守'), 'ignored front islands fall and collapse the line');
+  assert(pressure.latestHeldId === HOME_ID, 'a collapse with nothing held still resets the front');
+  assert(pressure.islands.a1.status === 'open', 'collapsed islands can be entered again');
+
+  const battleState = createCampaignState();
+  battleState.battle = createBattle(battleState.islands.a1, battleState);
+  battleState.phase = 'battle';
+  battleState.selectedTroop = 'archer';
+  assert(deployUnit(battleState, 0).ok, 'deploy archer on an empty pad');
+  assert(!deployUnit(battleState, 1).ok, 'same troop is on cooldown');
+  assert(battleState.cooldowns.archer > 0, 'deploy starts a cooldown');
+  battleState.cooldowns.ebb = 0;
+  assert(castSkill(battleState, 'ebb').ok && battleState.battle.slow > 0, 'ebb slows the beach');
+  assert(!castSkill(battleState, 'ebb').ok, 'skill cooldown blocks a second cast');
+
+  const scripted = createTideStore();
+  assert(scripted.enter('b1').ok === false, 'store blocks a locked island');
+  assert(scripted.enter('a1').ok, 'store enters the first island');
+  scripted.getState().cooldowns.archer = 0;
+  scripted.getState().selectedTroop = 'archer';
+  for (const pad of [0, 1, 2, 3]) {
+    scripted.getState().cooldowns.archer = 0;
+    scripted.deploy(pad);
+  }
+  let guard = 0;
+  while (scripted.getState().phase === 'battle' && guard < 5000) {
+    scripted.tick(0.05);
+    guard += 1;
+  }
+  assert(scripted.getState().phase === 'map', 'a defended row-1 island returns to the map');
+  assert(scripted.getState().islands.a1.status === 'held', 'four archers can hold 沙岬');
+
+  const usageTide = readFileSync(join(root, 'docs/usage.md'), 'utf8');
+  assert(usageTide.includes('archipelago.html') && usageTide.includes('潮前线'), 'usage docs cover tidefront');
 }
 
 section('skills blocks');

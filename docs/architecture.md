@@ -6,7 +6,7 @@
 |----|------|------|
 | **引擎 (Engine)** | `src/engine/` | 迷你实模式 DOM 运行时：`Component` / `ComponentRender` / `D` / `LogProvider` |
 | **组件库 (UI)** | `src/ui/` | 对标 antd 的常用组件（Button / Input / Modal…），默认**橙色主色 + 白色面板** |
-| **产品 (Product)** | `src/product/` | 示例应用：ProtoLive + Coding Agent + Escape Room（可用引擎 + UI 库） |
+| **产品 (Product)** | `src/product/` | 示例应用：ProtoLive + Coding Agent + Escape Room + 潮前线（可用引擎 + UI 库） |
 | **索引 (Catalog)** | `src/catalog/` | 站点首页：产品与示例入口，本身也是 gd5 应用 |
 
 ```
@@ -37,6 +37,8 @@ agent store ──► Workspace / Settings pages
      FileTree · CodePane · AgentChat · AgentSide · Toolbar
      (+ UI: Tree, CodeBlock, DiffBlock, TodoList, ChatBubble, CommandPalette)
 ```
+
+潮前线（`src/product/archipelago/`，入口 `archipelago.html`）是 3D 群岛防御产品 demo：海图 + 岛内战斗，规则在 `lib/world.js`（航线、冷却、刷新前线、整排失守）。
 
 Escape Room（`src/product/escape/`，入口 `escape.html`）是 2D 密室逃脱产品 demo：
 
@@ -84,6 +86,10 @@ src/product/
     main.js
     components/
     lib/
+  archipelago/  # 潮前线 3D island defense
+    main.js
+    lib/        # world.js rules, battle.js, store.js, scenes
+    components/
   escape/       # Escape Room (2D) product demo
     main.js
     components/
