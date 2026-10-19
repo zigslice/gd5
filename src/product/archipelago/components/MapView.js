@@ -33,7 +33,10 @@ export class MapView extends Component {
             background: 0x08344a,
             onInit: ({ THREE, scene, camera, renderer }) => {
               this._api = mountMapScene(THREE, scene, camera, renderer.domElement, {
-                onPick: (id) => this.store.selectIsland(id),
+                onPick: (id) => {
+                  this.store.selectIsland(id);
+                  this.store.enter(id);
+                },
               });
               return () => {
                 this._api?.dispose?.();
@@ -49,6 +52,7 @@ export class MapView extends Component {
               this._placeLabels(state);
             },
           }),
+            div({ className: 'tide-map-cta' }, span({ text: '点击沙色岛屿，进入岛屿视角' })),
           div(
             { id: 'labels', className: 'tide-labels' },
             ...islands.map((island) =>
@@ -56,6 +60,10 @@ export class MapView extends Component {
                 id: `label-${island.id}`,
                 className: 'tide-label',
                 text: island.name,
+                onClick: () => {
+                  this.store.selectIsland(island.id);
+                  this.store.enter(island.id);
+                },
               })
             )
           )
@@ -72,6 +80,7 @@ export class MapView extends Component {
       const pos = this._api.project(island.id, host);
       if (!el) continue;
       el.dataset.status = island.status;
+      el.textContent = island.status === 'open' ? `${island.name} · 点击进入` : island.name;
       if (!pos) {
         el.style.display = 'none';
         continue;

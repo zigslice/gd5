@@ -38,7 +38,7 @@ agent store ──► Workspace / Settings pages
      (+ UI: Tree, CodeBlock, DiffBlock, TodoList, ChatBubble, CommandPalette)
 ```
 
-潮前线（`src/product/archipelago/`，入口 `archipelago.html`）是 3D 群岛防御产品 demo：海图 + 岛内战斗，规则在 `lib/world.js`（航线、冷却、刷新前线、整排失守）。
+潮前线（`src/product/archipelago/`，入口 `archipelago.html`）是 3D 群岛防御产品 demo：海图进入岛屿视角，左侧布防，敌船从固定码头上岸。战役规则在 `lib/world.js`，岛内布防和登陆战在 `lib/battle.js`。
 
 Escape Room（`src/product/escape/`，入口 `escape.html`）是 2D 密室逃脱产品 demo：
 
