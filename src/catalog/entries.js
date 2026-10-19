@@ -47,6 +47,15 @@ const RAW_CATALOG = [
     tags: ['游戏', '场景'],
   },
   {
+    id: 'tidefront',
+    kind: 'product',
+    title: '潮前线',
+    kicker: '3D 群岛防御',
+    summary: '海洋上的多座岛屿。沿航线逐岛布防、守住房子。冷却要靠刷新清空，刷新会把前线推到最近守住的岛前面；这一排若全部失守，已防御的岛会重新丢失。',
+    href: 'archipelago.html',
+    tags: ['3D', '防御'],
+  },
+  {
     id: 'gallery',
     kind: 'example',
     title: 'UI Gallery',

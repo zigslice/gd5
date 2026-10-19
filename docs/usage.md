@@ -8,6 +8,7 @@ python3 -m http.server 8080
 # ProtoLive：     http://localhost:8080/protolive.html
 # Coding Agent：  http://localhost:8080/agent.html
 # Escape Room：   http://localhost:8080/escape.html
+# 潮前线：        http://localhost:8080/archipelago.html
 ```
 
 ## 索引
@@ -22,6 +23,7 @@ python3 -m http.server 8080
 | ProtoLive | http://localhost:8080/protolive.html |
 | Coding Agent | http://localhost:8080/agent.html |
 | 密室逃脱 | http://localhost:8080/escape.html |
+| 潮前线 | http://localhost:8080/archipelago.html |
 | 组件画廊与 demo | `examples/*.html` |
 
 ## Coding Agent（产品能力全景 demo）
@@ -54,6 +56,22 @@ Agent 回合是**本地模拟**（读写 store、刷 todos/diff/terminal），�
 | 重置 | 顶栏「重置」或通关后「再玩一次」 |
 
 同样用 `ComponentRender` 页槽 + 子组件 `mount` + store 驱动，展示非 IDE 类产品组合。
+
+## 潮前线（3D 群岛防御产品 demo）
+
+入口：[`archipelago.html`](../archipelago.html) → `src/product/archipelago/main.js`。
+
+海洋上有多座岛，沿航线一座一座进去。岛上部署兵种、放技能，挡住 NPC，守住房子。守住就拿奖励、升级，回到地图后这座岛换成已防御的颜色。
+
+兵种和技能有冷却，人在地图上时冷却不会自己走完，要点「刷新前线」。刷新会把前线推进到最近一次守住的岛的前一排，新的一排开始积累攻势。这一排如果全部失守，之前防御成功的岛会重新丢失。
+
+| 操作 | 方式 |
+|------|------|
+| 选岛 / 进入 | 点海图或左侧列表，再点「进入」 |
+| 布防 | 岛内先选兵种，再点地上的部署点 |
+| 技能 | 底部「退潮」「灯塔」，各自冷却 |
+| 刷新前线 | 地图上的「刷新前线」 |
+| 失守 | 房子全毁，或攻势条满，或「撤退失守」 |
 
 ## ProtoLive 操作
 

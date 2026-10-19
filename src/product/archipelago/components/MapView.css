@@ -1,0 +1,43 @@
+.tide-view {
+  position: relative;
+  height: 100%;
+  min-height: 100%;
+}
+
+.tide-view .gd-three,
+.tide-canvas {
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  background: #08344a;
+}
+
+.tide-labels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.tide-label {
+  position: absolute;
+  transform: translate(-50%, -130%);
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  color: #f7f1e4;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
+  white-space: nowrap;
+}
+
+.tide-label[data-status='held'] {
+  color: #c8f6d8;
+}
+
+.tide-label[data-status='lost'] {
+  color: #ffc2b8;
+}
+
+.tide-label[data-status='locked'] {
+  color: #c5d3dc;
+}
