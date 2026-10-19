@@ -1,21 +1,15 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-gd-theme="orange">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ProtoLive — Live Demo 原型设计</title>
+  <title>gd5 — 产品与示例</title>
   <link rel="icon" href="src/product/favicon.svg" type="image/svg+xml">
-  <!-- tokens + base：全局基础；组件 CSS 旁挂并由 Component.mount 注入 -->
-  <link rel="stylesheet" href="src/product/css/tokens.css">
-  <link rel="stylesheet" href="src/product/css/base.css">
+  <link rel="stylesheet" href="src/ui/css/ui.css">
 </head>
 <body>
-  <!-- Engine page mounts: ComponentRender 按 id 切换 display -->
-  <div id="boot"></div>
-  <div id="editor" style="display: none;"></div>
-  <div id="preview" style="display: none;"></div>
-
-  <script type="module" src="src/product/main.js"></script>
-  <!-- Coding Agent product demo: /agent.html -->
+  <!-- Engine page slot: 索引页，点击卡片才进入子产品或示例 -->
+  <div id="home"></div>
+  <script type="module" src="src/catalog/main.js"></script>
 </body>
 </html>

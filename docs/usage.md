@@ -4,10 +4,25 @@
 
 ```bash
 python3 -m http.server 8080
-# ProtoLive:      http://localhost:8080/
-# Coding Agent:   http://localhost:8080/agent.html
-# Escape Room:    http://localhost:8080/escape.html
+# 索引：          http://localhost:8080/
+# ProtoLive：     http://localhost:8080/protolive.html
+# Coding Agent：  http://localhost:8080/agent.html
+# Escape Room：   http://localhost:8080/escape.html
 ```
+
+## 索引
+
+入口：[`index.html`](../index.html) → `src/catalog/`。
+
+`http://localhost:8080/` 是产品与示例的索引，页面本身用 gd5 写（`ComponentRender` 页槽 + UI 组件库）。可以搜索，也可以按「产品 / 示例」筛选。点击卡片才进入子产品或示例页，不会一打开就进 ProtoLive。
+
+| 入口 | 地址 |
+|------|------|
+| 索引 | http://localhost:8080/ |
+| ProtoLive | http://localhost:8080/protolive.html |
+| Coding Agent | http://localhost:8080/agent.html |
+| 密室逃脱 | http://localhost:8080/escape.html |
+| 组件画廊与 demo | `examples/*.html` |
 
 ## Coding Agent（产品能力全景 demo）
 

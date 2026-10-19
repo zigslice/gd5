@@ -213,7 +213,7 @@ const [ref, root] = get();
 
 ## 页面槽
 
-`index.html` 里为每个组件准备同名 `id` 节点。`ComponentRender.init` 的 `id` 必须与之对应。
+页面 HTML 里为每个组件准备同名 `id` 节点。`ComponentRender.init` 的 `id` 必须与之对应。站点索引用 `index.html`（`src/catalog/`），ProtoLive 用 `protolive.html`。
 
 UI 示例（`examples/*-demo.html`、`examples/ui-gallery.html`）同样是标准 gd5 应用：页槽 + `ComponentRender` / `LogProvider`，引导代码见 [`examples/demoApp.js`](../examples/demoApp.js)。
 

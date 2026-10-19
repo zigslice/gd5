@@ -7,13 +7,16 @@
 | **引擎 (Engine)** | `src/engine/` | 迷你实模式 DOM 运行时：`Component` / `ComponentRender` / `D` / `LogProvider` |
 | **组件库 (UI)** | `src/ui/` | 对标 antd 的常用组件（Button / Input / Modal…），默认**橙色主色 + 白色面板** |
 | **产品 (Product)** | `src/product/` | 示例应用：ProtoLive + Coding Agent + Escape Room（可用引擎 + UI 库） |
+| **索引 (Catalog)** | `src/catalog/` | 站点首页：产品与示例入口，本身也是 gd5 应用 |
 
 ```
 src/engine  ──►  src/ui（组件库）
                     │
                     ▼
-              src/product / 你的应用
+         src/catalog（索引） / src/product / 你的应用
 ```
+
+站点入口 `index.html` 挂 `src/catalog/`：列出 ProtoLive、Coding Agent、Escape Room 和 `examples/`，点击才进入对应 HTML。ProtoLive 本体在 `protolive.html`。
 
 产品示例内部：
 
@@ -67,6 +70,10 @@ escape store ──► Game / Win pages
 
 ```
 src/engine/
+src/catalog/    # 索引页（index.html）
+  main.js
+  entries.js
+  components/   # CatalogPage.js + CatalogPage.css
 src/product/
   components/   # ProtoLive: FooComponent.js + FooComponent.css 旁挂
   nodes/        # 画布 kind
