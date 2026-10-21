@@ -133,7 +133,12 @@ import {
   themes,
   setTheme,
   getTheme,
+  setJelly,
+  getJelly,
+  applyRememberedJelly,
 } from '../src/ui/index.js';
+
+applyRememberedJelly();
 class GalleryPage extends Component {
   static styles = [new URL('./ui-gallery.css', import.meta.url)];
 
@@ -180,6 +185,7 @@ class GalleryPage extends Component {
       popconfirmOpen: false,
       anchorKey: 'antd',
       theme: 'orange',
+      jelly: getJelly(),
     };
     this.modal = new Modal({});
     this.drawer = new Drawer({});
@@ -194,7 +200,7 @@ class GalleryPage extends Component {
     await loadUi();
     const theme = getTheme() || 'orange';
     setTheme(theme);
-    this.setData({ theme }, { refresh: false });
+    this.setData({ theme, jelly: getJelly() }, { refresh: false });
     await this.modal.mount();
     await this.drawer.mount();
     await this.toast.mount();
@@ -229,7 +235,7 @@ class GalleryPage extends Component {
           Title({ level: 1, text: 'gd5 UI' }),
           Text({
             type: 'secondary',
-            text: 'Component library aligned with namethatui.com and Ant Design. Themes: orange / blue / green.',
+            text: 'Component library aligned with namethatui.com and Ant Design. Themes: orange / blue / green. Jelly is a global switch beside the theme.',
           }),
           Card(
             { title: 'Theme', style: { marginTop: '24px' } },
@@ -237,7 +243,7 @@ class GalleryPage extends Component {
               { direction: 'vertical', size: 'md' },
               Text({
                 type: 'secondary',
-                text: 'Call setTheme("blue") or wrap with ConfigProvider({ theme: "green" }). Default is orange.',
+                text: 'Call setTheme("blue") or wrap with ConfigProvider({ theme: "green" }). setJelly(true) is the same kind of switch, remembered as gd5-jelly. Default jelly is off. Solid primary, default, and chip surfaces participate; ghost, tags, and switches stay rigid.',
               }),
               ToggleGroup({
                 value: d.theme,
@@ -252,15 +258,33 @@ class GalleryPage extends Component {
                   label: themes[key].label,
                 })),
               }),
+              Space(
+                { align: 'center' },
+                Text({ type: 'secondary', text: 'Jelly' }),
+                Switch({
+                  checked: !!d.jelly,
+                  attrs: { 'aria-label': 'Jelly' },
+                  onChange: (next) => {
+                    setJelly(next);
+                    this.state.ref = {};
+                    this.setData({ jelly: next });
+                  },
+                }),
+                Text({
+                  type: 'secondary',
+                  text: d.jelly ? 'On' : 'Off',
+                })
+              ),
               Text({
                 type: 'secondary',
-                text: `Active: ${themes[d.theme]?.label || d.theme} · primary ${themes[d.theme]?.primary || ''}`,
+                text: `Active: ${themes[d.theme]?.label || d.theme} · primary ${themes[d.theme]?.primary || ''} · jelly ${d.jelly ? 'on' : 'off'}`,
               }),
               Space(
                 {},
                 Button({ type: 'primary', text: 'Primary' }),
                 Button({ type: 'default', text: 'Default' }),
                 Button({ type: 'ghost', text: 'Ghost' }),
+                Chip({ text: 'Chip', onClick: () => {} }),
                 Tag({ color: 'primary', text: 'Primary tag' }),
                 Switch({ checked: true })
               )

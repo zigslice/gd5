@@ -1,3 +1,4 @@
+import { JELLY_ATTR } from './jelly.js';
 import { cx, el, omit } from './util.js';
 import { THEME_ATTR, resolveThemeInput } from './theme.js';
 
@@ -7,9 +8,10 @@ import { THEME_ATTR, resolveThemeInput } from './theme.js';
  *   ConfigProvider({ theme: 'blue' }, …children)
  *   ConfigProvider({ theme: { name: 'green' } }, …)
  *   ConfigProvider({ theme: { token: { primary: '#e86a17' } } }, …)
+ *   ConfigProvider({ jelly: true }, …)  // subtree data-gd-jelly="on"
  */
 export function ConfigProvider(props = {}, ...children) {
-  const { theme, className, style } = props;
+  const { theme, jelly, className, style } = props;
   const { name, token } = resolveThemeInput(theme);
   const cssVars = { ...(typeof style === 'object' ? style : {}) };
 
@@ -21,12 +23,15 @@ export function ConfigProvider(props = {}, ...children) {
     }
   }
 
-  const attrs = name ? { [THEME_ATTR]: name } : undefined;
+  const attrs = {};
+  if (name) attrs[THEME_ATTR] = name;
+  if (jelly === true) attrs[JELLY_ATTR] = 'on';
+  else if (jelly === false) attrs[JELLY_ATTR] = 'off';
 
   return el(
     'div',
     {
-      ...omit(props, ['theme', 'className', 'style']),
+      ...omit(props, ['theme', 'jelly', 'className', 'style']),
       className: cx('gd-config-provider', className),
       style: cssVars,
       attrs,

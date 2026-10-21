@@ -1,3 +1,4 @@
+import { JELLY_HOST_ATTR } from './jelly.js';
 import { cx, el, omit } from './util.js';
 
 /**
@@ -80,10 +81,7 @@ export function Button(props = {}, ...children) {
       ]),
       type: props.htmlType || 'button',
       disabled: locked,
-      attrs: {
-        ...(props.attrs || {}),
-        'aria-busy': busy ? 'true' : 'false',
-      },
+      attrs: buttonAttrs(type, busy, props.attrs),
       className: cx(
         'gd-btn',
         `gd-btn--${type}`,
@@ -105,6 +103,17 @@ export function Button(props = {}, ...children) {
     label != null ? el('span', { className: 'gd-btn__label', text: label }) : null,
     ...kids
   );
+}
+
+/** Solid primary and default buttons can carry the global jelly membrane. */
+function buttonAttrs(type, busy, extra) {
+  const attrs = {
+    ...(extra || {}),
+    'aria-busy': busy ? 'true' : 'false',
+  };
+  if (type === 'primary' || type === 'default') attrs[JELLY_HOST_ATTR] = 'solid';
+  else delete attrs[JELLY_HOST_ATTR];
+  return attrs;
 }
 
 /**

@@ -170,14 +170,18 @@
   padding: 0 10px;
   border-radius: 999px;
   border: 1px solid var(--gd-border);
-  background: var(--gd-bg-elevated);
+  --gd-jelly-fill: var(--gd-bg-elevated);
+  --gd-jelly-edge: var(--gd-border);
+  background: var(--gd-jelly-fill);
   color: var(--gd-text);
   font-size: 13px;
   cursor: default;
 }
 .gd-chip--selected {
   border-color: var(--gd-primary);
-  background: var(--gd-primary-soft);
+  --gd-jelly-fill: var(--gd-primary-soft);
+  --gd-jelly-edge: var(--gd-primary);
+  background: var(--gd-jelly-fill);
   color: var(--gd-primary);
 }
 .gd-chip__close {
@@ -967,8 +971,8 @@
   font-size: 22px;
   z-index: 50;
 }
-.gd-fab--primary { background: var(--gd-primary); color: var(--gd-text-inverse); }
-.gd-fab--default { background: var(--gd-bg-elevated); color: var(--gd-text); border: 1px solid var(--gd-border); }
+.gd-fab--primary { --gd-jelly-fill: var(--gd-primary); --gd-jelly-edge: transparent; background: var(--gd-jelly-fill); color: var(--gd-text-inverse); }
+.gd-fab--default { --gd-jelly-fill: var(--gd-bg-elevated); --gd-jelly-edge: var(--gd-border); background: var(--gd-jelly-fill); color: var(--gd-text); border: 1px solid var(--gd-border); }
 .gd-fab--top { bottom: 84px; font-size: 18px; }
 .gd-fab--chat { font-size: 20px; }
 

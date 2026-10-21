@@ -1,3 +1,4 @@
+import { JELLY_HOST_ATTR } from './jelly.js';
 import { cx, el, omit } from './util.js';
 
 /**
@@ -17,6 +18,7 @@ export function Chip(props = {}, ...children) {
     'span',
     {
       ...omit(props, ['text', 'closable', 'selected', 'className', 'onClose', 'color']),
+      attrs: { ...(props.attrs || {}), [JELLY_HOST_ATTR]: 'solid' },
       className: cx(
         'gd-chip',
         selected && 'gd-chip--selected',

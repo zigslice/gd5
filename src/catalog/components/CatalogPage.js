@@ -9,8 +9,11 @@ import {
   Tag,
   Text,
   Title,
+  getJelly,
   getTheme,
+  setJelly,
   setTheme,
+  Switch,
   themes,
 } from '../../ui/index.js';
 import { el } from '../../ui/util.js';
@@ -63,6 +66,7 @@ export class CatalogPage extends Component {
     this.state.data.kind = initial.kind;
     this.state.data.query = initial.query;
     this.state.data.theme = getTheme();
+    this.state.data.jelly = getJelly();
     this.state.data.visible = CATALOG.length;
   }
 
@@ -98,6 +102,12 @@ export class CatalogPage extends Component {
     this._paintTheme();
   }
 
+  setJellyOn(on) {
+    const enabled = setJelly(on);
+    this.state.data.jelly = enabled;
+    this._paintJelly();
+  }
+
   clearFilters() {
     this.state.data.kind = 'all';
     this.state.data.query = '';
@@ -129,15 +139,35 @@ export class CatalogPage extends Component {
               )
             ),
             div(
-              { className: 'catalog-theme' },
-              Text({
-                as: 'span',
-                type: 'muted',
-                small: true,
-                text: '主题',
-                className: 'catalog-theme__label',
-              }),
-              div({ id: 'themeSlot' })
+              { className: 'catalog-controls' },
+              div(
+                { className: 'catalog-theme' },
+                Text({
+                  as: 'span',
+                  type: 'muted',
+                  small: true,
+                  text: '主题',
+                  className: 'catalog-theme__label',
+                }),
+                div({ id: 'themeSlot' })
+              ),
+              div(
+                { className: 'catalog-theme' },
+                Text({
+                  as: 'span',
+                  type: 'muted',
+                  small: true,
+                  text: '果冻',
+                  className: 'catalog-theme__label',
+                }),
+                div({ id: 'jellySlot' }),
+                Button({
+                  type: 'primary',
+                  size: 'sm',
+                  text: '按一下',
+                  attrs: { 'aria-label': '试试果冻按钮' },
+                })
+              )
             )
           ),
           main(
@@ -212,6 +242,7 @@ export class CatalogPage extends Component {
     );
 
     this._paintTheme();
+    this._paintJelly();
     this._paintFilter();
     this._paintResults();
   }
@@ -229,6 +260,18 @@ export class CatalogPage extends Component {
         label: name === 'orange' ? '橙' : name === 'blue' ? '蓝' : '绿',
       })),
       onChange: (name) => this.setThemeName(name),
+    });
+    host.appendChild(control.dom());
+  }
+
+  _paintJelly() {
+    const host = this.ids().jellySlot;
+    if (!host) return;
+    D.clear(host);
+    const control = Switch({
+      checked: !!this.state.data.jelly,
+      attrs: { 'aria-label': '果冻效果' },
+      onChange: (next) => this.setJellyOn(next),
     });
     host.appendChild(control.dom());
   }

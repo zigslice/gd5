@@ -18,6 +18,17 @@ export {
   resolveThemeInput,
   THEME_ATTR,
 } from './theme.js';
+export {
+  setJelly,
+  getJelly,
+  ensureJelly,
+  applyRememberedJelly,
+  scaleJellyConfig,
+  JELLY_ATTR,
+  JELLY_HOST_ATTR,
+  JELLY_KEY,
+} from './jelly.js';
+export { JELLY_REVIEW } from './jelly-review.js';
 
 export { Button, ButtonIndicator, onceAsync } from './button.js';
 export { LoadingButton, AsyncButton, createLoadingButton } from './LoadingButton.js';

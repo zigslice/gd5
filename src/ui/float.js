@@ -1,3 +1,4 @@
+import { JELLY_HOST_ATTR } from './jelly.js';
 import { cx, el, omit } from './util.js';
 
 /**
@@ -15,6 +16,7 @@ export function Fab(props = {}, ...children) {
     {
       ...omit(props, ['text', 'type', 'className']),
       type: 'button',
+      attrs: { ...(props.attrs || {}), [JELLY_HOST_ATTR]: 'solid' },
       className: cx('gd-fab', `gd-fab--${type}`, className),
     },
     ...kids

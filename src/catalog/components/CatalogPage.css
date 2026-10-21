@@ -75,6 +75,14 @@ body::before {
   color: var(--gd-text-muted);
 }
 
+.catalog-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
 .catalog-theme {
   display: flex;
   align-items: center;
@@ -356,6 +364,7 @@ body::before {
     align-items: stretch;
   }
 
+  .catalog-controls,
   .catalog-theme {
     justify-content: space-between;
   }

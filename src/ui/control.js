@@ -73,7 +73,7 @@ export function Switch(props = {}) {
         disabled && 'gd-switch--disabled',
         className
       ),
-      attrs: { 'aria-checked': checked ? 'true' : 'false' },
+      attrs: { ...(props.attrs || {}), 'aria-checked': checked ? 'true' : 'false' },
       onClick: (event) => {
         if (disabled) return;
         onChange?.(!checked, event);
