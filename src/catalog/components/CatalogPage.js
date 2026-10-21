@@ -11,9 +11,8 @@ import {
   Title,
   getJelly,
   getTheme,
-  setJelly,
+  JellySwitch,
   setTheme,
-  Switch,
   themes,
 } from '../../ui/index.js';
 import { el } from '../../ui/util.js';
@@ -102,12 +101,6 @@ export class CatalogPage extends Component {
     this._paintTheme();
   }
 
-  setJellyOn(on) {
-    const enabled = setJelly(on);
-    this.state.data.jelly = enabled;
-    this._paintJelly();
-  }
-
   clearFilters() {
     this.state.data.kind = 'all';
     this.state.data.query = '';
@@ -153,13 +146,6 @@ export class CatalogPage extends Component {
               ),
               div(
                 { className: 'catalog-theme' },
-                Text({
-                  as: 'span',
-                  type: 'muted',
-                  small: true,
-                  text: '果冻',
-                  className: 'catalog-theme__label',
-                }),
                 div({ id: 'jellySlot' }),
                 Button({
                   type: 'primary',
@@ -268,10 +254,12 @@ export class CatalogPage extends Component {
     const host = this.ids().jellySlot;
     if (!host) return;
     D.clear(host);
-    const control = Switch({
-      checked: !!this.state.data.jelly,
-      attrs: { 'aria-label': '果冻效果' },
-      onChange: (next) => this.setJellyOn(next),
+    const control = JellySwitch({
+      label: '果冻',
+      onChange: (next) => {
+        this.state.data.jelly = next;
+        this._paintJelly();
+      },
     });
     host.appendChild(control.dom());
   }

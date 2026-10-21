@@ -24,12 +24,27 @@
 }
 
 .gd-btn.gd-jelly-live,
+.btn.gd-jelly-live,
 .gd-chip.gd-jelly-live {
   border-radius: 999px;
 }
 
-.gd-btn.gd-jelly-live:active:not(:disabled) {
+.gd-btn.gd-jelly-live:active:not(:disabled),
+.btn.gd-jelly-live:active {
   transform: none;
+}
+
+.gd-jelly-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.gd-jelly-switch__label {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  opacity: 0.82;
 }
 
 .gd-jelly-canvas {

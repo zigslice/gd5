@@ -10,6 +10,10 @@
  */
 
 import { ComponentRender, LogProvider } from '../engine/index.js';
+import { applyRememberedJelly, loadUi } from '../ui/index.js';
+
+applyRememberedJelly();
+void loadUi();
 import { BootComponent } from './components/BootComponent.js';
 import { EditorComponent } from './components/EditorComponent.js';
 import { PreviewComponent } from './components/PreviewComponent.js';

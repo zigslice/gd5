@@ -81,24 +81,30 @@
 }
 
 .gd-btn--ghost {
+  --gd-jelly-fill: transparent;
+  --gd-jelly-edge: var(--gd-border);
   background: transparent;
   border-color: var(--gd-border);
   color: var(--gd-text-secondary);
 }
 
 .gd-btn--ghost:hover:not(:disabled) {
+  --gd-jelly-edge: var(--gd-border-strong);
   border-color: var(--gd-border-strong);
   color: var(--gd-text);
 }
 
 .gd-btn--danger {
+  --gd-jelly-fill: transparent;
+  --gd-jelly-edge: var(--gd-danger);
   background: transparent;
   border-color: var(--gd-danger);
   color: var(--gd-danger);
 }
 
 .gd-btn--danger:hover:not(:disabled) {
-  background: var(--gd-danger-soft);
+  --gd-jelly-fill: var(--gd-danger-soft);
+  background: var(--gd-jelly-fill);
 }
 
 .gd-btn--text {

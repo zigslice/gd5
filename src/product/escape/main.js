@@ -8,6 +8,10 @@
  */
 
 import { ComponentRender, LogProvider } from '../../engine/index.js';
+import { applyRememberedJelly, loadUi } from '../../ui/index.js';
+
+applyRememberedJelly();
+void loadUi();
 import { EscapeBootComponent } from './components/EscapeBootComponent.js';
 import { GameComponent } from './components/GameComponent.js';
 import { WinComponent } from './components/WinComponent.js';

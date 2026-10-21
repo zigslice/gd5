@@ -10,7 +10,9 @@
  * [data-gd-jelly] ancestor is "on" and motion is allowed.
  */
 
+import { Switch } from './control.js';
 import { DEFAULT_CONFIG, JellyBody, traceSmoothPath } from './jelly-body.js';
+import { el } from './util.js';
 
 export const JELLY_ATTR = 'data-gd-jelly';
 export const JELLY_HOST_ATTR = 'data-gd-jelly-host';
@@ -117,6 +119,38 @@ export function setJelly(on, target) {
   return enabled;
 }
 
+/**
+ * The same switch the catalog uses. Checked state follows getJelly() at click time,
+ * so a product toolbar can keep the node without rebuilding the page.
+ * @param {object} [props]
+ * @param {string} [props.label]
+ * @param {(on: boolean) => void} [props.onChange]
+ */
+export function JellySwitch(props = {}) {
+  const label = props.label == null ? '果冻' : props.label;
+  return el(
+    'span',
+    { className: 'gd-jelly-switch' },
+    label
+      ? el('span', { className: 'gd-jelly-switch__label', text: label })
+      : null,
+    Switch({
+      checked: getJelly(),
+      attrs: { 'aria-label': '果冻效果' },
+      onChange: (_next, event) => {
+        const next = !getJelly();
+        setJelly(next);
+        const button = event?.currentTarget;
+        if (button?.classList) {
+          button.classList.toggle('gd-switch--checked', next);
+          button.setAttribute?.('aria-checked', next ? 'true' : 'false');
+        }
+        props.onChange?.(next);
+      },
+    })
+  );
+}
+
 /** Restore the document switch from localStorage. No-op when unset. */
 export function applyRememberedJelly() {
   let saved = null;
@@ -190,8 +224,20 @@ function wantsLive(node) {
   return true;
 }
 
+const PRODUCT_BUTTONS = '.btn--primary, .btn--secondary, .btn--ghost, .btn--danger';
+
+function adoptPressableButtons() {
+  if (typeof document === 'undefined' || typeof document.querySelectorAll !== 'function') return;
+  for (const node of document.querySelectorAll(PRODUCT_BUTTONS)) {
+    if (node.getAttribute(JELLY_HOST_ATTR) === 'solid') continue;
+    if (node.closest?.('.gd-split-btn')) continue;
+    node.setAttribute(JELLY_HOST_ATTR, 'solid');
+  }
+}
+
 function refresh() {
   if (typeof document === 'undefined' || typeof document.querySelectorAll !== 'function') return;
+  adoptPressableButtons();
   const nodes = document.querySelectorAll(`[${JELLY_HOST_ATTR}="solid"]`);
   const seen = new Set();
   for (const node of nodes) {
@@ -392,7 +438,8 @@ function readToken(host, name) {
  */
 function readFill(host) {
   const raw = readToken(host, '--gd-jelly-fill');
-  if (raw && raw !== 'transparent') return raw;
+  if (raw === 'transparent' || raw === 'rgba(0, 0, 0, 0)') return 'rgba(0, 0, 0, 0)';
+  if (raw) return raw;
   let probe = host.querySelector?.(':scope > .gd-jelly-probe');
   if (!probe) {
     probe = document.createElement('span');
