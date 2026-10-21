@@ -9,7 +9,11 @@ let stylesPromise = null;
  */
 export function loadUi() {
   if (!stylesPromise) {
-    stylesPromise = adoptStyles(new URL('./css/ui.css', import.meta.url));
+    stylesPromise = adoptStyles(new URL('./css/ui.css', import.meta.url)).then(async () => {
+      const jelly = await import('./jelly.js');
+      jelly.ensureJelly();
+      jelly.applyRememberedJelly();
+    });
   }
   return stylesPromise;
 }

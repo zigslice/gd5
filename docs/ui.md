@@ -4,6 +4,8 @@ Ant Design–style **UI kit on top of the engine**. Catalog aligned with [NameTh
 
 **Themes (selectable):** `orange` (default), `blue`, `green` — white panels, accent via `--gd-*` / `setTheme()` / `ConfigProvider`.
 
+**Jelly (selectable, default off):** `setJelly(true)` writes `data-gd-jelly="on"` on `<html>`, the same level as the theme. `loadUi()` restores the choice from `gd5-jelly`. Solid primary and default buttons, floating action buttons, and chips grow a soft-body fill. Ghost, text, danger, switches, segmented controls, tags, inputs, cards, and overlays stay rigid. `prefers-reduced-motion` keeps the switch but skips the canvas.
+
 ```
 Engine (runtime)     →  src/engine/
 UI kit (components)  →  src/ui/

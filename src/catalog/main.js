@@ -6,7 +6,7 @@
  */
 
 import { ComponentRender, LogProvider } from '../engine/index.js';
-import { isThemeName, setTheme } from '../ui/index.js';
+import { applyRememberedJelly, isThemeName, setTheme } from '../ui/index.js';
 import { CatalogPage } from './components/CatalogPage.js';
 
 const THEME_KEY = 'gd5-catalog-theme';
@@ -17,6 +17,8 @@ try {
 } catch {
   /* private mode */
 }
+
+applyRememberedJelly();
 
 const render = new ComponentRender({
   logProvider: new LogProvider({

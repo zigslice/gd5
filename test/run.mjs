@@ -1392,6 +1392,7 @@ section('ui kit');
   assert(docs.includes('PeleView') && docs.includes('Mermaid'), 'docs cover PeleView');
   assert(docs.includes('obsidianmd/pele') || docs.includes('pele.run'), 'docs cite Pele upstream');
   assert(docs.includes('LoadingButton') && docs.includes('Loading Button'), 'docs cover LoadingButton');
+  assert(docs.includes('setJelly'), 'docs cover the jelly switch');
   assert(docs.includes('demoApp.js'), 'docs mention demoApp bootstrap');
 
   {
@@ -1516,6 +1517,7 @@ section('ui kit');
     },
   });
   assert(btn.e.className.includes('gd-btn--primary'), 'Button applies primary class');
+  assert(btn.e['data-gd-jelly-host'] === 'solid', 'primary Button is a jelly host');
   {
     const label = (btn.e.children || []).find((c) => String(c.className || '').includes('gd-btn__label'));
     assert(
@@ -1848,6 +1850,8 @@ section('ui kit');
   });
   assert(sw.e.className.includes('gd-switch--checked'), 'Switch checked class');
   assert(listeners.some((l) => l.type === 'click'), 'Switch registers click');
+  const labeled = Switch({ checked: true, attrs: { 'aria-label': 'Jelly' } });
+  assert(labeled.e['aria-label'] === 'Jelly' && labeled.e['aria-checked'] === 'true', 'Switch keeps its label');
   listeners.find((l) => l.type === 'click')?.handler({});
   assert(switched === false, 'Switch onChange receives next value');
 
@@ -1894,6 +1898,78 @@ section('ui kit');
 
   const scoped = ui.ConfigProvider({ theme: 'blue' }, ui.Button({ type: 'primary', text: 'Hi' }));
   assert(scoped.e.className.includes('gd-config-provider'), 'ConfigProvider root');
+  assert(scoped.e['data-gd-jelly'] == null, 'ConfigProvider omits jelly unless asked');
+
+  const jellyScope = ui.ConfigProvider({ jelly: true }, ui.Button({ type: 'default', text: 'Go' }));
+  assert(jellyScope.e['data-gd-jelly'] === 'on', 'ConfigProvider jelly on');
+  const jellyOff = ui.ConfigProvider({ theme: 'green', jelly: false });
+  assert(jellyOff.e['data-gd-jelly'] === 'off', 'ConfigProvider jelly off');
+  assert(jellyOff.e['data-gd-theme'] === 'green', 'ConfigProvider keeps theme beside jelly');
+
+  assert(Button({ type: 'ghost', text: 'G' }).e['data-gd-jelly-host'] == null, 'ghost Button is not a jelly host');
+  assert(Button({ type: 'text', text: 'T' }).e['data-gd-jelly-host'] == null, 'text Button is not a jelly host');
+  assert(Button({ type: 'danger', text: 'D' }).e['data-gd-jelly-host'] == null, 'danger Button is not a jelly host');
+  assert(Button({ text: 'Plain' }).e['data-gd-jelly-host'] === 'solid', 'default Button is a jelly host');
+  assert(ui.Fab({ text: '+' }).e['data-gd-jelly-host'] === 'solid', 'Fab is a jelly host');
+  assert(ui.Chip({ text: 'C' }).e['data-gd-jelly-host'] === 'solid', 'Chip is a jelly host');
+  assert(ui.Tag({ text: 'T' }).e['data-gd-jelly-host'] == null, 'Tag is not a jelly host');
+  assert(ui.Pill({ text: 'P' }).e['data-gd-jelly-host'] == null, 'Pill is not a jelly host');
+  assert(Switch({ checked: false }).e['data-gd-jelly-host'] == null, 'Switch is not a jelly host');
+
+  const prevStorage = globalThis.localStorage;
+  const store = new Map();
+  globalThis.localStorage = {
+    getItem: (key) => (store.has(key) ? store.get(key) : null),
+    setItem: (key, value) => store.set(key, String(value)),
+  };
+  assert(ui.setJelly(true) === true, 'setJelly(true)');
+  assert(htmlEl.attrs['data-gd-jelly'] === 'on', 'setJelly writes data-gd-jelly');
+  assert(ui.getJelly() === true, 'getJelly reads on');
+  assert(store.get('gd5-jelly') === 'on', 'setJelly remembers gd5-jelly');
+  delete htmlEl.attrs['data-gd-jelly'];
+  ui.applyRememberedJelly();
+  assert(htmlEl.attrs['data-gd-jelly'] === 'on', 'applyRememberedJelly restores the switch');
+  assert(ui.setJelly(false) === false, 'setJelly(false)');
+  assert(ui.getJelly() === false, 'getJelly reads off');
+  globalThis.localStorage = prevStorage;
+
+  const small = ui.scaleJellyConfig(32);
+  assert(Math.abs(small.k - 32 / 62) < 1e-9, 'jelly scale follows control size');
+  assert(small.config.maxBulge < 24 && small.config.maxBulge > 0, 'small controls scale bulge down');
+  assert(small.config.samples === 240, 'jelly samples stay 240');
+  assert(small.config.maxDepthIn < 0, 'inward depth keeps its sign');
+  assert(ui.scaleJellyConfig(20).k === 0.42, 'jelly scale floors at 0.42');
+  assert(ui.scaleJellyConfig(90).k === 1, 'jelly scale caps at 1');
+
+  const { JellyBody } = await import('../src/ui/jelly-body.js');
+  const body = new JellyBody({ width: 120, height: 36, radius: 18 });
+  assert(body.isResting(), 'fresh membrane is resting');
+  body.pressAtLocal(8, 0, 1);
+  assert(body.isResting() === false, 'press holds the membrane awake');
+  body.update(1 / 30);
+  assert(
+    body.membrane.some((point) => Math.abs(point.d) > 0.01 || Math.abs(point.v) > 0.01),
+    'press displaces the membrane'
+  );
+  body.release();
+
+  const pascal = Object.keys(ui).filter((name) => /^[A-Z]/.test(name) && /[a-z]/.test(name));
+  const review = ui.JELLY_REVIEW;
+  for (const name of pascal) {
+    assert(review[name] && typeof review[name].reason === 'string' && review[name].reason.length > 8, `jelly review covers ${name}`);
+    assert(typeof review[name].jelly === 'boolean', `jelly review flag for ${name}`);
+  }
+  for (const name of Object.keys(review)) {
+    assert(pascal.includes(name), `jelly review has no extra ${name}`);
+  }
+  const hosts = Object.entries(review)
+    .filter(([, row]) => row.jelly)
+    .map(([name]) => name)
+    .sort();
+  assert(
+    hosts.join(',') === ['AsyncButton', 'BackToTop', 'Button', 'ChatLauncher', 'Chip', 'Fab', 'LoadingButton'].join(','),
+    'jelly hosts are the solid controls'
+  );
 }
 
 section('catalog index');
@@ -1925,6 +2001,10 @@ section('catalog index');
   assert(catalogSrc.includes('loadUi'), 'catalog page loads the UI kit');
   assert(catalogSrc.includes('SegmentedControl'), 'catalog page uses SegmentedControl');
   assert(catalogSrc.includes('filterCatalog'), 'catalog page filters entries');
+  assert(catalogSrc.includes('setJelly') && catalogSrc.includes('果冻'), 'catalog page exposes the jelly switch');
+
+  const gallerySrc = readFileSync(join(root, 'examples/ui-gallery.js'), 'utf8');
+  assert(gallerySrc.includes('setJelly'), 'gallery exposes the jelly switch');
 
   const usage = readFileSync(join(root, 'docs/usage.md'), 'utf8');
   assert(usage.includes('protolive.html'), 'usage points ProtoLive at protolive.html');
