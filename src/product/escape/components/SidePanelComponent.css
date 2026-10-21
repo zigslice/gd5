@@ -102,8 +102,10 @@
 }
 
 .btn--primary {
+  --gd-jelly-fill: #e86a17;
+  --gd-jelly-edge: transparent;
   border: 1px solid #e86a17;
-  background: #e86a17;
+  background: var(--gd-jelly-fill);
   color: #fff;
   border-radius: var(--radius-sm, 4px);
   padding: 6px 12px;

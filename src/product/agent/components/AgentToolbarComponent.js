@@ -1,5 +1,5 @@
 import { Component } from '../../../engine/index.js';
-import { Button, loadUi } from '../../../ui/index.js';
+import { Button, JellySwitch, loadUi } from '../../../ui/index.js';
 
 /**
  * Top chrome — brand, run status, command palette / settings actions.
@@ -65,6 +65,7 @@ export class AgentToolbarComponent extends Component {
       text: 'Settings',
       onClick: () => this.onOpenSettings?.(),
     });
+    actions.appendChild(JellySwitch({ label: '果冻' }).dom());
     actions.appendChild(demo.dom());
     actions.appendChild(cmd.dom());
     actions.appendChild(settings.dom());

@@ -1,5 +1,5 @@
 import { Component } from '../../../engine/index.js';
-import { loadUi } from '../../../ui/index.js';
+import { JellySwitch, loadUi } from '../../../ui/index.js';
 import { createEscapeStore } from '../lib/store.js';
 import { SceneComponent } from './SceneComponent.js';
 import { InventoryComponent } from './InventoryComponent.js';
@@ -91,6 +91,7 @@ export class GameComponent extends Component {
             span({ className: 'escape-game__brand', text: 'Midnight Archive' }),
             span({ className: 'escape-game__sub', text: '密室逃脱 · 产品 demo' }),
             span({ id: 'escapeMoves', className: 'escape-game__moves', text: '步数 0' }),
+            JellySwitch({ label: '果冻' }),
             button({
               className: 'btn btn--ghost escape-game__reset',
               type: 'button',

@@ -9,6 +9,10 @@
  */
 
 import { ComponentRender, LogProvider } from '../../engine/index.js';
+import { applyRememberedJelly, loadUi } from '../../ui/index.js';
+
+applyRememberedJelly();
+void loadUi();
 import { AgentBootComponent } from './components/AgentBootComponent.js';
 import { WorkspaceComponent } from './components/WorkspaceComponent.js';
 import { AgentSettingsComponent } from './components/AgentSettingsComponent.js';

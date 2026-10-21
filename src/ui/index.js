@@ -21,6 +21,7 @@ export {
 export {
   setJelly,
   getJelly,
+  JellySwitch,
   ensureJelly,
   applyRememberedJelly,
   scaleJellyConfig,
