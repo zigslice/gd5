@@ -3,8 +3,6 @@ import { cx, el, loadUi } from './util.js';
 
 /** Pixels of drag that map to one card before the curve. */
 const COVERFLOW_PITCH = 86;
-/** How far a flick's velocity (px/ms) is projected, in milliseconds. */
-const COVERFLOW_FLICK_MS = 140;
 
 /**
  * Normalize items to a stable shape.
@@ -47,14 +45,22 @@ export function coverFlowDragSlots(dx, pitch = COVERFLOW_PITCH) {
 
 /**
  * Card index after a drag is released.
- * `velocity` is px/ms; a flick is projected forward before the same curve.
+ * Distance uses the non-linear slot curve. `velocity` (px/ms) then adds
+ * extra slots — about one card at 1px/ms — so a flick travels further
+ * without pushing a moderate drag through the curve a second time.
  * Dragging left (dx < 0) advances to the next card.
  * @param {{origin:number,dx:number,velocity?:number,pitch?:number,count:number,loop?:boolean}} opts
  */
 export function coverFlowSettleIndex({ origin, dx, velocity = 0, pitch = COVERFLOW_PITCH, count, loop = true }) {
   if (!count) return 0;
-  const projected = dx + velocity * COVERFLOW_FLICK_MS;
-  const raw = origin - coverFlowDragSlots(projected, pitch);
+  const speed = Math.max(-1.2, Math.min(1.2, velocity || 0));
+  let slots = coverFlowDragSlots(dx, pitch) + speed * 0.85;
+  if (count > 1) {
+    const limit = count - 1;
+    if (slots > limit) slots = limit;
+    else if (slots < -limit) slots = -limit;
+  }
+  const raw = origin - slots;
   const rounded = Math.round(raw);
   if (loop) return wrapIndex(rounded, count);
   return clampIndex(rounded, count);
@@ -187,7 +193,11 @@ export class CoverFlow extends Component {
         moved: false,
         origin: this._pos == null ? this.state.data.index : this._pos,
       };
-      stage.setPointerCapture?.(e.pointerId);
+      try {
+        stage.setPointerCapture?.(e.pointerId);
+      } catch {
+        /* synthetic or already-released pointers */
+      }
     });
 
     this.on(
@@ -199,11 +209,14 @@ export class CoverFlow extends Component {
         const dx = e.clientX - drag.x0;
         const now = e.timeStamp || nowMs();
         const dt = now - drag.t;
-        if (dt > 0 && dt < 100) {
-          const inst = (e.clientX - drag.x) / dt;
-          drag.vx = drag.vx * 0.62 + inst * 0.38;
-        } else if (dt >= 100) {
-          drag.vx *= 0.5;
+        if (dt > 0 && dt < 120) {
+          // Floor the sample window so a burst of events in one frame cannot
+          // look like dozens of pixels per millisecond.
+          const inst = (e.clientX - drag.x) / Math.max(dt, 16);
+          const blended = drag.vx * 0.55 + inst * 0.45;
+          drag.vx = Math.max(-1.2, Math.min(1.2, blended));
+        } else if (dt >= 120) {
+          drag.vx = 0;
         }
         drag.x = e.clientX;
         drag.t = now;
@@ -319,7 +332,7 @@ export class CoverFlow extends Component {
     const t0 = nowMs();
     this._setLive(true);
     const step = (now) => {
-      if (!this.mounted()) return;
+      if (!this.isMounted()) return;
       const u = Math.min(1, (now - t0) / duration);
       const eased = 1 - (1 - u) ** 3;
       this._pos = from + delta * eased;
