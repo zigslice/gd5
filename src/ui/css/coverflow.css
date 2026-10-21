@@ -43,8 +43,13 @@
   cursor: grab;
 }
 
-.gd-coverflow__stage:active {
+.gd-coverflow__stage:active,
+.gd-coverflow--live .gd-coverflow__stage {
   cursor: grabbing;
+}
+
+.gd-coverflow--live .gd-coverflow__card {
+  transition: none;
 }
 
 .gd-coverflow__stage:focus-visible {

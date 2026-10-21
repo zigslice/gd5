@@ -1245,6 +1245,28 @@ section('ui kit');
     assert(cf.getIndex() === 0, 'CoverFlow loops by default');
     cf.setIndex(1);
     assert(cf.getIndex() === 1, 'CoverFlow.setIndex');
+    assert(ui.coverFlowDragSlots(0) === 0, 'coverflow zero drag is zero slots');
+    assert(Math.abs(ui.coverFlowDragSlots(86) - 1) < 1e-9, 'coverflow one pitch is one slot');
+    assert(Math.abs(ui.coverFlowDragSlots(-86) + 1) < 1e-9, 'coverflow drag left is negative slots');
+    assert(Math.abs(ui.coverFlowDragSlots(0.5 * 86)) < 0.5, 'coverflow short drag resists');
+    assert(Math.abs(ui.coverFlowDragSlots(2 * 86)) > 2, 'coverflow long drag accelerates');
+    assert(ui.coverFlowSettleIndex({ origin: 1, dx: 0, count: 5 }) === 1, 'coverflow release without drag stays');
+    assert(ui.coverFlowSettleIndex({ origin: 1, dx: -86, count: 5 }) === 2, 'coverflow one pitch advances');
+    assert(ui.coverFlowSettleIndex({ origin: 1, dx: -20, count: 5 }) === 1, 'coverflow short drag stays on the card');
+    assert(ui.coverFlowSettleIndex({ origin: 0, dx: -200, count: 5, loop: false }) > 2, 'coverflow long drag crosses more than two cards');
+    assert(ui.coverFlowSettleIndex({ origin: 0, dx: 0, velocity: -1, count: 5 }) !== 0, 'coverflow flick advances');
+    assert(ui.coverFlowSettleIndex({ origin: 0, dx: 200, count: 5, loop: false }) === 0, 'coverflow clamps at the first card');
+    assert(Math.abs(ui.coverFlowOffset(0, 4.8, 5, true) - 0.2) < 1e-9, 'coverflow loop offset wraps the seam');
+    const pose = cf._cardStyle(1, 2);
+    assert(pose.transform.includes('translateX(78px)'), 'coverflow offset 1 keeps x');
+    assert(pose.transform.includes('rotateY(-42deg)'), 'coverflow offset 1 keeps tilt');
+    assert(pose.transform.includes('translateZ(-70px)'), 'coverflow offset 1 keeps depth');
+    assert(pose.transform.includes('scale(0.9)'), 'coverflow offset 1 keeps scale');
+    assert(Math.abs(Number(pose.opacity) - 0.78) < 1e-6, 'coverflow offset 1 keeps opacity');
+    const rest = cf._cardStyle(0, 2);
+    assert(rest.opacity === '1' && rest.transform.includes('translateX(0px)') && rest.transform.includes('rotateY(0deg)'), 'coverflow center pose');
+    const mid = cf._cardStyle(0.5, 2);
+    assert(mid.transform.includes('rotateY(') && !mid.transform.includes('rotateY(-42deg)'), 'coverflow fractional tilt eases');
   }
   {
     const html = ui.renderMarkdown(

@@ -368,7 +368,7 @@ await cf.mount(host);
 cf.next(); // or cf.prev() / cf.setIndex(1)
 ```
 
-Drag the stage, use arrows / dots, or click a side card. Keyboard: ← →.
+Drag or swipe the stage and the cards follow the pointer. On release they ease onto a card along a non-linear curve: a short drag resists and stays, a longer or faster swipe crosses more than one card. Arrows, dots, and a click on a side card still step directly. Keyboard: ← →.
 
 ## Markdown editor
 

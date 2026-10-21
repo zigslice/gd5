@@ -1,6 +1,11 @@
 import { Component } from '../engine/index.js';
 import { cx, el, loadUi } from './util.js';
 
+/** Pixels of drag that map to one card before the curve. */
+const COVERFLOW_PITCH = 86;
+/** How far a flick's velocity (px/ms) is projected, in milliseconds. */
+const COVERFLOW_FLICK_MS = 140;
+
 /**
  * Normalize items to a stable shape.
  * @param {Array<string|object>} items
@@ -26,8 +31,55 @@ export function normalizeCoverFlowItems(items = []) {
 }
 
 /**
+ * Map a horizontal drag to card slots.
+ * Short drags resist (sub-linear); long drags accelerate past one-card-per-pitch.
+ * Positive dx (drag right) yields positive slots (toward previous cards).
+ * @param {number} dx
+ * @param {number} [pitch]
+ */
+export function coverFlowDragSlots(dx, pitch = COVERFLOW_PITCH) {
+  if (!pitch) return 0;
+  const t = dx / pitch;
+  if (t === 0) return 0;
+  const sign = Math.sign(t);
+  return sign * Math.pow(Math.abs(t), 1.4);
+}
+
+/**
+ * Card index after a drag is released.
+ * `velocity` is px/ms; a flick is projected forward before the same curve.
+ * Dragging left (dx < 0) advances to the next card.
+ * @param {{origin:number,dx:number,velocity?:number,pitch?:number,count:number,loop?:boolean}} opts
+ */
+export function coverFlowSettleIndex({ origin, dx, velocity = 0, pitch = COVERFLOW_PITCH, count, loop = true }) {
+  if (!count) return 0;
+  const projected = dx + velocity * COVERFLOW_FLICK_MS;
+  const raw = origin - coverFlowDragSlots(projected, pitch);
+  const rounded = Math.round(raw);
+  if (loop) return wrapIndex(rounded, count);
+  return clampIndex(rounded, count);
+}
+
+/**
+ * Shortest signed distance from a fractional position to card `i`.
+ * With `loop`, the seam stays continuous (the first card sits just past the last).
+ * @param {number} i
+ * @param {number} pos
+ * @param {number} count
+ * @param {boolean} loop
+ */
+export function coverFlowOffset(i, pos, count, loop) {
+  let d = i - pos;
+  if (!loop || count <= 1) return d;
+  d -= count * Math.round(d / count);
+  return d;
+}
+
+/**
  * CoverFlow — Apple Cover Flow / game character-select style carousel.
  * Center card faces forward; neighbors tilt & stack in perspective.
+ * Drag and touch follow the pointer, then ease onto a card. A longer or
+ * faster swipe crosses more than one card.
  *
  * Also known as: Cover Flow, coverflow carousel, 3D card carousel.
  *
@@ -55,6 +107,10 @@ export class CoverFlow extends Component {
     this._onChange = deps.onChange || null;
     this._onSelect = deps.onSelect || null;
     this._drag = null;
+    /** @type {number|null} fractional position while dragging or gliding */
+    this._pos = null;
+    this._raf = 0;
+    this._suppressClick = false;
   }
 
   async mount(host, params = {}) {
@@ -62,7 +118,14 @@ export class CoverFlow extends Component {
     return super.mount(host, params);
   }
 
+  componentDidUnMount() {
+    this._drag = null;
+    this._stopMotion(false);
+  }
+
   setItems(items) {
+    this._drag = null;
+    this._stopMotion(false);
     const next = normalizeCoverFlowItems(items);
     this.setData(
       {
@@ -84,10 +147,15 @@ export class CoverFlow extends Component {
   }
 
   setIndex(index, { emit = true } = {}) {
+    this._drag = null;
+    this._stopMotion(false);
     const { items, loop } = this.state.data;
     if (!items.length) return this;
     const next = loop ? wrapIndex(index, items.length) : clampIndex(index, items.length);
-    if (next === this.state.data.index) return this;
+    if (next === this.state.data.index) {
+      if (this._mounted) this._applyPose();
+      return this;
+    }
     this.setData({ index: next }, { refresh: !!this._mounted });
     if (emit) this._onChange?.(next, items[next]);
     return this;
@@ -107,17 +175,55 @@ export class CoverFlow extends Component {
 
     this.on(stage, 'pointerdown', (e) => {
       if (e.button != null && e.button !== 0) return;
-      this._drag = { x0: e.clientX, moved: false };
+      if (this._drag && e.pointerId != null && this._drag.pointerId !== e.pointerId) return;
+      this._stopMotion(true);
+      const now = e.timeStamp || nowMs();
+      this._drag = {
+        pointerId: e.pointerId,
+        x0: e.clientX,
+        x: e.clientX,
+        t: now,
+        vx: 0,
+        moved: false,
+        origin: this._pos == null ? this.state.data.index : this._pos,
+      };
       stage.setPointerCapture?.(e.pointerId);
     });
-    this.on(stage, 'pointermove', (e) => {
-      if (!this._drag) return;
-      if (Math.abs(e.clientX - this._drag.x0) > 8) this._drag.moved = true;
-    });
+
+    this.on(
+      stage,
+      'pointermove',
+      (e) => {
+        const drag = this._drag;
+        if (!drag || (e.pointerId != null && e.pointerId !== drag.pointerId)) return;
+        const dx = e.clientX - drag.x0;
+        const now = e.timeStamp || nowMs();
+        const dt = now - drag.t;
+        if (dt > 0 && dt < 100) {
+          const inst = (e.clientX - drag.x) / dt;
+          drag.vx = drag.vx * 0.62 + inst * 0.38;
+        } else if (dt >= 100) {
+          drag.vx *= 0.5;
+        }
+        drag.x = e.clientX;
+        drag.t = now;
+        if (Math.abs(dx) > 6) {
+          drag.moved = true;
+          e.preventDefault?.();
+          this._follow(dx);
+        }
+      },
+      { passive: false }
+    );
+
     this.on(stage, 'pointerup', (e) => {
-      if (!this._drag) return;
-      const dx = e.clientX - this._drag.x0;
-      const moved = this._drag.moved;
+      const drag = this._drag;
+      if (!drag || (e.pointerId != null && e.pointerId !== drag.pointerId)) return;
+      const dx = e.clientX - drag.x0;
+      const moved = drag.moved;
+      let vx = drag.vx;
+      const idle = (e.timeStamp || nowMs()) - drag.t;
+      if (idle > 80) vx = 0;
       this._drag = null;
       try {
         stage.releasePointerCapture?.(e.pointerId);
@@ -125,16 +231,12 @@ export class CoverFlow extends Component {
         /* ignore */
       }
       if (!moved) return;
-      this._suppressClick = true;
-      setTimeout(() => {
-        this._suppressClick = false;
-      }, 0);
-      if (dx < -40) this.next();
-      else if (dx > 40) this.prev();
+      this._armClickSuppress();
+      this._release(drag.origin, dx, vx);
     });
-    this.on(stage, 'pointercancel', () => {
-      this._drag = null;
-    });
+
+    this.on(stage, 'pointercancel', (e) => this._abortDrag(e));
+    this.on(stage, 'lostpointercapture', (e) => this._abortDrag(e));
 
     this.on(stage, 'keydown', (e) => {
       if (e.key === 'ArrowRight') {
@@ -151,27 +253,204 @@ export class CoverFlow extends Component {
     });
   }
 
+  _armClickSuppress() {
+    this._suppressClick = true;
+    setTimeout(() => {
+      this._suppressClick = false;
+    }, 0);
+  }
+
+  _abortDrag(e) {
+    const drag = this._drag;
+    if (!drag) return;
+    if (e?.pointerId != null && e.pointerId !== drag.pointerId) return;
+    const moved = drag.moved;
+    const origin = drag.origin;
+    this._drag = null;
+    if (!moved) return;
+    this._armClickSuppress();
+    const from = this._pos == null ? origin : this._pos;
+    this._glide(from, Math.round(origin));
+  }
+
+  _follow(dx) {
+    const { items, loop } = this.state.data;
+    const count = items.length;
+    if (!count || !this._drag) return;
+    this._pos = livePosition(this._drag.origin, dx, count, loop);
+    this._setLive(true);
+    this._applyPose();
+  }
+
+  _release(origin, dx, velocity) {
+    const { items, loop } = this.state.data;
+    const count = items.length;
+    if (!count) return;
+    const index = coverFlowSettleIndex({ origin, dx, velocity, count, loop });
+    const from = this._pos == null ? origin : this._pos;
+    let target = index;
+    if (loop && count > 1) {
+      let best = index;
+      let bestDist = Infinity;
+      for (const cand of [index - count, index, index + count]) {
+        const dist = Math.abs(cand - from);
+        if (dist < bestDist) {
+          best = cand;
+          bestDist = dist;
+        }
+      }
+      target = best;
+    }
+    if (prefersReducedMotion() || typeof globalThis.requestAnimationFrame !== 'function') {
+      this._finish(target);
+      return;
+    }
+    this._glide(from, target);
+  }
+
+  _glide(from, to) {
+    this._stopRaf();
+    const delta = to - from;
+    if (Math.abs(delta) < 0.0001 || prefersReducedMotion() || typeof globalThis.requestAnimationFrame !== 'function') {
+      this._finish(to);
+      return;
+    }
+    const duration = Math.min(680, 280 + Math.abs(delta) * 110);
+    const t0 = nowMs();
+    this._setLive(true);
+    const step = (now) => {
+      if (!this.mounted()) return;
+      const u = Math.min(1, (now - t0) / duration);
+      const eased = 1 - (1 - u) ** 3;
+      this._pos = from + delta * eased;
+      this._applyPose();
+      if (u < 1) this._raf = globalThis.requestAnimationFrame(step);
+      else this._finish(to);
+    };
+    this._raf = globalThis.requestAnimationFrame(step);
+  }
+
+  _finish(unwrapped) {
+    this._raf = 0;
+    const { items, loop } = this.state.data;
+    const count = items.length;
+    const index = !count
+      ? 0
+      : loop
+        ? wrapIndex(Math.round(unwrapped), count)
+        : clampIndex(Math.round(unwrapped), count);
+    this._pos = null;
+    this._setLive(false);
+    if (index !== this.state.data.index) this.setIndex(index);
+    else if (this._mounted) this._applyPose();
+  }
+
+  _stopRaf() {
+    if (this._raf) {
+      globalThis.cancelAnimationFrame?.(this._raf);
+      this._raf = 0;
+    }
+  }
+
+  /**
+   * @param {boolean} keepPos keep the fractional position (grab during a glide)
+   */
+  _stopMotion(keepPos) {
+    this._stopRaf();
+    if (!keepPos) {
+      this._pos = null;
+      this._setLive(false);
+    }
+  }
+
+  _setLive(on) {
+    this.ids().gdCfRoot?.classList?.toggle('gd-coverflow--live', on);
+  }
+
   _cardStyle(offset, sideCount) {
     const abs = Math.abs(offset);
-    if (abs > sideCount) {
-      return {
-        opacity: '0',
-        pointerEvents: 'none',
-        transform: `translate(-50%, -50%) translateX(${offset * 72}px) translateZ(-220px) rotateY(${offset < 0 ? 55 : -55}deg) scale(0.72)`,
-        zIndex: String(0),
-      };
-    }
-    const x = offset * 78;
-    const rot = offset === 0 ? 0 : offset < 0 ? 42 : -42;
-    const z = -Math.abs(offset) * 70;
-    const scale = offset === 0 ? 1 : Math.max(0.78, 1 - abs * 0.1);
-    const opacity = offset === 0 ? 1 : Math.max(0.45, 1 - abs * 0.22);
+    const curve = abs === 0 ? 0 : Math.pow(abs, 0.82);
+    const x = Math.sign(offset) * 78 * curve;
+    const rot = -Math.sign(offset) * 42 * Math.min(curve, 1);
+    const z = -curve * 70;
+    let scale = abs === 0 ? 1 : Math.max(0.78, 1 - curve * 0.1);
+    let opacity = abs === 0 ? 1 : Math.max(0.45, 1 - curve * 0.22);
+    if (abs > sideCount) opacity *= Math.max(0, 1 - (abs - sideCount) / 0.45);
+    const hidden = abs > sideCount + 0.45;
+    if (hidden) opacity = 0;
     return {
       opacity: String(opacity),
       transform: `translate(-50%, -50%) translateX(${x}px) translateZ(${z}px) rotateY(${rot}deg) scale(${scale})`,
-      zIndex: String(100 - abs),
-      pointerEvents: 'auto',
+      zIndex: String(100 - Math.round(abs * 10)),
+      pointerEvents: hidden ? 'none' : 'auto',
     };
+  }
+
+  _applyPose() {
+    const stage = this.ids().gdCfStage;
+    if (!stage?.querySelectorAll) return;
+    const { items, sideCount, loop, index } = this.state.data;
+    const count = items.length;
+    const pos = this._pos == null ? index : this._pos;
+    const cards = [...stage.querySelectorAll('.gd-coverflow__card')];
+    let nearest = index;
+    let nearestAbs = Infinity;
+    const posed = cards.map((card) => {
+      const i = Number(card.getAttribute('data-index'));
+      const offset = coverFlowOffset(i, pos, count, loop);
+      const abs = Math.abs(offset);
+      if (abs < nearestAbs) {
+        nearestAbs = abs;
+        nearest = i;
+      }
+      return { card, i, offset };
+    });
+    for (const { card, i, offset } of posed) {
+      const style = this._cardStyle(offset, sideCount);
+      card.style.opacity = style.opacity;
+      card.style.transform = style.transform;
+      card.style.zIndex = style.zIndex;
+      card.style.pointerEvents = style.pointerEvents;
+      card.setAttribute('data-offset', String(offset));
+      const active = i === nearest;
+      card.classList.toggle('gd-coverflow__card--active', active);
+      card.setAttribute('aria-current', active ? 'true' : 'false');
+      if ('tabIndex' in card) card.tabIndex = active ? 0 : -1;
+    }
+    const dots = this.ids().gdCfDots;
+    if (dots?.querySelectorAll && count) {
+      const activeDot = loop ? wrapIndex(Math.round(pos), count) : clampIndex(Math.round(pos), count);
+      [...dots.querySelectorAll('.gd-coverflow__dot')].forEach((dot, i) => {
+        dot.classList.toggle('gd-coverflow__dot--active', i === activeDot);
+        dot.setAttribute('aria-current', i === activeDot ? 'true' : 'false');
+      });
+    }
+    this._syncCaption(nearest);
+  }
+
+  _syncCaption(nearest) {
+    const caption = this.ids().gdCfCaption;
+    if (!caption) return;
+    const { items, loop } = this.state.data;
+    const count = items.length;
+    if (!count) return;
+    const i = loop ? wrapIndex(nearest, count) : clampIndex(nearest, count);
+    const item = items[i];
+    if (!item) return;
+    const titleEl = caption.querySelector?.('.gd-coverflow__caption-title');
+    if (titleEl) titleEl.textContent = item.title;
+    const subEl = caption.querySelector?.('.gd-coverflow__caption-sub');
+    if (item.subtitle) {
+      if (subEl) subEl.textContent = item.subtitle;
+      else if (typeof document !== 'undefined') {
+        const created = document.createElement('div');
+        created.className = 'gd-coverflow__caption-sub';
+        created.textContent = item.subtitle;
+        caption.appendChild(created);
+      }
+    } else if (subEl?.remove) {
+      subEl.remove();
+    }
   }
 
   _renderCard(item, offset, index) {
@@ -224,7 +503,7 @@ export class CoverFlow extends Component {
         },
         onClick: (e) => {
           e.preventDefault();
-          if (this._suppressClick || this._drag?.moved) return;
+          if (this._suppressClick || this._drag?.moved || this._raf) return;
           if (offset === 0) {
             this._onSelect?.(index, item);
             return;
@@ -297,7 +576,7 @@ export class CoverFlow extends Component {
         );
       } else {
         for (let i = 0; i < count; i++) {
-          const offset = i - index;
+          const offset = coverFlowOffset(i, index, count, loop);
           stage.appendChild(this._renderCard(items[i], offset, i).dom());
         }
       }
@@ -343,6 +622,32 @@ function clampIndex(i, len) {
 function wrapIndex(i, len) {
   if (!len) return 0;
   return ((Number(i) % len) + len) % len;
+}
+
+/**
+ * Fractional position while the pointer is down.
+ * Past either end (when not looping) the extra distance rubber-bands.
+ */
+function livePosition(origin, dx, count, loop) {
+  const pos = origin - coverFlowDragSlots(dx);
+  if (loop || count <= 1) return pos;
+  if (pos < 0) return rubber(pos);
+  if (pos > count - 1) return count - 1 + rubber(pos - (count - 1));
+  return pos;
+}
+
+function rubber(over) {
+  const sign = Math.sign(over);
+  if (!sign) return 0;
+  return sign * Math.pow(Math.abs(over), 0.65) * 0.45;
+}
+
+function prefersReducedMotion() {
+  return globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches === true;
+}
+
+function nowMs() {
+  return globalThis.performance?.now?.() ?? Date.now();
 }
 
 /**
