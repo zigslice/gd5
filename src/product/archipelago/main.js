@@ -6,6 +6,10 @@
  */
 
 import { ComponentRender, LogProvider } from '../../engine/index.js';
+import { applyRememberedJelly, loadUi } from '../../ui/index.js';
+
+applyRememberedJelly();
+void loadUi();
 import { TideBootComponent } from './components/TideBootComponent.js';
 import { TideGameComponent } from './components/TideGameComponent.js';
 

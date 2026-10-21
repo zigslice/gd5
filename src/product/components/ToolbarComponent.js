@@ -1,4 +1,5 @@
 import { Component } from '../../engine/index.js';
+import { JellySwitch } from '../../ui/index.js';
 
 /**
  * 顶栏：撤销 / 重做 / 预览 / 导出。
@@ -26,6 +27,7 @@ export class ToolbarComponent extends Component {
           ),
           div(
             { className: 'toolbar__actions', id: 'toolbarActions' },
+            JellySwitch({ label: '果冻' }),
             button({
               id: 'btnUndo',
               type: 'button',

@@ -21,7 +21,7 @@ function host(name, reason) {
 
 host(
   'Button',
-  'Primary and default are one solid pressable surface. Ghost, text, and danger stay flat.'
+  'Primary and default are solid pressable surfaces. Ghost and danger keep an outline membrane. Text stays flat.'
 );
 host('LoadingButton', 'Renders Button, so it follows the same solid-type rule.');
 host('AsyncButton', 'Alias of LoadingButton.');
@@ -43,8 +43,8 @@ skip(
   'The state glyph is the control. A membrane would swallow the mark or the track.'
 );
 skip(
-  ['Switch'],
-  'The 22px track and the separate knob are two shapes. A single membrane cannot be both.'
+  ['Switch', 'JellySwitch'],
+  'The 22px track and the separate knob are two shapes. The global jelly switch stays rigid.'
 );
 skip(
   ['ToggleGroup', 'SegmentedControl'],

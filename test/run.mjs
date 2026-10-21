@@ -1906,9 +1906,9 @@ section('ui kit');
   assert(jellyOff.e['data-gd-jelly'] === 'off', 'ConfigProvider jelly off');
   assert(jellyOff.e['data-gd-theme'] === 'green', 'ConfigProvider keeps theme beside jelly');
 
-  assert(Button({ type: 'ghost', text: 'G' }).e['data-gd-jelly-host'] == null, 'ghost Button is not a jelly host');
+  assert(Button({ type: 'ghost', text: 'G' }).e['data-gd-jelly-host'] === 'solid', 'ghost Button is an outline jelly host');
   assert(Button({ type: 'text', text: 'T' }).e['data-gd-jelly-host'] == null, 'text Button is not a jelly host');
-  assert(Button({ type: 'danger', text: 'D' }).e['data-gd-jelly-host'] == null, 'danger Button is not a jelly host');
+  assert(Button({ type: 'danger', text: 'D' }).e['data-gd-jelly-host'] === 'solid', 'danger Button is an outline jelly host');
   assert(Button({ text: 'Plain' }).e['data-gd-jelly-host'] === 'solid', 'default Button is a jelly host');
   assert(ui.Fab({ text: '+' }).e['data-gd-jelly-host'] === 'solid', 'Fab is a jelly host');
   assert(ui.Chip({ text: 'C' }).e['data-gd-jelly-host'] === 'solid', 'Chip is a jelly host');
@@ -2001,7 +2001,15 @@ section('catalog index');
   assert(catalogSrc.includes('loadUi'), 'catalog page loads the UI kit');
   assert(catalogSrc.includes('SegmentedControl'), 'catalog page uses SegmentedControl');
   assert(catalogSrc.includes('filterCatalog'), 'catalog page filters entries');
-  assert(catalogSrc.includes('setJelly') && catalogSrc.includes('果冻'), 'catalog page exposes the jelly switch');
+  assert(catalogSrc.includes('JellySwitch') && catalogSrc.includes('果冻'), 'catalog page exposes the jelly switch');
+  for (const entry of ['src/product/main.js', 'src/product/agent/main.js', 'src/product/escape/main.js', 'src/product/archipelago/main.js']) {
+    const src = readFileSync(join(root, entry), 'utf8');
+    assert(src.includes('applyRememberedJelly'), `${entry} restores jelly for the product`);
+  }
+  assert(readFileSync(join(root, 'src/product/components/ToolbarComponent.js'), 'utf8').includes('JellySwitch'), 'ProtoLive toolbar has the jelly switch');
+  assert(readFileSync(join(root, 'src/product/agent/components/AgentToolbarComponent.js'), 'utf8').includes('JellySwitch'), 'agent toolbar has the jelly switch');
+  assert(readFileSync(join(root, 'src/product/escape/components/GameComponent.js'), 'utf8').includes('JellySwitch'), 'escape home has the jelly switch');
+  assert(readFileSync(join(root, 'src/product/archipelago/components/TideGameComponent.js'), 'utf8').includes('JellySwitch'), 'tidefront home has the jelly switch');
 
   const gallerySrc = readFileSync(join(root, 'examples/ui-gallery.js'), 'utf8');
   assert(gallerySrc.includes('setJelly'), 'gallery exposes the jelly switch');

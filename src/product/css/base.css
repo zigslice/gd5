@@ -73,36 +73,47 @@ select {
 }
 
 .btn--ghost {
+  --gd-jelly-fill: transparent;
+  --gd-jelly-edge: var(--border);
   background: transparent;
   border-color: var(--border);
   color: var(--text-secondary);
 }
 
 .btn--ghost:hover {
+  --gd-jelly-edge: var(--border-strong);
   border-color: var(--border-strong);
   color: var(--text-primary);
 }
 
 .btn--secondary {
-  background: var(--bg-elevated);
+  --gd-jelly-fill: var(--bg-elevated);
+  --gd-jelly-edge: var(--border-strong);
+  background: var(--gd-jelly-fill);
   border-color: var(--border-strong);
 }
 
 .btn--secondary:hover {
-  background: #263140;
+  --gd-jelly-fill: #263140;
+  background: var(--gd-jelly-fill);
 }
 
 .btn--primary {
-  background: var(--accent);
+  --gd-jelly-fill: var(--accent);
+  --gd-jelly-edge: transparent;
+  background: var(--gd-jelly-fill);
   color: #04201e;
   font-weight: 600;
 }
 
 .btn--primary:hover {
-  background: var(--accent-hover);
+  --gd-jelly-fill: var(--accent-hover);
+  background: var(--gd-jelly-fill);
 }
 
 .btn--danger {
+  --gd-jelly-fill: transparent;
+  --gd-jelly-edge: var(--danger);
   background: transparent;
   border-color: var(--danger);
   color: var(--danger);

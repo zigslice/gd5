@@ -243,7 +243,7 @@ class GalleryPage extends Component {
               { direction: 'vertical', size: 'md' },
               Text({
                 type: 'secondary',
-                text: 'Call setTheme("blue") or wrap with ConfigProvider({ theme: "green" }). setJelly(true) is the same kind of switch, remembered as gd5-jelly. Default jelly is off. Solid primary, default, and chip surfaces participate; ghost, tags, and switches stay rigid.',
+                text: 'Call setTheme("blue") or wrap with ConfigProvider({ theme: "green" }). setJelly(true) is the same kind of switch, remembered as gd5-jelly, and shared by the catalog and every product. Default jelly is off. Primary, default, ghost, danger, chips, and floating buttons participate. Text buttons, tags, and switches stay rigid.',
               }),
               ToggleGroup({
                 value: d.theme,

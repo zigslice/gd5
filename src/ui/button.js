@@ -111,8 +111,9 @@ function buttonAttrs(type, busy, extra) {
     ...(extra || {}),
     'aria-busy': busy ? 'true' : 'false',
   };
-  if (type === 'primary' || type === 'default') attrs[JELLY_HOST_ATTR] = 'solid';
-  else delete attrs[JELLY_HOST_ATTR];
+  if (type === 'primary' || type === 'default' || type === 'ghost' || type === 'danger') {
+    attrs[JELLY_HOST_ATTR] = 'solid';
+  } else delete attrs[JELLY_HOST_ATTR];
   return attrs;
 }
 

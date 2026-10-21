@@ -1,5 +1,5 @@
 import { Component, D, bind } from '../../../engine/index.js';
-import { loadUi, Button, Tag, Text, Title, ProgressBar } from '../../../ui/index.js';
+import { loadUi, Button, JellySwitch, Tag, Text, Title, ProgressBar } from '../../../ui/index.js';
 import { BattleView } from './BattleView.js';
 import { MapView } from './MapView.js';
 import { GARRISON_CAP } from '../lib/battle.js';
@@ -73,6 +73,7 @@ export class TideGameComponent extends Component {
             span({ className: 'tide-brand__sub', text: '群岛防御' }),
             span({ id: 'frontTag', className: 'gd-tag gd-tag--primary', text: '前线' }),
             span({ id: 'metaLabel', className: 'tide-meta', text: '' }),
+            JellySwitch({ label: '果冻' }),
             Button({
               type: 'text',
               size: 'sm',
@@ -106,8 +107,82 @@ export class TideGameComponent extends Component {
     const message = this.ids().message;
     if (message) message.textContent = state.message;
 
-    this._paintSide(state);
-    this._paintDock(state);
+    const hudKey = this._hudKey(state);
+    if (hudKey !== this._hudKeyPrev) {
+      this._hudKeyPrev = hudKey;
+      this._paintSide(state);
+      this._paintDock(state);
+    }
+    this._patchHud(state);
+  }
+
+  _hudKey(state) {
+    const islands = Object.values(state.islands)
+      .map((island) => `${island.id}:${island.status}:${island.row}`)
+      .join(',');
+    const ranks = Object.entries(state.troopRank || {})
+      .map(([id, rank]) => `${id}:${rank}`)
+      .join(',');
+    const battle = state.battle;
+    const gates = Object.entries(state.cooldowns || {})
+      .map(([id, value]) => `${id}:${value > 0.05 ? 1 : 0}`)
+      .join(',');
+    return [
+      state.phase,
+      state.frontRow,
+      state.selectedId,
+      state.selectedTroop,
+      state.selectedUnitId,
+      state.level,
+      state.gold,
+      ranks,
+      islands,
+      gates,
+      battle?.status || '',
+      battle?.islandId || '',
+      battle?.units?.map((unit) => unit.id).join(',') || '',
+      battle?.houses?.map((house) => house.id).join(',') || '',
+    ].join('|');
+  }
+
+  _patchHud(state) {
+    const side = this.ids().side;
+    if (!side) return;
+    if (state.phase !== 'battle') {
+      for (const island of Object.values(state.islands)) {
+        const node = side.querySelector(`[data-pressure="${island.id}"]`);
+        if (!node) continue;
+        const label = node.querySelector('.gd-text');
+        const text = `${island.name}攻势 ${Math.floor(island.pressure)}`;
+        if (label && label.textContent !== text) label.textContent = text;
+        const bar = node.querySelector('.gd-progress__bar');
+        if (bar) bar.style.width = `${Math.max(0, Math.min(100, island.pressure))}%`;
+      }
+      return;
+    }
+    const battle = state.battle;
+    if (!battle) return;
+    const meta = side.querySelector('[data-fight-meta]');
+    if (meta) {
+      meta.textContent = `第 ${battle.wave}/${battle.waveCount} 批 · 来船 ${battle.boats.length} · 上岸 ${battle.npcs.length} · 我方 ${battle.units.length}`;
+    }
+    for (const house of battle.houses || []) {
+      const node = side.querySelector(`[data-house="${house.id}"]`);
+      if (!node) continue;
+      const label = node.querySelector('.tide-house');
+      if (label) label.textContent = `房子 ${house.id.slice(1)}  ${Math.ceil(house.hp)}/${house.maxHp}`;
+      const bar = node.querySelector('.gd-progress__bar');
+      if (bar) bar.style.width = `${Math.max(0, Math.min(100, (house.hp / house.maxHp) * 100))}%`;
+    }
+    for (const spec of Object.values(SKILLS)) {
+      const button = side.querySelector(`[data-skill="${spec.id}"]`);
+      if (!button) continue;
+      const cd = state.cooldowns[spec.id] || 0;
+      const text = cd > 0.05 ? `${spec.name} ${cd.toFixed(1)}s` : spec.name;
+      const label = button.querySelector('.gd-btn__label');
+      if (label && label.textContent !== text) label.textContent = text;
+      button.disabled = cd > 0.05;
+    }
   }
 
   _paintSide(state) {
@@ -187,7 +262,7 @@ export class TideGameComponent extends Component {
             .filter((island) => island.status === 'open' && island.row === state.frontRow)
             .map((island) =>
               div(
-                { className: 'tide-pressure', key: `p-${island.id}` },
+                { className: 'tide-pressure', key: `p-${island.id}`, attrs: { 'data-pressure': island.id } },
                 Text({
                   as: 'span',
                   small: true,
@@ -311,8 +386,10 @@ export class TideGameComponent extends Component {
       { className: 'tide-panel', key: 'fight-side' },
       Title({ level: 4, text: island ? `交战 · ${island.name}` : '交战', className: 'tide-h' }),
       Text({
+        as: 'p',
         type: 'secondary',
         small: true,
+        attrs: { 'data-fight-meta': '1' },
         text: battle
           ? `第 ${battle.wave}/${battle.waveCount} 批 · 来船 ${battle.boats.length} · 上岸 ${battle.npcs.length} · 我方 ${battle.units.length}`
           : '',
@@ -325,7 +402,7 @@ export class TideGameComponent extends Component {
       }),
       ...(battle?.houses || []).map((house) =>
         div(
-          { className: 'tide-pressure', key: house.id },
+          { className: 'tide-pressure', key: house.id, attrs: { 'data-house': house.id } },
           span({
             className: 'tide-house',
             text: `房子 ${house.id.slice(1)}  ${Math.ceil(house.hp)}/${house.maxHp}`,
@@ -338,6 +415,7 @@ export class TideGameComponent extends Component {
         return Button({
           block: true,
           disabled: cd > 0.05,
+          attrs: { 'data-skill': spec.id },
           text: cd > 0.05 ? `${spec.name} ${cd.toFixed(1)}s` : spec.name,
           onClick: () => this.store.cast(spec.id),
         });
