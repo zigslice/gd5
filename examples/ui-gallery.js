@@ -685,7 +685,7 @@ class GalleryPage extends Component {
               { direction: 'vertical', size: 'sm' },
               Text({
                 type: 'secondary',
-                text: 'Cover Flow（封面流）— game character-select style: center card faces forward, neighbors tilt & stack. Drag / arrows / dots.',
+                text: 'Cover Flow（封面流）— center card faces forward, neighbors tilt and stack. Drag or swipe follows a non-linear curve; a faster swipe crosses more cards. Arrows and dots still step directly.',
               }),
               h(CoverFlow, {
                 height: 300,

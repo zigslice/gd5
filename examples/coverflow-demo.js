@@ -18,7 +18,7 @@ class CoverFlowDemoPage extends Component {
           h1({ className: 'gd-demo__title', text: 'Cover Flow' }),
           p({
             className: 'gd-demo__hint',
-            text: '封面流 — 居中正面卡片，左右倾斜叠放（游戏选角色那种）',
+            text: '左右拖动或在触摸屏上滑动，卡片会跟着走，松手后按非线性曲线自动滑到一张上；滑得更远或更快会一次跨过多张。',
           }),
           div(
             { className: 'gd-demo__body' },

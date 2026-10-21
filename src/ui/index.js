@@ -102,6 +102,9 @@ export {
   CoverflowCarousel,
   createCoverFlow,
   normalizeCoverFlowItems,
+  coverFlowDragSlots,
+  coverFlowSettleIndex,
+  coverFlowOffset,
 } from './CoverFlow.js';
 export {
   TodoList,
