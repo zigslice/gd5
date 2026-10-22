@@ -128,6 +128,15 @@ const RAW_CATALOG = [
     tags: ['3D'],
   },
   {
+    id: 'timeline',
+    kind: 'example',
+    title: 'Timeline',
+    kicker: '时间线',
+    summary: '用标签名做筛选 Tab。点一个标签，时间线上只留下同名的条目。',
+    href: 'examples/timeline-demo.html',
+    tags: ['时间线', '筛选'],
+  },
+  {
     id: 'todo',
     kind: 'example',
     title: 'TodoList',
