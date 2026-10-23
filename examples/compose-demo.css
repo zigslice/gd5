@@ -1,0 +1,126 @@
+/**
+ * Thin workspace shell for the composition demo.
+ * Child panels keep their own CSS (AppHeader / SideNav / DetailPane).
+ */
+
+.compose-workspace {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.compose-workspace__body {
+  display: grid;
+  grid-template-columns: minmax(200px, 280px) 1fr;
+  gap: 0;
+  flex: 1;
+  min-height: 0;
+}
+
+@media (max-width: 720px) {
+  .compose-workspace__body {
+    grid-template-columns: 1fr;
+  }
+}
+
+.compose-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--gd-border, #e8e2dc);
+  background: var(--gd-bg-container, #fff);
+}
+
+.compose-header__brand {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.compose-header__meta {
+  margin: 0;
+  font-size: 13px;
+  color: var(--gd-text-secondary, #5c534c);
+}
+
+.compose-nav {
+  padding: 16px;
+  border-right: 1px solid var(--gd-border, #e8e2dc);
+  background: var(--gd-bg-container, #fff);
+  min-height: 0;
+}
+
+.compose-nav__title {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gd-text-secondary, #5c534c);
+}
+
+.compose-nav__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.compose-nav__item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--gd-text, #1f1a17);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.compose-nav__item:hover {
+  background: var(--gd-bg-spotlight, #f5f5f5);
+}
+
+.compose-nav__item.is-active {
+  border-color: var(--gd-primary, #fa8c16);
+  background: color-mix(in srgb, var(--gd-primary, #fa8c16) 12%, transparent);
+}
+
+.compose-detail {
+  padding: 20px 24px 40px;
+  min-width: 0;
+  background: var(--gd-bg-spotlight, #f5f5f5);
+}
+
+.compose-detail__title {
+  margin: 0 0 8px;
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.compose-detail__path {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: var(--gd-text-secondary, #5c534c);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.compose-detail__body {
+  margin: 0 0 18px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--gd-text, #1f1a17);
+}
+
+.compose-detail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

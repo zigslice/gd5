@@ -68,6 +68,21 @@ escape store ──► Game / Win pages
 
 `EditorComponent` 只组合：`ensureShell` 树里写子组件（或 `host-*` + `mount`）→ `store.subscribe → child.refresh`。
 
+## 层级分解（设计意图）
+
+**页面要薄，靠 Component 组合** —— 这是硬约定，不是可选风格。完整说明见 [`composition.md`](./composition.md)。
+
+| 要 | 不要 |
+|----|------|
+| 先交组件树，再开文件 | 一个 `HomePage` 画完侧栏+详情+日志 |
+| `ensureShell` 里 `h(Child, …)` / `TodoList({…})` | `createElement` / `appendChild` / 清空 host 灌树 |
+| 一区域一 `Component` + 旁挂 CSS | `querySelector` 改子区域 |
+| 子组件 `refresh` / `setData` | 父在 `render` 后半段命令式拼 DOM |
+
+**新代码**默认树内就地组合。`host-*` + 事后 `mount` 仅用于传送门 / 页外槽；不要当默认模板抄。
+
+LLM / agent 写 UI 时必须先读 [`skills/engine/README.md`](../skills/engine/README.md) 的「先拆层级」与「禁止」两节。
+
 ## 目录
 
 ```

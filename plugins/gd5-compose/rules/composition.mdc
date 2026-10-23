@@ -1,0 +1,17 @@
+---
+description: gd5 UI must decompose into Components and assemble declaratively
+globs: "**/{webui,gd5,examples,product,catalog,components}/**/*.{js,mjs,css,html}"
+alwaysApply: false
+---
+
+# gd5 composition
+
+When editing gd5 (or vendored gd5) UI:
+
+1. Plan a component tree before writing code.
+2. One region → one `Component` + co-located CSS; pages only assemble.
+3. Use `ensureShell` / `h(Child, …)` / UI factories. Events in props.
+4. Never in `render`: `createElement`, `appendChild`, clearing a host to rebuild, or `querySelector` to patch child UI.
+5. Prefer in-tree composition over empty `host-*` + later `mount` (portals excepted).
+
+Follow skill `gd5-compose` and, when present, `docs/composition.md`.

@@ -88,9 +88,10 @@ Agent 回合是**本地模拟**（读写 store、刷 todos/diff/terminal），�
 
 ## 用引擎写新产品页
 
-1. 在 HTML 增加 `<div id="myPage">`
-2. `class MyPage extends Component { ... }`
-3. 在对应 `main.js` 的 `componentsDef` 注册
-4. `navigator.navigate('myPage', params)`
+1. **先画组件树**（侧栏 / 详情 / 工具栏各一节点），见 [composition.md](./composition.md)
+2. 在 HTML 增加 `<div id="myPage">`
+3. 每个节点一个 `extends Component`；页面只 `ensureShell` 组装子组件
+4. 在对应 `main.js` 的 `componentsDef` 注册
+5. `navigator.navigate('myPage', params)`
 
-详见 [engine.md](./engine.md) 与 [skills/engine/](../skills/engine/)。
+禁止在单个 `render` 里用 `createElement` / `appendChild` 灌整页。详见 [engine.md](./engine.md) 与 [skills/engine/](../skills/engine/)。

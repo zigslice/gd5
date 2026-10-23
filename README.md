@@ -205,14 +205,17 @@ src/ui/         component library
 src/catalog/    site index (index.html) — products and example pages
 src/product/    example apps (optional): ProtoLive, Coding Agent, Escape Room, Tidefront
 examples/       gd5 apps (page slots + ComponentRender) — ui-gallery, demos
-docs/           api.md · ui.md · engine.md · architecture.md
+docs/           api.md · ui.md · engine.md · composition.md · architecture.md
+plugins/        Cursor plugin `gd5-compose` (hierarchy + declarative assembly)
 ```
 
 - [`docs/api.md`](docs/api.md) — engine API
 - [`docs/ui.md`](docs/ui.md) — UI catalog & theming
 - [`docs/engine.md`](docs/engine.md) — authoring guide
+- [`docs/composition.md`](docs/composition.md) — hierarchy + declarative assembly (do / don't)
 - [`docs/architecture.md`](docs/architecture.md) — boundaries
-- [`skills/engine/README.md`](skills/engine/README.md) — short skill sheet
+- [`skills/engine/README.md`](skills/engine/README.md) — short skill sheet (decompose first)
+- [`plugins/gd5-compose/`](plugins/gd5-compose/) — Cursor plugin for agents (install under `~/.cursor/plugins/local/`)
 
 ---
 
