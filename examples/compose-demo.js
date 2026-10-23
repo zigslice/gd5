@@ -80,8 +80,9 @@ class SideNav extends Component {
 
   render() {
     const selectedId = this.store.selectedId;
-    this.ensureShell((ids) => ids.composeNav, ({ nav, h2, div, button, map }) => {
-      nav(
+    this.ensureShell((ids) => ids.composeNav, ({ aside, h2, div, button, map }) => {
+      // `nav` is not in bind()'s short-tag list — use aside (or h('nav', …)).
+      aside(
         { id: 'composeNav', className: 'compose-nav' },
         h2({ className: 'compose-nav__title', text: 'Routes' }),
         div(
