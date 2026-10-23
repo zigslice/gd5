@@ -93,7 +93,16 @@ export { List, ListItem, Descriptions, Statistic } from './list.js';
 export { Calendar } from './calendar.js';
 export { Image } from './image.js';
 export { Result, Popconfirm } from './result.js';
-export { Timeline } from './timeline.js';
+export {
+  Timeline,
+  TIMELINE_ALL,
+  TIMELINE_TAG_COLORS,
+  resolveTimelineTags,
+  groupTimelineItems,
+  timelineItemVisible,
+  paintTimelineFilter,
+  layoutTimelineRail,
+} from './timeline.js';
 export { ChatBubble } from './chat.js';
 export { Carousel } from './carousel.js';
 export {
