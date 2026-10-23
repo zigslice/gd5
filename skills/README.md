@@ -4,8 +4,10 @@
 
 | 目录 | 归属 | 内容 |
 |------|------|------|
-| `skills/engine/` | 引擎 | 如何用 `Component` / `D` / 导航写产品页 |
+| `skills/engine/` | 引擎 | 层级分解、声明式组装、`Component` / `D` / 导航 |
 | `skills/blocks/` | 产品 | 编辑器左侧可拖积木（JSON） |
+
+Agent / LLM 写或改 UI 时：**先读** [engine/README.md](./engine/README.md) 的「先拆层级」与「禁止」，再读 [`docs/composition.md`](../docs/composition.md)。不要对着单体命令式 `render` 继续堆代码。
 
 ## 产品积木（blocks）
 

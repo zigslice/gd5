@@ -2,7 +2,8 @@
 
 迷你实模式 HTML 组件引擎（原 gd5 框架，ES module 化）。
 
-**完整 API 列表**见 [`api.md`](./api.md)（本页偏写法与坑）。
+**完整 API 列表**见 [`api.md`](./api.md)（本页偏写法与坑）。  
+**层级分解 / 声明式组装 / 禁止命令式 render**见 [`composition.md`](./composition.md)（设计意图；写页面前先读）。
 
 ## 入口
 
@@ -52,6 +53,8 @@ div(
 ```
 
 `ensureShell` 只建一次，就地 `TodoList({…})` / `EChart` / `ThreeView` / `SparkView` / `PeleView` 也只创建一次。引擎插入 `display: contents` 宿主再 `mount`。
+
+**这是默认写法。** 不要在 `render` 里用 `document.createElement` / `appendChild` / 清空 host 再灌内容来「组装」——那是反模式，见 [`composition.md`](./composition.md)。页面若同时有侧栏、详情等多块 UI，先拆成多个 `Component`，父树只声明组合。
 
 ## 写组件时怎么少踩坑
 

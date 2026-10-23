@@ -136,6 +136,15 @@ const RAW_CATALOG = [
     href: 'examples/todo-demo.html',
     tags: ['列表'],
   },
+  {
+    id: 'compose',
+    kind: 'example',
+    title: 'Composition',
+    kicker: '层级组合',
+    summary: '薄页面 + Header / SideNav / DetailPane。声明式组装，不在 render 里 createElement。',
+    href: 'examples/compose-demo.html',
+    tags: ['组合', '层级'],
+  },
 ];
 
 /** @type {CatalogEntry[]} */

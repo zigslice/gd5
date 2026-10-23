@@ -1,0 +1,10 @@
+{
+  "name": "gd5-compose",
+  "version": "1.0.0",
+  "description": "Force gd5 UI hierarchy decomposition and declarative ensureShell assembly. Blocks createElement soup in Component.render.",
+  "author": {
+    "name": "zigslice"
+  },
+  "license": "MIT",
+  "keywords": ["gd5", "composition", "declarative", "component"]
+}

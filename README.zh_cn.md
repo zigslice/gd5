@@ -205,14 +205,17 @@ src/ui/         组件库
 src/catalog/    站点索引（index.html）— 产品与示例入口
 src/product/    示例应用（可选）：ProtoLive、Coding Agent、密室逃脱、潮前线
 examples/       标准 gd5 应用（页槽 + ComponentRender）— ui-gallery、各 demo
-docs/           api.md · ui.md · engine.md · architecture.md
+docs/           api.md · ui.md · engine.md · composition.md · architecture.md
+plugins/        Cursor 插件 `gd5-compose`（层级分解 + 声明式组装）
 ```
 
 - [`docs/api.md`](docs/api.md) —— 引擎 API
 - [`docs/ui.md`](docs/ui.md) —— 组件目录与主题
 - [`docs/engine.md`](docs/engine.md) —— 编写指南
+- [`docs/composition.md`](docs/composition.md) —— 层级分解与声明式组装（要做 / 禁止）
 - [`docs/architecture.md`](docs/architecture.md) —— 边界
-- [`skills/engine/README.md`](skills/engine/README.md) —— 短技能表
+- [`skills/engine/README.md`](skills/engine/README.md) —— 短技能表（先拆层级）
+- [`plugins/gd5-compose/`](plugins/gd5-compose/) —— 给 agent 用的 Cursor 插件（装到 `~/.cursor/plugins/local/`）
 
 ---
 

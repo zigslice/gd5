@@ -74,6 +74,7 @@ section('layout: product vs engine');
     'docs/architecture.md',
     'docs/api.md',
     'docs/ui.md',
+    'docs/composition.md',
     'skills/engine/README.md',
     'src/ui/index.js',
     'src/ui/button.js',
@@ -121,6 +122,9 @@ section('layout: product vs engine');
     'examples/ui-gallery.css',
     'examples/todo-demo.html',
     'examples/todo-demo.js',
+    'examples/compose-demo.html',
+    'examples/compose-demo.js',
+    'examples/compose-demo.css',
     'examples/embed-demo.html',
     'examples/embed-demo.js',
     'examples/spark-demo.html',
@@ -1421,6 +1425,7 @@ section('ui kit');
     const demos = [
       'examples/ui-gallery.html',
       'examples/todo-demo.html',
+      'examples/compose-demo.html',
       'examples/embed-demo.html',
       'examples/spark-demo.html',
       'examples/pele-demo.html',
@@ -1443,6 +1448,17 @@ section('ui kit');
     assert(!todoDemo.includes('this.todoList'), 'todo-demo does not pre-new on this');
     assert(!todoDemo.includes('replaceChildren'), 'todo-demo does not use replaceChildren');
     assert(!todoDemo.includes('_mountedTodo'), 'todo-demo has no mount flag');
+    const composeDemo = readFileSync(join(root, 'examples/compose-demo.js'), 'utf8');
+    assert(
+      composeDemo.includes('h(AppHeader') &&
+        composeDemo.includes('h(SideNav') &&
+        composeDemo.includes('h(DetailPane'),
+      'compose-demo declares child components in the tree'
+    );
+    assert(!composeDemo.includes('document.createElement'), 'compose-demo does not use createElement');
+    assert(!composeDemo.includes('appendChild'), 'compose-demo does not use appendChild');
+    assert(!composeDemo.includes('querySelector'), 'compose-demo does not use querySelector');
+    assert(composeDemo.includes('WorkspacePage'), 'compose-demo has a thin WorkspacePage');
     const embedDemo = readFileSync(join(root, 'examples/embed-demo.js'), 'utf8');
     assert(embedDemo.includes('EChart({'), 'embed-demo composes EChart({…}) inline');
     assert(embedDemo.includes('ThreeView({'), 'embed-demo composes ThreeView({…}) inline');
@@ -2039,6 +2055,16 @@ section('catalog index');
   const usage = readFileSync(join(root, 'docs/usage.md'), 'utf8');
   assert(usage.includes('protolive.html'), 'usage points ProtoLive at protolive.html');
   assert(usage.includes('src/catalog/'), 'usage documents the catalog');
+  assert(usage.includes('composition.md') || usage.includes('先画组件树'), 'usage points at composition rules');
+
+  const composition = readFileSync(join(root, 'docs/composition.md'), 'utf8');
+  assert(composition.includes('createElement'), 'composition doc bans createElement');
+  assert(composition.includes('先交树') || composition.includes('组件树'), 'composition doc requires a tree first');
+  assert(composition.includes('ensureShell'), 'composition doc shows ensureShell assembly');
+
+  const engineSkills = readFileSync(join(root, 'skills/engine/README.md'), 'utf8');
+  assert(engineSkills.includes('先拆层级'), 'engine skills lead with hierarchy decomposition');
+  assert(engineSkills.includes('禁止'), 'engine skills list hard bans for LLM');
 }
 
 section('product: tidefront');
