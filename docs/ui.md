@@ -103,7 +103,7 @@ Primitives return **real-DOM `Element`s**. Overlay widgets are **`Component`s** 
 | Steps / Quantity Stepper | `Steps`, `QuantityStepper` | primitive |
 | Switch / Checkbox / Radio | `Switch`, `Checkbox`, `Radio`, `RadioGroup` | primitive |
 | Tabs / Toggle Group | `Tabs`, `ToggleGroup`, `SegmentedControl` | primitive |
-| Timeline | `Timeline` | primitive |
+| Timeline | `Timeline` (`mode: 'tags'` — tab names are the row tags) | primitive |
 | Toast / Snackbar | `Toast` | **Component** |
 | Toolbar | `Toolbar` | primitive |
 | Tree / Outline / Disclosure | `Tree` (`accordion` 手风琴单路径), `OutlineView`, `DisclosureTriangle` | primitive |
@@ -256,6 +256,32 @@ this.ensureShell((ids) => ids.root, ({ div }) => {
 Component classes use `h(CoverFlow, { items })` the same way (`h` ≈ React `createElement`).
 
 Statuses: `pending` · `active` (`in_progress`) · `done` (`completed`).
+
+## Timeline
+
+Vertical events. Items with `time` / `title` stay the classic rail.
+
+Items with `year`, `month`, and `tag` grow filter tabs. **The tab label and the row label are the same string.** `All` shows every row; choosing `sold` leaves only rows tagged `sold`, and years with nothing left drop out. Omit `activeKey` and the timeline filters itself. Pass `activeKey` + `onChange` to own the selection.
+
+Tag colors: `peach`, `blue`, `neutral`, `sage`, `sand`, `lilac`. Unknown names fall back in that order.
+
+```js
+import { Timeline } from './src/ui/index.js';
+
+Timeline({
+  tags: [
+    { name: 'closed', color: 'peach' },
+    { name: 'sold', color: 'blue' },
+    { name: 'sued', color: 'neutral' },
+  ],
+  items: [
+    { year: '2012', month: 'Aug', tag: 'closed', text: 'Twitter caps third-party apps at 100,000 users each.' },
+    { year: '2024', month: 'Feb', tag: 'sold', text: 'Reddit and Google sign a deal.' },
+  ],
+})
+```
+
+Live demo: [`examples/timeline-demo.html`](../examples/timeline-demo.html).
 
 ## EChart / ThreeView
 

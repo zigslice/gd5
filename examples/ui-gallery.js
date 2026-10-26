@@ -5,6 +5,7 @@
  */
 import { Component } from '../src/engine/index.js';
 import { startDemoApp } from './demoApp.js';
+import { platformTimelineItems, platformTimelineTags } from './timeline-data.js';
 import {
   loadUi,
   Button,
@@ -499,6 +500,22 @@ class GalleryPage extends Component {
               Alert({ type: 'info', message: 'Inline Alert' }),
               Callout({ type: 'warning', title: 'Callout', message: 'In-content notice, not a toast.' }),
               Empty({ description: 'Nothing here yet' })
+            )
+          ),
+
+          this.section(
+            'Timeline',
+            Space(
+              { direction: 'vertical', size: 'md' },
+              Text({
+                type: 'secondary',
+                text: 'Tabs are the tag names. All shows every row; a tag leaves only rows wearing that same label.',
+              }),
+              Timeline({
+                mode: 'tags',
+                tags: platformTimelineTags,
+                items: platformTimelineItems,
+              })
             )
           ),
 
